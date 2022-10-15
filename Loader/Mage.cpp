@@ -35,7 +35,7 @@ float GetManaStoneCD() {
 void ListAI::MageDps() {
 	PolymorphTimer = PolymorphInnerCD - (time(0) - current_time);
 	if (PolymorphTimer < 0) PolymorphTimer = 0;
-	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && localPlayer->prctHP > 0) {
+	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
 		int nbrAggro = HasAggro[0].size();
 		bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
 		bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
@@ -152,7 +152,7 @@ void ListAI::MageDps() {
 				Functions::CastSpellByName("Remove Lesser Curse");
 				if(Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && targetUnit->prctHP > 0) {
+			else if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && !targetUnit->isdead) {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
 				bool targetStunned = targetUnit->flags & UNIT_FLAG_CONFUSED;
 				bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;

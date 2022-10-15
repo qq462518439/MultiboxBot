@@ -4,9 +4,7 @@
 
 void ListAI::HunterDps() {
 	int FeignDeathIDs[1] = { 5384 };
-	bool FeignDeathBuff = localPlayer->hasBuff(FeignDeathIDs, 1);
-	int RaptorStrikeIDs[8] = { 2973, 14260, 14261, 14262, 14263, 14264, 14265, 14266 };
-	if (FeignDeathBuff || ((localPlayer->castInfo == 0 || localPlayer->isCasting(RaptorStrikeIDs, 8)) && localPlayer->prctHP > 0)) {
+	if (localPlayer->hasBuff(FeignDeathIDs, 1) || ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead)) {
 		int nbrAggro = HasAggro[0].size();
 		bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
 		bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
@@ -67,7 +65,7 @@ void ListAI::HunterDps() {
 				//Feign Death (Aggro PvE)
 				Functions::CastSpellByName("Feign Death");
 			}
-			else if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && targetUnit->prctHP > 0) {
+			else if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && !targetUnit->isdead) {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
 				bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 				bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;

@@ -12,7 +12,7 @@ static void PaladinAttack() {
 		if (listIndexCloseEnemies.size() > 0) localPlayer->SetTarget(ListUnits[listIndexCloseEnemies[0]].Guid);
 	}
 
-	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
+	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && !localPlayer->isdead) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SoLIDs[4] = { 20165, 20347, 20348, 20349 };

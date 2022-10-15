@@ -138,7 +138,7 @@ void ListAI::PaladinTank() {
 		Functions::pressKey(0x28);
 		Functions::releaseKey(0x28);
 	}
-	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (localPlayer->prctHP > 0)) {
+	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead) {
 		int BoSanctuaryIDs[4] = { 20911, 20912, 20913, 20914 };
 		bool BoSanctuaryBuff = localPlayer->hasBuff(BoSanctuaryIDs, 4);
 		int RetributionAuraIDs[5] = { 7294, 10298, 10299, 10300, 10301 };

@@ -89,7 +89,7 @@ void Game::MainLoop() {
 						Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
 					}
-					else if (targetUnit != NULL && Functions::PlayerIsRanged() && (localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
+					else if (targetUnit != NULL && Functions::PlayerIsRanged() && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && distTarget < 8)) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
 						int distMove = 10; if (playerClass == "Hunter") distMove = 12;
 						if (Moving == 4 && (distTarget < 30)) {
 							Functions::pressKey(0x28);

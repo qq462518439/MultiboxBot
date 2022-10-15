@@ -14,7 +14,7 @@ static void PaladinAttack() {
 		if (listIndexCloseEnemies.size() > 0) localPlayer->SetTarget(ListUnits[listIndexCloseEnemies[0]].Guid);
 	}
 
-	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
+	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SotCIDs[6] = { 21082, 20162, 20305, 20306, 20307, 20308 };
@@ -146,7 +146,7 @@ void ListAI::PaladinDps() {
 		Functions::pressKey(0x28);
 		Functions::releaseKey(0x28);
 	}
-	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (localPlayer->prctHP > 0)) {
+	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead) {
 		int BoWisdomIDs[6] = { 19742, 19850, 19852, 19853, 19854, 25290 };
 		bool BoWisdomBuff = localPlayer->hasBuff(BoWisdomIDs, 6);
 		int SanctityAuraIDs[1] = { 20218 };

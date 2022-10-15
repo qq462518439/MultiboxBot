@@ -1104,17 +1104,16 @@ void Functions::FollowMultibox(std::string unit_name) {
 				FollowUnit(tarType + std::to_string(i));
 				return;
 			}
-			else {
-				for (unsigned int y = 0; y < ListUnits.size(); y++) {
-					if (ListUnits[y].name == unit_name) {
-						float dist = localPlayer->position.DistanceTo(ListUnits[y].position);
-						if (dist < 60) {
-							localPlayer->ClickToMove(Move, ListUnits[y].Guid, ListUnits[y].position);
-							return;
-						}
-					}
-				}
+			else break;
+		}
+	}
+	for (unsigned int y = 0; y < ListUnits.size(); y++) {
+		if (ListUnits[y].name == unit_name) {
+			float dist = localPlayer->position.DistanceTo(ListUnits[y].position);
+			if (dist < 60) {
+				localPlayer->ClickToMove(Move, ListUnits[y].Guid, ListUnits[y].position);
 			}
+			return;
 		}
 	}
 }
