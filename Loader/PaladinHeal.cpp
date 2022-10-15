@@ -12,7 +12,7 @@ static void PaladinAttack() {
 		if (listIndexCloseEnemies.size() > 0) localPlayer->SetTarget(ListUnits[listIndexCloseEnemies[0]].Guid);
 	}
 
-	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && !localPlayer->isdead) {
+	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SoLIDs[4] = { 20165, 20347, 20348, 20349 };
@@ -136,7 +136,7 @@ void ListAI::PaladinHeal() {
 		Functions::pressKey(0x28);
 		Functions::releaseKey(0x28);
 	}
-	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (localPlayer->prctHP > 0)) {
+	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead) {
 		int BoKingsIDs[1] = { 20217 };
 		bool BoKingsBuff = localPlayer->hasBuff(BoKingsIDs, 1);
 		int DevotionAuraIDs[7] = { 465, 10290, 643, 10291, 1032, 10292, 10293 };
