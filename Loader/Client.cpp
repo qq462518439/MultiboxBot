@@ -51,7 +51,7 @@ void Client::ConnectToServer(const char* addr, int port) {
 		sin.sin_port = htons(port);
 		sock = socket(AF_INET, SOCK_STREAM, 0);
 		
-		<< "Connecting...\n";
+		std::cout << "Connecting...\n";
 		connect(sock, (SOCKADDR*)&sin, sizeof(sin));
 		std::cout << "Connected to " << "127.0.0.1" << ":" << port << "\n";
 	}
