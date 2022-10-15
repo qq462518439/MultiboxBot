@@ -3,7 +3,7 @@
 ## Table of contents
 * [General infos](#general-infos)
 * [Requirements](#requirements)
-* [PixelBot 1.12.1](#pixelbot-1121)
+* [MultiboxBot 1.12.1](#multiboxbot-1121)
 
 ## General Infos
 
