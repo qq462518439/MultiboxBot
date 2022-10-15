@@ -1,0 +1,24 @@
+﻿  Client.cpp
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Client.cpp(49,25): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  dllmain.cpp
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\dllmain.cpp(21,15): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  Functions.cpp
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(300,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(318,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(320,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  Game.cpp
+  Hunter.cpp
+  Mage.cpp
+  MemoryManager.cpp
+  PaladinDps.cpp
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\PaladinDps.cpp(144,23): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  PaladinHeal.cpp
+  PaladinTank.cpp
+  Rogue.cpp
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Rogue.cpp(83,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  Warlock.cpp
+  WoWObject.cpp
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\WoWObject.cpp(138,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\WoWObject.cpp(148,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  Generating Code...
+  Loader.vcxproj -> C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Test\src\Loader.dll
