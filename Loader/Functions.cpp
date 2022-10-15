@@ -174,12 +174,12 @@ std::tuple<Position, int> Functions::getAOETargetPos(float range, float range2) 
 					clustersArr[min_cluster1].push_back(clustersArr[min_cluster2][i]);
 				}
 				clusters_center[min_cluster1] = meanPos(clustersArr[min_cluster1]);
-				//On dÃ©truit les valeurs du cluster_min2
+				//On détruit les valeurs du cluster_min2
 				clustersArr.erase(clustersArr.begin() + min_cluster2);
 				clusters_center.erase(clusters_center.begin() + min_cluster2);
 			}
 		} while (min_cluster1 != 0 || min_cluster2 != 0);
-		//3- On choisit le cluster avec le plus d'unitÃ©s
+		//3- On choisit le cluster avec le plus d'unités
 		unsigned int max_cluster_unit = 0; int index = 0;
 		for (unsigned int i = 0; i < clustersArr.size(); i++) {
 			if (clustersArr[i].size() > max_cluster_unit && clusters_center[i].DistanceTo(localPlayer->position) < range2) {
@@ -272,8 +272,8 @@ bool Functions::PlayerIsRanged() {
 }
 
 int Functions::getTankIndex() {
-	std::string tankNames[] = { "Nihal", "Sapphire" };
-	for (int i = 0; i <= NumGroupMembers; i++) {
+	std::string tankNames[2] = { "Nihal", "Sapphire" };
+	for (int i = 1; i <= NumGroupMembers; i++) {
 		for (int y = 0; y < 2; y++) {
 			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].name == tankNames[y]) return i;
 		}
@@ -474,7 +474,7 @@ bool Functions::IsInventoryFull() {
 }
 
 int Functions::GetItemCount(std::string item_info) {
-	//Trouve par le nom la quantitÃ© d'item similaire dans l'inventaire
+	//Trouve par le nom la quantité d'item similaire dans l'inventaire
 	int total = 0;
 	for (int i = 0; i <= 4; i++) {
 		for (int y = 1; y < GetContainerNumSlots(i); y++) {
@@ -490,7 +490,7 @@ int Functions::GetItemCount(std::string item_info) {
 }
 
 int Functions::GetItemCount(int item_id) {
-	//Trouve par l'ID la quantitÃ© d'item similaire dans l'inventaire
+	//Trouve par l'ID la quantité d'item similaire dans l'inventaire
 	int total = 0;
 	for (int i = 0; i <= 4; i++) {
 		for (int y = 1; y < GetContainerNumSlots(i); y++) {
@@ -532,7 +532,7 @@ void Functions::PickupItem(std::string item_info) {
 }
 
 void Functions::PlaceItem(int slot, std::string itemName) {
-	//Place l'objet dans le slot indiquÃ©
+	//Place l'objet dans le slot indiqué
 	PickupItem(itemName);
 	std::string command = "PlaceAction(" + std::to_string(slot) + ")";
 	LuaCall((command + " ClearCursor()").c_str());
@@ -552,7 +552,7 @@ void Functions::PickupItem(int item_id) {
 }
 
 void Functions::PlaceItem(int slot, int item_id) {
-	//Place l'objet dans le slot indiquÃ©
+	//Place l'objet dans le slot indiqué
 	PickupItem(item_id);
 	std::string command = "PlaceAction(" + std::to_string(slot) + ")";
 	LuaCall((command + " ClearCursor()").c_str());
@@ -688,7 +688,7 @@ int Functions::GetBuffKey(std::string buffTexture, std::string buffTexture2) {
 }
 
 bool Functions::GetUnitDispel(std::string target, std::string dispellType1, std::string dispellType2, std::string dispellType3) {
-	//Retourne si la cible a un debuff Ã  dispel
+	//Retourne si la cible a un debuff à dispel
 	std::string args[3] = { dispellType1, dispellType2, dispellType3 };
 	for (int i = 1; i <= 16; i++) {
 		std::string debuffIcon, debuffType;
@@ -703,7 +703,7 @@ bool Functions::GetUnitDispel(std::string target, std::string dispellType1, std:
 }
 
 int Functions::GetDispelKey(std::string dispellType1, std::string dispellType2, std::string dispellType3) {
-	//Retourne le joueur du groupe Ã  dispel
+	//Retourne le joueur du groupe à dispel
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)) return i;
 	}
