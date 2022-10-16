@@ -83,11 +83,21 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
 		}
 	}
+	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
 	if (Combat && (HpRatio < 20) && Functions::IsSpellReady("Lay on Hands")) {
 		//Lay on Hands
-		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Lay on Hands");
-		return 0;
+		if (isParty && distAlly > 40.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::MoveToAlly(indexP);
+			return 0;
+		}
+		else if (distAlly < 30.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::CastSpellByName("Lay on Hands");
+			LastTarget = indexP;
+			return 0;
+		}
+		else return 1;
 	}
 	else if (Combat && isPlayer && (HpRatio < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
 		//Divine Protection / Divine Shield
@@ -108,37 +118,71 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 	}
 	else if (Combat && isParty && (HpRatio < 20) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
 		//Blessing of Protection
-		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Blessing of Protection");
-		return 0;
+		if (distAlly > 30.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::MoveToAlly(indexP);
+			return 0;
+		}
+		else if (distAlly < 30.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::CastSpellByName("Blessing of Protection");
+			LastTarget = indexP;
+			return 0;
+		}
+		else return 1;
 	}
 	else if (Combat && isParty && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
 		//Blessing of Sacrifice
-		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Blessing of Sacrifice");
-		return 0;
+		if (distAlly > 30.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::MoveToAlly(indexP);
+			return 0;
+		}
+		else if (distAlly < 30.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::CastSpellByName("Blessing of Sacrifice");
+			LastTarget = indexP;
+			return 0;
+		}
+		else return 1;
 	}
 	else if ((HpRatio < 50) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
 		//Holy Light
-		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Holy Light");
-		LastTarget = indexP;
-		if (localPlayer->isCasting()) current_time = time(0);
-		return 0;
+		if (isParty && distAlly > 40.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::MoveToAlly(indexP);
+			return 0;
+		}
+		else if (distAlly < 40.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::CastSpellByName("Holy Light");
+			LastTarget = indexP;
+			if (localPlayer->isCasting()) current_time = time(0);
+			return 0;
+		}
+		else return 1;
 	}
 	else if ((HpRatio < 85) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
 		//Flash of Light
-		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Flash of Light");
-		LastTarget = indexP;
-		if (localPlayer->isCasting()) current_time = time(0);
-		return 0;
+		if (isParty && distAlly > 40.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::MoveToAlly(indexP);
+			return 0;
+		}
+		else if (distAlly < 40.0f) {
+			localPlayer->SetTarget(healGuid);
+			Functions::CastSpellByName("Flash of Light");
+			LastTarget = indexP;
+			if (localPlayer->isCasting()) current_time = time(0);
+			return 0;
+		}
+		else return 1;
 	}
 	return 1;
 }
 
 void ListAI::PaladinDps() {
-	HealInnerTimer = 5.0 - (time(0) - current_time);
+	HealInnerTimer = 5.0f - (time(0) - current_time);
 	if (HealInnerTimer < 0) HealInnerTimer = 0;
 	int FoLIDs[6] = { 19750, 19939, 19940, 19941, 19942, 19943 };
 	int holyLightIDs[9] = { 635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292 };

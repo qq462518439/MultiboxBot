@@ -89,64 +89,67 @@ void Game::MainLoop() {
 						Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
 					}
-					else if (targetUnit != NULL && Functions::PlayerIsRanged() && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && distTarget < 8)) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
-						int distMove = 10; if (playerClass == "Hunter") distMove = 12;
-						if (Moving == 4 && (distTarget < 30)) {
+					else if (targetUnit != NULL && Functions::PlayerIsRanged() && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && distTarget < 10.0f)) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (!targetUnit->isdead)) {
+						if (Moving == 4 && (distTarget < 30.0f)) {
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if ((distTarget < 12) && (Moving == 0 || Moving == 1) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
+						else if ((distTarget < 12.0f) && (Moving == 0 || Moving == 1) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
 							if (localPlayer->speed == 0) {
 								Position oppositeDir = localPlayer->getOppositeDirection(targetUnit->position);
 								ThreadSynchronizer::RunOnMainThread([oppositeDir]() { localPlayer->ClickToMove(Move, targetUnit->Guid, oppositeDir); });
 							}
 							Moving = 1;
 						}
-						else if ((Moving == 0 || Moving == 3) && !IsFacing) {
+						else if ((Moving == 0) && !IsFacing) {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 						}
-						else if ((distTarget < distMove) && (Moving == 0) && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && !hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
+						else if ((distTarget < 10.0f) && (Moving == 0) && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && !hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
 							Functions::pressKey(0x28);
 							Moving = 3;
 						}
-						else if (distTarget > 30 && !IsSitting && (Moving == 0 || Moving == 2)) {
+						else if (distTarget > 30.0f && !IsSitting && (Moving == 0 || Moving == 2 || Moving == 5)) {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 							Moving = 2;
 						}
-						else if (Moving == 1 && (distTarget > 12 || !(targetUnit->flags & UNIT_FLAG_CONFUSED) || targetUnit->speed > 0)) {
+						else if (Moving == 1 && (distTarget > 12.0f || !(targetUnit->flags & UNIT_FLAG_CONFUSED) || targetUnit->speed > 0)) {
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if (Moving == 2 && (distTarget < 30)) {
+						else if ((Moving == 2 || Moving == 5) && (distTarget < 30.0f)) {
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if (Moving == 3 && ((distTarget > distMove) || (!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed >= 7))) {
+						else if (Moving == 3 && ((distTarget > 10.0f) || (!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed >= 7))) {
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
 					}
-					else if (targetUnit != NULL && !Functions::PlayerIsRanged() && (localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
-						if (distTarget > 5 && !IsSitting) {
+					else if (targetUnit != NULL && !Functions::PlayerIsRanged() && (localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
+						if (distTarget > 5.0f && !IsSitting) {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
-							Moving = 1;
+							Moving = 2;
 						}
-						else if (Moving == 1) {
+						else if (Moving == 2 || Moving == 5) {
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
 						else if (!IsFacing) ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 					}
-					else if (Moving > 0) {
+					else if (Moving > 0 && Moving < 4) {
 						if (Moving < 3) Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
 						Moving = 0;
 					}
-
+					else if (Moving == 5 && (targetUnit == NULL || ((targetUnit->unitReaction > Neutral) && (distTarget < 30.0f)))) {
+						Functions::pressKey(0x28);
+						Functions::releaseKey(0x28);
+						Moving = 0;
+					}
 				}
 
 				end = std::chrono::high_resolution_clock::now();

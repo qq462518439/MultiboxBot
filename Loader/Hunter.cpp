@@ -4,7 +4,8 @@
 
 void ListAI::HunterDps() {
 	int FeignDeathIDs[1] = { 5384 };
-	if (localPlayer->hasBuff(FeignDeathIDs, 1) || ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead)) {
+	int RaptorStrikeIDs[8] = { 2973, 14260, 14261, 14262, 14263, 14264, 14265, 14266 };
+	if (localPlayer->hasBuff(FeignDeathIDs, 1) || ((localPlayer->castInfo == 0 || localPlayer->isCasting(RaptorStrikeIDs, 8)) && (localPlayer->channelInfo == 0) && !localPlayer->isdead)) {
 		int nbrAggro = HasAggro[0].size();
 		bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
 		bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;

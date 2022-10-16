@@ -5,7 +5,7 @@
 static int LastTarget = 0;
 
 static void PaladinAttack() {
-	if (targetUnit == NULL || targetUnit->unitReaction > Neutral || targetUnit->prctHP == 0) {
+	if (targetUnit == NULL || targetUnit->unitReaction > Neutral || targetUnit->isdead) {
 		for(int i = NumGroupMembers; i >= 0; i--) {
 			if (HasAggro[i].size() > 0) {
 				localPlayer->SetTarget(HasAggro[i][0]);
@@ -74,10 +74,12 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
 		}
 	}
-	if (Combat && (HpRatio < 20) && Functions::IsSpellReady("Lay on Hands")) {
+	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
+	if (Combat && (distAlly < 40.0f) && (HpRatio < 20) && Functions::IsSpellReady("Lay on Hands")) {
 		//Lay on Hands
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Lay on Hands");
+		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
@@ -98,21 +100,23 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::UseAction(120);
 		return 0;
 	}
-	else if (Combat && isParty && (HpRatio < 20) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
+	else if (Combat && isParty && (distAlly < 30.0f) && (HpRatio < 20) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
 		//Blessing of Protection
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Protection");
+		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if (Combat && isParty && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
+	else if (Combat && isParty && (distAlly < 30.0f) && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
 		//Blessing of Sacrifice
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Sacrifice");
+		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if ((nbrAggro == 0 || nbrEnemyPlayer > 0) && (HpRatio < 25) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
+	else if ((nbrAggro == 0 || nbrEnemyPlayer > 0) && (distAlly < 40.0f) && (HpRatio < 25) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
 		//Flash of Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash of Light");
@@ -120,7 +124,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if ((nbrAggro == 0 || nbrEnemyPlayer > 0) && (HpRatio < 40) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
+	else if ((nbrAggro == 0 || nbrEnemyPlayer > 0) && (distAlly < 40.0f) && (HpRatio < 40) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
 		//Holy Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Holy Light");

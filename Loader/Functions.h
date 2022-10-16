@@ -20,6 +20,7 @@ class Functions {
 		static int GetBuffKey(int* IDs, int size);
 		static bool PlayerIsRanged();
 		static int getTankIndex();
+		static void MoveToAlly(int unitIndex);
 		// === Lua Game Functions === //
 		static int GetNumGroupMembers();
 		static bool IsInGroup();

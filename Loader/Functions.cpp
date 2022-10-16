@@ -102,7 +102,7 @@ void Functions::ClassifyHeal() {
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
 		if (ListUnits[i].unitReaction > Neutral && !ListUnits[i].isdead) {
 			float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
-			if (dist < 40) {
+			if (dist < 60) {
 				PrctHp.push_back(ListUnits[i].prctHP);
 				if (ListUnits[i].objectType == Player && ListUnits[i].prctHP < 60) AoEHeal = AoEHeal + 1;
 				HealTargetArray.push_back(i);
@@ -258,7 +258,7 @@ int Functions::getNbrCreatureType(int range, CreatureType type1, CreatureType ty
 int Functions::GetBuffKey(int* IDs, int size) {
 	//Retourne le joueur auquel il manque le buff
 	for (int i = 1; i <= NumGroupMembers; i++) {
-		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction >= Friendly) && (ListUnits[GroupMembersIndex[i]].prctHP > 0) && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40)) {
+		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction >= Friendly) && !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)) {
 			if (!ListUnits[GroupMembersIndex[i]].hasBuff(IDs, size)) return i;
 		}
 	}
@@ -279,6 +279,13 @@ int Functions::getTankIndex() {
 		}
 	}
 	return 0;
+}
+
+void Functions::MoveToAlly(int unitIndex) {
+	if (Moving == 0 || Moving == 2 || Moving == 5) {
+		localPlayer->ClickToMove(Move, ListUnits[unitIndex].Guid, ListUnits[unitIndex].position);
+		Moving = 5;
+	}
 }
 
 //======================================================================//
@@ -1110,7 +1117,7 @@ void Functions::FollowMultibox(std::string unit_name) {
 	for (unsigned int y = 0; y < ListUnits.size(); y++) {
 		if (ListUnits[y].name == unit_name) {
 			float dist = localPlayer->position.DistanceTo(ListUnits[y].position);
-			if (dist < 60) {
+			if (dist < 60.0f) {
 				localPlayer->ClickToMove(Move, ListUnits[y].Guid, ListUnits[y].position);
 			}
 			return;
