@@ -31,13 +31,11 @@ class Interface(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.quit_program)
         self.iconphoto(True, ImageTk.PhotoImage(Image.open(r"assets/icon.jpg")))
         self.iconWoW = tk.PhotoImage(file='assets/iconWoW.png')
-        self.iconScreenshot = ImageTk.PhotoImage(Image.open(r"assets/iconScreenshot.jpg"))
         self.attributes('-topmost', True)
         
          # Variables
         parser.init_config('config.conf')
         self.PATH_WoW = parser.get_value('config.conf', 'PATH_WoW', '=')
-        self.PATH_Screenshot = parser.get_value('config.conf', 'PATH_Screenshot', '=')
         self.ACC_Info = parser.get_multiplevalues('config.conf', 'ACC_Infos', '(', ',', ')')
         self.MOVEMENT_KEY = [win32con.VK_RIGHT, win32con.VK_UP, win32con.VK_DOWN, win32con.VK_LEFT]
         
@@ -47,10 +45,6 @@ class Interface(tk.Tk):
         self.script_running = False
         self.InMovement = [0 for x in range(20)]
         self.indexIMG = 0
-        if(self.PATH_Screenshot != ''):
-            for file in os.listdir(self.PATH_Screenshot):
-                nbrTmp = re.findall('[0-9]+', file)
-                if(int(nbrTmp[0]) > self.indexIMG): self.indexIMG = int(nbrTmp[0])
                 
         self.serverthread = server_thread()
         self.serverthread.start()
