@@ -93,7 +93,7 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
     else {
         uintptr_t namePtr = *(uintptr_t*)(NAME_BASE_OFFSET);
         unsigned int i = 0;
-        while (i <= ListUnits.size()) {
+        while (i <= 1000) {
             unsigned long long nextGuid = *(unsigned long long*)(namePtr + NEXT_NAME_OFFSET);
             if (nextGuid != Guid) namePtr = *(uintptr_t*)(namePtr);
             else break;

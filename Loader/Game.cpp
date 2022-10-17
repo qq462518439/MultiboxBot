@@ -55,6 +55,7 @@ void Game::MainLoop() {
 						IsSitting = false;
 						Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
+						Moving = 0;
 					}
 
 					Combat = localPlayer->flags & UNIT_FLAG_IN_COMBAT;
@@ -88,6 +89,7 @@ void Game::MainLoop() {
 						IsSitting = false;
 						Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
+						Moving = 0;
 					}
 					else if (targetUnit != NULL && Functions::PlayerIsRanged() && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && distTarget < 10.0f)) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (!targetUnit->isdead)) {
 						if (Moving == 4 && (distTarget < 30.0f)) {

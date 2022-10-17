@@ -72,34 +72,23 @@ class Interface(tk.Tk):
         self.WoWDirEntry = tk.Entry(tab2, state='normal', width = 26)
         self.WoWDirEntry.insert(0,self.PATH_WoW)
         self.WoWDirEntry.configure(state='disabled')
-        self.ScreenshotDirButton = tk.Button(tab2, image=self.iconScreenshot, command=lambda: self.selectScreenshotDir())
-        self.ScreenshotDirEntry = tk.Entry(tab2, state='normal', width = 26)
-        self.ScreenshotDirEntry.insert(0,self.PATH_Screenshot)
-        self.ScreenshotDirEntry.configure(state='disabled')
         self.ModifyCredentials_Button = tk.Button(tab2, text='Modify credentials', command=lambda: self.open_credentials_tab(), padx=5, pady=5)
         self.LaunchRepair_Button = tk.Button(tab1, text='Launch', command=lambda: self.launch_repair_clients(), padx=5, pady=5)
-        self.ToggleIA_Button = tk.Button(tab1, text='Toggle IA', command=lambda: self.toggleIA(), padx=5, pady=5)
         self.ScriptOnOff_Label = tk.Label(tab1, text="OFF", foreground='red')
-        self.IAOnOff_Label = tk.Label(tab1, text="OFF", foreground='red')
         self.NbrClient_Menu = tk.OptionMenu(tab1, self.numberClientsList, *OptionList)
         self.NbrClient_Label = tk.Label(tab1, text="Number clients:")
         
          # Config
         self.LaunchRepair_Button.config(width = 6)
         self.NbrClient_Menu.config(width = 2)
-        self.IAOnOff_Label.config(width = 3)
         
          # Grid
         self.WoWDirButton.grid(row=0, column=0, sticky=tk.E, padx=2, pady=10)
         self.WoWDirEntry.grid(row=0, column=1, columnspan=2, padx=2)
-        self.ScreenshotDirButton.grid(row=1, column=0, sticky=tk.E, padx=2)
-        self.ScreenshotDirEntry.grid(row=1, column=1, columnspan=2, padx=2)
         self.ModifyCredentials_Button.grid(row=2, column=1)
         self.ScriptOnOff_Label.grid(row=0, column=4, sticky=tk.E)
         self.LaunchRepair_Button.grid(row=1, column=0, pady=5)
-        self.ToggleIA_Button.grid(row=2, column=0, pady=5)
-        self.IAOnOff_Label.grid(row=2, column=1)
-        self.NbrClient_Label.grid(row=1, column=3)
+        self.NbrClient_Label.grid(row=1, column=3, padx=2)
         self.NbrClient_Menu.grid(row=1, column=4)
         
     def quit_program(self):
@@ -123,20 +112,6 @@ class Interface(tk.Tk):
             self.WoWDirEntry.delete(0,tk.END)
             self.WoWDirEntry.insert(0,tmp.name)
             self.WoWDirEntry.configure(state='disabled')
-            
-    def selectScreenshotDir(self):
-        tmp = filedialog.askdirectory(title='Select your screenshots directory', initialdir=self.PATH_Screenshot)
-        if(tmp != '' and tmp != self.PATH_Screenshot):
-            self.PATH_Screenshot = tmp
-            parser.modify_config('config.conf', path_screen=tmp)
-            self.ScreenshotDirEntry.configure(state='normal')
-            self.ScreenshotDirEntry.delete(0,tk.END)
-            self.ScreenshotDirEntry.insert(0,tmp)
-            self.ScreenshotDirEntry.configure(state='disabled')
-            self.indexIMG = 0
-            for file in os.listdir(self.PATH_Screenshot):
-                nbrTmp = re.findall('[0-9]+', file)
-                if(int(nbrTmp[0]) > self.indexIMG): self.indexIMG = int(nbrTmp[0])
         
     def open_credentials_tab(self):
         global credentialTab
@@ -185,8 +160,7 @@ class Interface(tk.Tk):
             win32api.SendMessage(hwnd, win32con.WM_CHAR, ord(c), 0)
     
     def on_KeyPress(self, key):
-        if(hasattr(key, 'char') and key.char == '²'): self.takeScreenshot()
-        elif(key == keyboard.Key.page_up):
+        if(key == keyboard.Key.page_up):
             for i in range(self.NBR_ACCOUNT//5):
                 if(win32gui.GetForegroundWindow() in self.hwndACC[i*5:(i*5)+5]):
                     for y in range(i*5, (i*5)+5):
@@ -309,15 +283,6 @@ class Interface(tk.Tk):
                     win32api.SendMessage(self.hwndACC[i], win32con.WM_KEYUP, win32con.VK_RETURN, 0)
                 if(i == 0 and self.NBR_ACCOUNT == 5): win32gui.ShowWindow(self.hwndACC[i], win32con.SW_MAXIMIZE)
                 else: win32gui.MoveWindow(self.hwndACC[i], self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
-        
-    def toggleIA(self):
-        #Activate or disable the use of I.A
-        if self.IAOnOff_Label.config('text')[-1] == 'OFF':
-            self.IAOnOff_Label.config(text='ON')
-            self.IAOnOff_Label.config(foreground='green')
-        else:
-            self.IAOnOff_Label.config(text='OFF')
-            self.IAOnOff_Label.config(foreground='red')
             
     def activateBot(self):
         self.MOVEMENT_KEY = [win32con.VK_RIGHT, win32con.VK_UP, win32con.VK_DOWN, win32con.VK_LEFT]
@@ -333,15 +298,6 @@ class Interface(tk.Tk):
             self.ScriptOnOff_Label.config(text='ON')
             self.ScriptOnOff_Label.config(foreground='green')
             print("Running")
-            
-    def takeScreenshot(self):
-        if(self.listCoord != []):
-            playsound('assets/screenshot.mp3', False)
-            img_rgb = ImageGrab.grab(bbox=None, include_layered_windows=False, all_screens=True)
-            for i in range(self.NBR_ACCOUNT):
-                img = img_rgb.crop((self.listCoord[i][0]+8, self.listCoord[i][1], self.listCoord[i][0]+self.listCoord[i][2]-8, self.listCoord[i][1]+self.listCoord[i][3]))
-                img.save(self.PATH_Screenshot + '\\' + str(self.indexIMG+1) + '_' + str(i+1) + '.jpg')
-            self.indexIMG = self.indexIMG + 1
     
 """def run(self):
         while(self.running):
