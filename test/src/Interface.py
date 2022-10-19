@@ -7,15 +7,11 @@ import subprocess
 
 from PIL import ImageTk, Image, ImageGrab
 from tkinter import messagebox, filedialog
-from playsound import playsound #1.2.2 !!
 from pynput import keyboard
 from tkinter import ttk
 import tkinter as tk
-import numpy as np
 import mouse
 import PIL
-import os
-import re
 
 import win32gui, win32con, win32api #pywin32
 
@@ -72,6 +68,19 @@ class Interface(tk.Tk):
         self.NbrClient_Menu = tk.OptionMenu(tab1, self.numberClientsList, *OptionList)
         self.NbrClient_Label = tk.Label(tab1, text="Number clients:")
         
+         # Players and informations related
+        self.Group_Label = tk.Label(tab1, text="Players detected:")
+        self.Name_Label = []; self.Class_Label = []; self.SpecialisationList = []
+        self.Specialisation_Menu = []; self.OptionList = []
+        for i in range(25):
+            self.Name_Label.append(tk.Label(tab1, text="Null", foreground='grey'))
+            self.Class_Label.append(tk.Label(tab1, text="Null", foreground='grey'))
+            self.SpecialisationList.append(tk.StringVar(self))
+            self.OptionList.append(['Null'])
+            self.SpecialisationList[i].set(self.OptionList[i][0])
+            self.Specialisation_Menu.append(tk.OptionMenu(tab1, self.SpecialisationList[i], *self.OptionList[i]))
+            self.Specialisation_Menu[i].config(width = 11)
+        
          # Config
         self.LaunchRepair_Button.config(width = 6)
         self.NbrClient_Menu.config(width = 2)
@@ -80,10 +89,24 @@ class Interface(tk.Tk):
         self.WoWDirButton.grid(row=0, column=0, sticky=tk.E, padx=2, pady=10)
         self.WoWDirEntry.grid(row=0, column=1, columnspan=2, padx=2)
         self.ModifyCredentials_Button.grid(row=2, column=1)
-        self.ScriptOnOff_Label.grid(row=0, column=4, sticky=tk.E)
-        self.LaunchRepair_Button.grid(row=1, column=0, pady=5)
-        self.NbrClient_Label.grid(row=1, column=3, padx=2)
-        self.NbrClient_Menu.grid(row=1, column=4)
+        self.ScriptOnOff_Label.grid(row=0, column=5, sticky=tk.E)
+        self.LaunchRepair_Button.grid(row=1, column=0, columnspan=2)
+        self.NbrClient_Label.grid(row=1, column=3, columnspan=2)
+        self.NbrClient_Menu.grid(row=1, column=5, sticky=tk.W)
+        self.Group_Label.grid(row=2, column=2, columnspan=3, pady=10)
+        
+    def show_infoAccounts(self, nbr):
+        y = 0
+        for i in range(nbr):
+            if(i%2 == 0):
+                self.Name_Label[i].grid(row=3+y, column=0)
+                self.Class_Label[i].grid(row=3+y, column=1)
+                self.Specialisation_Menu[i].grid(row=3+y, column=2)
+            else:
+                self.Name_Label[i].grid(row=3+y, column=3)
+                self.Class_Label[i].grid(row=3+y, column=4)
+                self.Specialisation_Menu[i].grid(row=3+y, column=5)
+                y = y+1
         
     def quit_program(self):
         #Disconnect clients
@@ -94,7 +117,6 @@ class Interface(tk.Tk):
         self.serverthread.running = False
         tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcp_socket.connect(('localhost', 50001))
-        tcp_socket.close()
         self.destroy()
         
     def selectWoWDir(self):
@@ -254,13 +276,8 @@ class Interface(tk.Tk):
                 time.sleep(0.1)
                 win32api.SendMessage(self.hwndACC[i], win32con.WM_KEYDOWN, win32con.VK_RETURN, 0)
                 win32api.SendMessage(self.hwndACC[i], win32con.WM_KEYUP, win32con.VK_RETURN, 0)
+            self.show_infoAccounts(self.NBR_ACCOUNT)
         else: #Repair
-            listDC = []
-            for i in range(self.NBR_ACCOUNT):
-                if(not win32gui.IsWindow(self.hwndACC[i]) and self.serverthread.clients[i] != 0):
-                    #Connection is active but no game window
-                    listDC.append(i)
-            if(len(listDC) > 0): self.serverthread.cleanClients(listDC)
             for i in range(self.NBR_ACCOUNT):
                 if(not win32gui.IsWindow(self.hwndACC[i])):
                     p1 = subprocess.Popen(["./src/Bootstrap.exe", self.PATH_WoW])
@@ -292,32 +309,94 @@ class Interface(tk.Tk):
             self.ScriptOnOff_Label.config(text='ON')
             self.ScriptOnOff_Label.config(foreground='green')
             print("Running")
-    
-"""def run(self):
-        while(self.running):
-            try:
-                datasize = self.conn.recv(128)
-            except:
-                self.running = False
-                break
-            if(datasize):
-                datasize = int(re.search("\d+", datasize.decode('utf-8')).group())
-                self.conn.send(b"ok")
-                print("Client " + self.addr[0] + ":" + str(self.addr[1]) + " - datasize: " + str(datasize))
-                total_data=bytearray();
-                while(len(total_data) < datasize):
-                    data = self.conn.recv(1024)
-                    if data:
-                        total_data.extend(data)
-                print("Client " + self.addr[0] + ":" + str(self.addr[1]) + " - message: " + total_data.decode('utf-8'))
-        print("[-] Client disconnected: " + self.addr[0] + ":" + str(self.addr[1]))"""
         
 
+def rgb_hack(rgb):
+    return "#%02x%02x%02x" % rgb 
+
+class client_thread(threading.Thread):
+    def __init__(self, index, conn, addr):
+        super(client_thread, self).__init__()
+        self.running = True
+        self.conn = conn
+        self.addr = addr
+        self.index = index
+        self.currentSpec = "Null"
+       
+    def run(self):
+        interface.after(500, self.checkSpecChange)
+        while(self.running):
+            try:
+                data = self.conn.recv(128)
+                if(data):
+                    data = data.decode('utf-8')
+                    ind = data.find("Class")
+                    if(ind > -1):
+                        Name = data[5:ind]
+                        Class = data[ind+6::]
+                        interface.Name_Label[self.index].config(text=Name)
+                        interface.Class_Label[self.index].config(text=Class)
+                        if(Class == "Druid"):
+                            interface.OptionList[self.index] = ['Balance', 'Feral', 'Restoration']
+                            color = "orange"
+                        elif(Class == "Hunter"):
+                            interface.OptionList[self.index] = ['Beast Mastery', 'Marksmanship', 'Survival']
+                            color = "green"
+                        elif(Class == "Mage"):
+                            interface.OptionList[self.index] = ['Arcane', 'Fire', 'Frost']
+                            color = rgb_hack((0, 210, 255))
+                        elif(Class == "Paladin"):
+                            interface.OptionList[self.index] = ['Holy', 'Protection', 'Retribution']
+                            color = rgb_hack((255, 0, 122))
+                        elif(Class == "Priest"):
+                            interface.OptionList[self.index] = ['Discipline', 'Holy', 'Shadow']
+                            color = rgb_hack((210, 210, 210))
+                        elif(Class == "Rogue"):
+                            interface.OptionList[self.index] = ['Assassination', 'Combat', 'Subtlety']
+                            color = rgb_hack((255, 210, 0))
+                        elif(Class == "Shaman"):
+                            interface.OptionList[self.index] = ['Elemental', 'Enhancement', 'Restoration']
+                            color = "blue"
+                        elif(Class == "Warlock"):
+                            interface.OptionList[self.index] = ['Affliction', 'Demonology', 'Destruction']
+                            color = "purple"
+                        elif(Class == "Warrior"):
+                            interface.OptionList[self.index] = ['Arms', 'Fury', 'Protection']
+                            color = "brown" 
+                        elif(Class == "Null"):
+                            interface.OptionList[self.index] = ['Null'] 
+                            color = "grey"
+                        interface.Specialisation_Menu[self.index]['menu'].delete(0, tk.END)
+                        for option in interface.OptionList[self.index]:
+                            interface.Specialisation_Menu[self.index]['menu'].add_command(label=option, command=tk._setit(interface.SpecialisationList[self.index], option))
+                        interface.SpecialisationList[self.index].set(interface.OptionList[self.index][0])
+                        interface.Name_Label[self.index].config(foreground="black")
+                        interface.Class_Label[self.index].config(foreground=color)
+                    #print("Client " + self.addr[0] + ":" + str(self.addr[1]) + " - message: " + data)
+            except Exception as e:
+                interface.serverthread.clients[self.index] = 0
+                self.running = False
+                self.conn.close()
+                if(win32gui.IsWindow(interface.hwndACC[self.index])):
+                    win32api.SendMessage(interface.hwndACC[self.index], win32con.WM_CLOSE, 0, 0)
+        print("[-] Client disconnected: " + self.addr[0] + ":" + str(self.addr[1]))
+        
+    def checkSpecChange(self):
+        if(self.running):
+            if(self.currentSpec != interface.SpecialisationList[self.index].get()):
+                self.currentSpec = interface.SpecialisationList[self.index].get()
+                for i in range(len(interface.OptionList[self.index])):
+                    if(self.currentSpec == interface.OptionList[self.index][i]):
+                        msg = ('Spec: '+str(i)+' ')
+                        self.conn.send(bytes(msg, 'utf-8'))
+            interface.after(500, self.checkSpecChange)
+        
 class server_thread(threading.Thread):
     def __init__(self):
         super(server_thread, self).__init__()
         self.running = True
         self.clients = []
+        self.clients_thread = []
 
     def run(self):
         # Set up a TCP/IP server
@@ -331,30 +410,23 @@ class server_thread(threading.Thread):
             indextmp = -1
             for i in range(len(self.clients)):
                 if(self.clients[i] == 0): indextmp = i
-            if(indextmp == -1): self.clients.append((conn, addr))
-            else: self.clients[indextmp] = (conn, addr)
+            if(indextmp == -1):
+                self.clients.append((conn, addr))
+                self.clients_thread.append(client_thread(len(self.clients)-1, conn, addr))
+                self.clients_thread[len(self.clients_thread)-1].start()
+            else:
+                self.clients[indextmp] = (conn, addr)
+                self.clients_thread[indextmp] = client_thread(indextmp, conn, addr)
+                self.clients_thread[indextmp].start()
             print("[+] New client: " + addr[0] + ":" + str(addr[1]))
-        for i in range(len(self.clients)):
-            if(self.clients[i] != 0): self.clients[i].close()
+        for clientthread in self.clients_thread:
+            clientthread.running = False
+            clientthread.conn.close()
         print("server over...")
         
     def sendAllClients(self, msg):
-        listDC = []
         for i in range(len(self.clients)):
-            if(self.clients[i] != 0):
-                try:
-                    self.clients[i][0].send(msg)
-                except:
-                    #Connection is dead
-                    listDC.append(i)
-        self.cleanClients(listDC)
-                
-    def cleanClients(self, listDC):
-        for i in listDC:
-            print("[-] Client disconnected: " + self.clients[i][1][0] + ":" + str(self.clients[i][1][1]))
-            self.clients[i] = 0
-            if(win32gui.IsWindow(interface.hwndACC[i])):
-                win32api.SendMessage(interface.hwndACC[i], win32con.WM_CLOSE, 0, 0)
+            if(self.clients[i] != 0): self.clients[i][0].send(msg)
         
     #Main :
 if __name__== "__main__" :

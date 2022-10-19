@@ -267,7 +267,7 @@ int Functions::GetBuffKey(int* IDs, int size) {
 
 bool Functions::PlayerIsRanged() {
 	if(playerClass == "Mage" || playerClass == "Priest" || playerClass == "Warlock" || playerClass == "Hunter"
-		|| (playerClass == "Druid" && playerRole == 1) || (playerClass == "Paladin" && playerRole == 1 && bossFight) || (playerClass == "Shaman" && playerRole < 3)) return true;
+		|| (playerClass == "Druid" && (playerRole == 0 || playerRole == 2)) || (playerClass == "Paladin" && playerRole == 0 && bossFight) || (playerClass == "Shaman" && (playerRole == 0 || playerRole == 2))) return true;
 	else return false;
 }
 

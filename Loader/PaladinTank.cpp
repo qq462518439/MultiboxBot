@@ -32,7 +32,7 @@ static void PaladinAttack() {
 			//Seal of Righteousness
 			Functions::CastSpellByName("Seal of Righteousness");
 		}
-		else if ((localPlayer->prctMana > 33) && (nbrCloseEnemy >= 3) && Functions::IsSpellReady("Consecration")) {
+		else if ((localPlayer->prctMana > 33) && (nbrCloseEnemy >= 2) && Functions::IsSpellReady("Consecration")) {
 			//Consecration
 			Functions::CastSpellByName("Consecration");
 		}
@@ -88,13 +88,13 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Divine Protection"); Functions::CastSpellByName("Divine Shield");
 		return 0;
 	}
-	else if (Combat && isPlayer && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+	else if (Combat && isPlayer && (HpRatio < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
 		Functions::PlaceItem(120, "Healthstone");
 		Functions::UseAction(120);
 		return 0;
 	}
-	else if (Combat && isPlayer && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
+	else if (Combat && isPlayer && (HpRatio < 35) && (Functions::GetHPotionCD() < 1.25)) {
 		//Healing Potion
 		Functions::PlaceItem(120, "Healing Potion");
 		Functions::UseAction(120);

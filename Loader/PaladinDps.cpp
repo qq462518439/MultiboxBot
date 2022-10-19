@@ -64,7 +64,7 @@ static void PaladinAttack() {
 			Functions::CastSpellByName("Hammer of Wrath");
 		}
 	}
-	else if (Moving == 0 && !Combat && !IsSitting && IsInGroup) {
+	else if (!Combat && !IsSitting && IsInGroup) {
 		Functions::FollowMultibox("Nihal");
 	}
 }
@@ -104,13 +104,13 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Divine Protection"); Functions::CastSpellByName("Divine Shield");
 		return 0;
 	}
-	else if (Combat && isPlayer && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+	else if (Combat && isPlayer && (HpRatio < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
 		Functions::PlaceItem(120, "Healthstone");
 		Functions::UseAction(120);
 		return 0;
 	}
-	else if (Combat && isPlayer && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
+	else if (Combat && isPlayer && (HpRatio < 35) && (Functions::GetHPotionCD() < 1.25)) {
 		//Healing Potion
 		Functions::PlaceItem(120, "Healing Potion");
 		Functions::UseAction(120);

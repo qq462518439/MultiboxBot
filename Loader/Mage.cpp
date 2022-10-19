@@ -215,7 +215,7 @@ void ListAI::MageDps() {
 					Functions::CastSpellByName("Shoot");
 				}
 			}
-			else if (Moving == 0 && !Combat && !IsSitting && IsInGroup) {
+			else if (!Combat && !IsSitting && IsInGroup) {
 				Functions::FollowMultibox("Saelwyn");
 				Moving = 4;
 			}

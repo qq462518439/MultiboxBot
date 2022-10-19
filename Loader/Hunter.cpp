@@ -161,7 +161,7 @@ void ListAI::HunterDps() {
 					Functions::CastSpellByName("Multi-Shot");
 				}
 			}
-			else if (Moving == 0 && !Combat && !IsSitting && IsInGroup) {
+			else if (!Combat && !IsSitting && IsInGroup) {
 				Functions::FollowMultibox("Eydis");
 				Moving = 4;
 			}

@@ -7,8 +7,26 @@
 #include <iostream>
 #include <chrono>
 
+static bool infoB = false;
+static std::string playerName = "";
+
 void Game::MainLoop() {
 	while (Client::client_running == true) {
+		if (!infoB && Functions::GetPlayerGuid() > 0) {
+			ThreadSynchronizer::RunOnMainThread(
+				[]() {
+					playerName = Functions::UnitName("player");
+					playerClass = Functions::UnitClass("player");
+				}
+			);
+			std::string msg = ("Name " + playerName + " Class " + playerClass);
+			Client::sendMessage(msg);
+			infoB = true;
+		}
+		else if (infoB && Functions::GetPlayerGuid() == 0) {
+			infoB = false;
+			Client::sendMessage("Name Null Class Null");
+		}
 		while (Client::bot_running == true) {
 			if (Functions::GetPlayerGuid() > 0) { //in-game
 
@@ -28,7 +46,6 @@ void Game::MainLoop() {
 						Functions::EnumerateVisibleObjects(0);
 
 						playerClass = Functions::UnitClass("player");
-						playerRole = Functions::GetPlayerRole();
 
 						if(localPlayer != NULL) targetUnit = localPlayer->getTarget();
 
@@ -54,8 +71,9 @@ void Game::MainLoop() {
 						//Stop Drinking
 						IsSitting = false;
 						Functions::pressKey(0x28);
-						Functions::releaseKey(0x28);
 						Moving = 0;
+						Functions::releaseKey(0x28);
+						std::cout << "called\n";
 					}
 
 					Combat = localPlayer->flags & UNIT_FLAG_IN_COMBAT;
@@ -69,6 +87,11 @@ void Game::MainLoop() {
 
 					tankIndex = Functions::getTankIndex();
 
+					if (!infoB) {
+						std::string msg = "Name " + playerName + " Class " + playerClass;
+						Client::sendMessage(msg.c_str());
+						infoB = true;
+					}
 				}
 				else std::cout << "localPlayer NULL !\n";
 
@@ -91,13 +114,13 @@ void Game::MainLoop() {
 						Functions::releaseKey(0x28);
 						Moving = 0;
 					}
-					else if (targetUnit != NULL && Functions::PlayerIsRanged() && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && distTarget < 10.0f)) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (!targetUnit->isdead)) {
+					else if (targetUnit != NULL && Functions::PlayerIsRanged() && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && distTarget < 11.0f)) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (!targetUnit->isdead)) {
 						if (Moving == 4 && (distTarget < 30.0f)) {
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if ((distTarget < 12.0f) && (Moving == 0 || Moving == 1) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
+						else if ((distTarget < 11.0f) && (Moving == 0 || Moving == 1) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
 							if (localPlayer->speed == 0) {
 								Position oppositeDir = localPlayer->getOppositeDirection(targetUnit->position);
 								ThreadSynchronizer::RunOnMainThread([oppositeDir]() { localPlayer->ClickToMove(Move, targetUnit->Guid, oppositeDir); });
@@ -107,7 +130,7 @@ void Game::MainLoop() {
 						else if ((Moving == 0) && !IsFacing) {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 						}
-						else if ((distTarget < 10.0f) && (Moving == 0) && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && !hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
+						else if ((distTarget < 11.0f) && (Moving == 0) && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && !hasTargetAggro && playerClass == "Hunter") || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
 							Functions::pressKey(0x28);
 							Moving = 3;
 						}
@@ -115,7 +138,7 @@ void Game::MainLoop() {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 							Moving = 2;
 						}
-						else if (Moving == 1 && (distTarget > 12.0f || !(targetUnit->flags & UNIT_FLAG_CONFUSED) || targetUnit->speed > 0)) {
+						else if (Moving == 1 && (distTarget > 11.0f || !(targetUnit->flags & UNIT_FLAG_CONFUSED) || targetUnit->speed > 0)) {
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
@@ -125,7 +148,7 @@ void Game::MainLoop() {
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if (Moving == 3 && ((distTarget > 10.0f) || (!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed >= 7))) {
+						else if (Moving == 3 && ((distTarget > 11.0f) || (!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed >= 7))) {
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
@@ -167,8 +190,8 @@ void Game::MainLoop() {
 				if (localPlayer != NULL) {
 					if (playerClass == "Hunter") ListAI::HunterDps();
 					else if (playerClass == "Mage") ListAI::MageDps();
-					else if (playerClass == "Paladin" && playerRole == 1) ListAI::PaladinHeal();
-					else if (playerClass == "Paladin" && playerRole == 2) ListAI::PaladinTank();
+					else if (playerClass == "Paladin" && playerRole == 0) ListAI::PaladinHeal();
+					else if (playerClass == "Paladin" && playerRole == 1) ListAI::PaladinTank();
 					else if (playerClass == "Paladin") ListAI::PaladinDps();
 					else if (playerClass == "Rogue") ListAI::RogueDps();
 				}
@@ -176,6 +199,10 @@ void Game::MainLoop() {
 				end = std::chrono::high_resolution_clock::now();
 				float_ms = end - start;
 				std::cout << "Actions: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
+			}
+			else if (infoB) {
+				infoB = false;
+				Client::sendMessage("Name Null Class Null");
 			}
 			Sleep(300);
 		}

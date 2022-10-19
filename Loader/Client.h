@@ -11,7 +11,7 @@ class Client {
 		static bool client_running;
 		//Methods
 		static void ConnectToServer(const char* addr, int port);
-		static void sendMessage(const char* msg);
+		static void sendMessage(std::string msg);
 		static void recvMessage();
 		static void DisconnectClient();
 		static DWORD WINAPI MakeLoop(void* data);

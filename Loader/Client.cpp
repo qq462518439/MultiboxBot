@@ -20,15 +20,13 @@ char* subchar(char* txt, int begin, int end) {
 	return res;
 }
 
-void Client::sendMessage(const char* msg) {
-	//Send datasize
-	send(sock, std::to_string(strlen(msg)).c_str(), sizeof(strlen(msg)), 0);
+void Client::sendMessage(std::string msg) {
 	//Send message
-	send(sock, msg, strlen(msg), 0);
+	send(sock, msg.c_str(), msg.length(), 0);
 }
 
 void Client::recvMessage() {
-	char buffer[1024];
+	char buffer[128];
 	recv(sock, buffer, sizeof(buffer), 0);
 	if (strstr(buffer, "Bot:")) {
 		char* buffTmp = subchar(buffer, 5, 7);
@@ -40,6 +38,10 @@ void Client::recvMessage() {
 			bot_running = false;
 		}
 		std::cout << "Bot running: " << bot_running << "\n";
+	}
+	else if (strstr(buffer, "Spec:")) {
+		char* buffTmp = subchar(buffer, 6, 7);
+		playerRole = ((int)buffTmp[0] - '0');
 	}
 }
 
