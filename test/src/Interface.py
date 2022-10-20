@@ -322,6 +322,7 @@ class client_thread(threading.Thread):
         self.addr = addr
         self.index = index
         self.currentSpec = "Null"
+        self.specChoice = 0
        
     def run(self):
         interface.after(500, self.checkSpecChange)
@@ -369,7 +370,8 @@ class client_thread(threading.Thread):
                         interface.Specialisation_Menu[self.index]['menu'].delete(0, tk.END)
                         for option in interface.OptionList[self.index]:
                             interface.Specialisation_Menu[self.index]['menu'].add_command(label=option, command=tk._setit(interface.SpecialisationList[self.index], option))
-                        interface.SpecialisationList[self.index].set(interface.OptionList[self.index][0])
+                        if(Class != "Null"): interface.SpecialisationList[self.index].set(interface.OptionList[self.index][self.specChoice])
+                        else: interface.SpecialisationList[self.index].set(interface.OptionList[self.index][0])
                         interface.Name_Label[self.index].config(foreground="black")
                         interface.Class_Label[self.index].config(foreground=color)
                     #print("Client " + self.addr[0] + ":" + str(self.addr[1]) + " - message: " + data)
@@ -383,10 +385,12 @@ class client_thread(threading.Thread):
         
     def checkSpecChange(self):
         if(self.running):
-            if(self.currentSpec != interface.SpecialisationList[self.index].get()):
-                self.currentSpec = interface.SpecialisationList[self.index].get()
+            SpecTMP = interface.SpecialisationList[self.index].get()
+            if(self.currentSpec != SpecTMP):
+                self.currentSpec = SpecTMP
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):
+                        if(self.currentSpec != "Null"): self.specChoice = i
                         msg = ('Spec: '+str(i)+' ')
                         self.conn.send(bytes(msg, 'utf-8'))
             interface.after(500, self.checkSpecChange)

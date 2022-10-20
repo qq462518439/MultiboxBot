@@ -41,7 +41,7 @@ void Client::recvMessage() {
 	}
 	else if (strstr(buffer, "Spec:")) {
 		char* buffTmp = subchar(buffer, 6, 7);
-		playerRole = ((int)buffTmp[0] - '0');
+		playerSpec = ((int)buffTmp[0] - '0');
 	}
 }
 

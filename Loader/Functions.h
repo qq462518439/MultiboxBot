@@ -51,9 +51,10 @@ class Functions {
 		static void SellUselessItems(); static int GetItemQuality(int bag, int slot);
 		// === Buffs / Debuffs === //
 		static std::string UnitBuff(std::string target, int index);
-		static std::tuple<std::string, std::string> UnitDebuff(std::string target, int index);
+		static std::tuple<std::string, int, std::string> UnitDebuff(std::string target, int index);
 		static bool GetUnitBuff(std::string target, std::string texture);
 		static bool GetUnitDebuff(std::string target, std::string texture);
+		static int GetStackDebuff(std::string target, std::string texture);
 		static int GetBuffKey(std::string buffTexture, std::string buffTexture2 = "Null");
 		static bool GetUnitDispel(std::string target, std::string dispellType1, std::string dispellType2="Null", std::string dispellType3="Null");
 		static int GetDispelKey(std::string dispellType1, std::string dispellType2="Null", std::string dispellType3="Null");

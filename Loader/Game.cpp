@@ -73,7 +73,7 @@ void Game::MainLoop() {
 						Functions::pressKey(0x28);
 						Moving = 0;
 						Functions::releaseKey(0x28);
-						std::cout << "called\n";
+						//std::cout << "called\n";
 					}
 
 					Combat = localPlayer->flags & UNIT_FLAG_IN_COMBAT;
@@ -190,8 +190,8 @@ void Game::MainLoop() {
 				if (localPlayer != NULL) {
 					if (playerClass == "Hunter") ListAI::HunterDps();
 					else if (playerClass == "Mage") ListAI::MageDps();
-					else if (playerClass == "Paladin" && playerRole == 0) ListAI::PaladinHeal();
-					else if (playerClass == "Paladin" && playerRole == 1) ListAI::PaladinTank();
+					else if (playerClass == "Paladin" && playerSpec == 0) ListAI::PaladinHeal();
+					else if (playerClass == "Paladin" && playerSpec == 1) ListAI::PaladinTank();
 					else if (playerClass == "Paladin") ListAI::PaladinDps();
 					else if (playerClass == "Rogue") ListAI::RogueDps();
 				}
@@ -218,7 +218,7 @@ void Game::MainLoop() {
 int GroupMembersIndex[40];
 std::vector<unsigned long long> HasAggro[40];
 bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false;
-int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerRole = 3, tankIndex = 0;
+int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 3, tankIndex = 0;
 float distTarget = 0;
 std::string tarType = "party", playerClass = "null";
 std::vector<int> HealTargetArray;

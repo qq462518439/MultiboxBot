@@ -267,7 +267,7 @@ int Functions::GetBuffKey(int* IDs, int size) {
 
 bool Functions::PlayerIsRanged() {
 	if(playerClass == "Mage" || playerClass == "Priest" || playerClass == "Warlock" || playerClass == "Hunter"
-		|| (playerClass == "Druid" && (playerRole == 0 || playerRole == 2)) || (playerClass == "Paladin" && playerRole == 0 && bossFight) || (playerClass == "Shaman" && (playerRole == 0 || playerRole == 2))) return true;
+		|| (playerClass == "Druid" && (playerSpec == 0 || playerSpec == 2)) || (playerClass == "Paladin" && playerSpec == 0 && bossFight) || (playerClass == "Shaman" && (playerSpec == 0 || playerSpec == 2))) return true;
 	else return false;
 }
 
@@ -652,12 +652,13 @@ std::string Functions::UnitBuff(std::string target, int index) {
 	return texture;
 }
 
-std::tuple<std::string, std::string> Functions::UnitDebuff(std::string target, int index) {
-	std::string command = "texture,_,type = UnitDebuff(\"" + (std::string)target + "\", " + std::to_string(index) + ")";
+std::tuple<std::string, int, std::string> Functions::UnitDebuff(std::string target, int index) {
+	std::string command = "texture,count,type = UnitDebuff(\"" + (std::string)target + "\", " + std::to_string(index) + ")";
 	LuaCall(command.c_str());
 	char* texture = (char*)GetText("texture");
+	int count = GetIntFromChar((char*)GetText("count"));
 	char* type = (char*)GetText("type");
-	return std::make_tuple(texture, type);
+	return std::make_tuple(texture, count, type);
 }
 
 bool Functions::GetUnitBuff(std::string target, std::string texture) {
@@ -672,11 +673,20 @@ bool Functions::GetUnitBuff(std::string target, std::string texture) {
 bool Functions::GetUnitDebuff(std::string target, std::string texture) {
 	for (int i = 1; i <= 16; i++) {
 		std::string textname;
-		std::tie(textname, std::ignore) = UnitDebuff(target, i);
+		std::tie(textname, std::ignore, std::ignore) = UnitDebuff(target, i);
 		if (textname == texture) return true;
 		else if (textname == "") return false;
 	}
 	return false;
+}
+
+int Functions::GetStackDebuff(std::string target, std::string texture) {
+	for (int i = 1; i <= 16; i++) {
+		int count;
+		std::tie(std::ignore, count, std::ignore) = UnitDebuff(target, i);
+		return count;
+	}
+	return 0;
 }
 
 int Functions::GetBuffKey(std::string buffTexture, std::string buffTexture2) {
@@ -699,7 +709,7 @@ bool Functions::GetUnitDispel(std::string target, std::string dispellType1, std:
 	std::string args[3] = { dispellType1, dispellType2, dispellType3 };
 	for (int i = 1; i <= 16; i++) {
 		std::string debuffIcon, debuffType;
-		std::tie(debuffIcon, debuffType) = UnitDebuff(target, i);
+		std::tie(debuffIcon, std::ignore, debuffType) = UnitDebuff(target, i);
 		if (debuffIcon != "Interface\\Icons\\Spell_Frost_FrostArmor02") {
 			for (int y = 0; y < 3; y++) {
 				if (args[y] == debuffType) return true;
@@ -728,7 +738,7 @@ bool Functions::IsSlowed(std::string target) {
 	tab.push_back("Interface\\Icons\\Ability_Rogue_Trip");
 	for (int i = 1; i <= 16; i++) {
 		std::string debuff;
-		std::tie(debuff, std::ignore) = UnitDebuff(target, i);
+		std::tie(debuff, std::ignore, std::ignore) = UnitDebuff(target, i);
 		for (unsigned int y = 0; y < tab.size(); y++) {
 			if (debuff == tab[y]) return true;
 		}
@@ -745,7 +755,7 @@ bool Functions::IsRooted(std::string target) {
 	tab.push_back("Interface\\Icons\\Ability_Ensnare");
 	for (int i = 1; i <= 16; i++) {
 		std::string debuff;
-		std::tie(debuff, std::ignore) = UnitDebuff(target, i);
+		std::tie(debuff, std::ignore, std::ignore) = UnitDebuff(target, i);
 		for (unsigned int y = 0; y < tab.size(); y++) {
 			if (debuff == tab[y]) return true;
 		}
@@ -763,7 +773,7 @@ bool Functions::IsFeared(std::string target) {
 	tab.push_back("Interface\\Icons\\Ability_Physical_Taunt");
 	for (int i = 1; i <= 16; i++) {
 		std::string debuff;
-		std::tie(debuff, std::ignore) = UnitDebuff(target, i);
+		std::tie(debuff, std::ignore, std::ignore) = UnitDebuff(target, i);
 		for (unsigned int y = 0; y < tab.size(); y++) {
 			if (debuff == tab[y]) return true;
 		}
@@ -781,7 +791,7 @@ bool Functions::IsCharmed(std::string target) {
 	tab.push_back(std::make_pair("Interface\\Icons\\Spell_Shadow_GatherShadows", "Shadowfang Keep"));
 	for (int i = 1; i <= 16; i++) {
 		std::string debuff;
-		std::tie(debuff, std::ignore) = UnitDebuff(target, i);
+		std::tie(debuff, std::ignore, std::ignore) = UnitDebuff(target, i);
 		for (unsigned int y = 0; y < tab.size(); y++) {
 			if (debuff == tab[y].first && (tab[y].second == "" || tab[y].second == GetRealZoneText)) return true;
 		}

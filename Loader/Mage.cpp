@@ -3,10 +3,8 @@
 #include <iostream>
 
 static time_t current_time_polymorph = time(0);
-static time_t current_time_flamestrike = time(0);
 static float PolymorphInnerCD = 15;
 static float PolymorphTimer = 0;
-static float FlamestrikeTimer = 0;
 
 std::string GetSpellRank(std::string txt) {
 	std::string list[4] = { "Ruby", "Citrine", "Jade", "Agate" };
@@ -37,8 +35,6 @@ float GetManaStoneCD() {
 void ListAI::MageDps() {
 	PolymorphTimer = PolymorphInnerCD - (time(0) - current_time_polymorph);
 	if (PolymorphTimer < 0) PolymorphTimer = 0;
-	FlamestrikeTimer = 8.0f - (time(0) - current_time_flamestrike);
-	if (FlamestrikeTimer < 0) FlamestrikeTimer = 0;
 	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
 		int nbrAggro = HasAggro[0].size();
 		bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
@@ -160,12 +156,16 @@ void ListAI::MageDps() {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
 				bool targetStunned = targetUnit->flags & UNIT_FLAG_CONFUSED;
 				bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
-				if (targetPlayer && Functions::IsSpellReady("Cold Snap") && !Functions::IsSpellReady("Frost Nova") && !Functions::IsSpellReady("Ice Block")) {
+				if ((playerSpec == 2) && targetPlayer && Functions::IsSpellReady("Cold Snap") && !Functions::IsSpellReady("Frost Nova") && !Functions::IsSpellReady("Ice Block")) {
 					Functions::CastSpellByName("Cold Snap");
 				}
 				else if ((nbrCloseEnemy >= 3 || (nbrCloseEnemyFacing >= 1 && targetPlayer) || (nbrCloseEnemy >= 1 && !IsInGroup)) && Functions::IsSpellReady("Frost Nova")) {
 					//Frost Nova
 					Functions::CastSpellByName("Frost Nova");
+				}
+				else if ((playerSpec == 1) && (nbrCloseEnemy >= 3 || (nbrCloseEnemyFacing >= 1 && targetPlayer) || (nbrCloseEnemy >= 1 && !IsInGroup)) && Functions::IsSpellReady("Blast Wave")) {
+					//Blast Wave
+					Functions::CastSpellByName("Blast Wave");
 				}
 				else if ((nbrCloseEnemyFacing >= 3 || (nbrCloseEnemyFacing >= 1 && targetPlayer) || (nbrCloseEnemyFacing >= 1 && !IsInGroup)) && Functions::IsSpellReady("Cone of Cold")) {
 					//Cone of Cold
@@ -183,11 +183,10 @@ void ListAI::MageDps() {
 					if(localPlayer->isCasting()) current_time_polymorph = time(0);
 					localPlayer->SetTarget(firstTarget->Guid);
 				}
-				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && (FlamestrikeTimer == 0) && Functions::IsSpellReady("Flamestrike")) {
+				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && (playerSpec == 1) && Functions::IsSpellReady("Flamestrike")) {
 					//Flamestrike
 					Functions::CastSpellByName("Flamestrike");
 					Functions::ClickAOE(cluster_center);
-					if (localPlayer->isCasting()) current_time_flamestrike = time(0);
 				}
 				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && Functions::IsSpellReady("Blizzard")) {
 					//Blizzard
@@ -202,13 +201,25 @@ void ListAI::MageDps() {
 					//Fire Blast (Movement)
 					Functions::CastSpellByName("Fire Blast");
 				}
+				else if (IsFacing && (localPlayer->speed == 0) && (playerSpec == 1) && (Functions::GetStackDebuff("target", "Interface\\Icons\\Spell_Fire_Soulburn") < 5) && Functions::IsSpellReady("Scorch")) {
+					//Scorch
+					Functions::CastSpellByName("Scorch");
+				}
+				else if ((playerSpec == 1) && Functions::UnitIsElite("target") && Functions::IsSpellReady("Combustion")) {
+					//Combustion
+					Functions::CastSpellByName("Combustion");
+				}
+				else if ((playerSpec == 1) && Functions::GetUnitBuff("player", "Interface\\Icons\\Spell_Fire_SealOfFire") && Functions::IsSpellReady("Pyroblast")) {
+					//Pyroblast
+					Functions::CastSpellByName("Pyroblast");
+				}
+				else if (IsFacing && (localPlayer->speed == 0) && (playerSpec == 1) && Functions::IsSpellReady("Fireball")) {
+					//Fireball
+					Functions::CastSpellByName("Fireball");
+				}
 				else if (IsFacing && (localPlayer->speed == 0) && Functions::IsSpellReady("Frostbolt")) {
 					//Frostbolt
 					Functions::CastSpellByName("Frostbolt");
-				}
-				else if (IsFacing && (localPlayer->speed == 0) && Functions::IsSpellReady("Fireball")) {
-					//Fireball
-					Functions::CastSpellByName("Fireball");
 				}
 				else if (IsFacing && (localPlayer->speed == 0) && Functions::HasWandEquipped() && !Functions::IsAutoRepeatAction(Functions::GetSlot("Shoot"))) {
 					//Wand
