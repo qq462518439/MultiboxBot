@@ -399,21 +399,19 @@ class client_thread(threading.Thread):
             SpecTMP = interface.SpecialisationList[self.index].get()
             if(self.currentSpec != SpecTMP):
                 if(isATank(self.Class, self.currentSpec) and not isATank(self.Class, SpecTMP)): #Was a Tank but changed
-                    self.currentSpec = SpecTMP; msg = ""
+                    self.currentSpec = SpecTMP; msg = "null"
                     for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5): #Who is a Tank in group
                         if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                             msg = ('Tank: '+interface.serverthread.clients_thread[i].Name)
-                    if(msg != ""): #If there is one then change
-                        for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
-                            interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
+                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
+                        interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
                 elif(isAMelee(self.Class, self.currentSpec) and not isAMelee(self.Class, SpecTMP)): #Was a Melee but changed
-                    self.currentSpec = SpecTMP; msg = ""
+                    self.currentSpec = SpecTMP; msg = "null"
                     for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5): #Who is a Melee in group
                         if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                             msg = ('Melee: '+interface.serverthread.clients_thread[i].Name)
-                    if(msg != ""): #If there is one then change
-                        for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
-                            interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
+                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
+                        interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
                 self.currentSpec = SpecTMP
                 if(isATank(self.Class, self.currentSpec)): #Is now a Tank
                     msg = ('Tank: '+self.Name)

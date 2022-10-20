@@ -56,7 +56,7 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
     position = Position(x, y, z);
 
     int health = *(int*)(descriptor + HEALTH_OFFSET);
-    isdead = false; if (health <= 1) isdead = true;
+    isdead = false; if ((objType == Player && health <= 1) || (objType == Unit && health <= 0)) isdead = true;
     int max_health = *(int*)(descriptor + MAX_HEALTH_OFFSET);
     prctHP = ((float)health / (float)max_health) * 100;
     int max_mana = *(int*)(descriptor + MAXPOWER1_OFFSET);

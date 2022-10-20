@@ -7,7 +7,8 @@ static int LastTarget = 0;
 static void PaladinAttack() {
 	for(int i = NumGroupMembers; i >= 0; i--) {
 		if (HasAggro[i].size() > 0) {
-			localPlayer->SetTarget(HasAggro[i][0]);
+			if((i > 0) || (i == 0 && (targetUnit == NULL || targetUnit->unitReaction > Neutral || targetUnit->isdead)))
+				localPlayer->SetTarget(HasAggro[i][0]);
 			break;
 		}
 	}
@@ -30,7 +31,7 @@ static void PaladinAttack() {
 			//Seal of Righteousness
 			Functions::CastSpellByName("Seal of Righteousness");
 		}
-		else if ((localPlayer->prctMana > 33) && (nbrCloseEnemy >= 2) && Functions::IsSpellReady("Consecration")) {
+		else if ((nbrCloseEnemy >= 2) && Functions::IsSpellReady("Consecration")) {
 			//Consecration
 			Functions::CastSpellByName("Consecration");
 		}

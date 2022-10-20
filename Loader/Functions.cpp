@@ -594,7 +594,7 @@ bool Functions::HasHPotion() {
 float Functions::GetHPotionCD() {
 	int listID[6] = { 118, 858, 929, 1710, 3928, 13446 };
 	for (int i = 0; i < 6; i++) {
-		if (GetItemCount(listID[i] > 0)) return GetItemCooldownDuration(listID[i]);
+		if (GetItemCount(listID[i]) > 0) return GetItemCooldownDuration(listID[i]);
 	}
 	return 99999;
 }
@@ -614,7 +614,7 @@ bool Functions::HasMPotion() {
 float Functions::GetMPotionCD() {
 	int listID[6] = { 2455, 3385, 3827, 6149, 13443, 13444 };
 	for (int i = 0; i < 6; i++) {
-		if (GetItemCount(listID[i] > 0)) return GetItemCooldownDuration(listID[i]);
+		if (GetItemCount(listID[i]) > 0) return GetItemCooldownDuration(listID[i]);
 	}
 	return 99999;
 }
