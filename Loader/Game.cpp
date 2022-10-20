@@ -63,8 +63,7 @@ void Game::MainLoop() {
 
 					distTarget = 0;
 					if (targetUnit != NULL) distTarget = localPlayer->position.DistanceTo(targetUnit->position);
-
-					IsSitting = false;
+					
 					int drinkingIDs[15] = { 430, 431, 432, 1133, 1135, 1137, 24355, 25696, 26261, 26402, 26473, 26475, 29007, 10250, 22734 };
 					if (localPlayer->hasBuff(drinkingIDs, 15)) IsSitting = true;
 					else if (IsSitting) {
