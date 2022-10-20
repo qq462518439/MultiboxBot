@@ -272,11 +272,8 @@ bool Functions::PlayerIsRanged() {
 }
 
 int Functions::getTankIndex() {
-	std::string tankNames[2] = { "Nihal", "Sapphire" };
 	for (int i = 1; i <= NumGroupMembers; i++) {
-		for (int y = 0; y < 2; y++) {
-			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].name == tankNames[y]) return i;
-		}
+		if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].name == tankName) return i;
 	}
 	return 0;
 }
@@ -993,12 +990,9 @@ int Functions::GetPlayerRole() {
 }
 
 std::string Functions::GetTank() {
-	std::string listTank[2] = { "Nihal", "Sapphire" };
 	for (int i = 1; i <= NumGroupMembers; i++) {
-		for (int y = 0; y < 2; y++) {
-			if (UnitName(tarType + std::to_string(i)) == listTank[y])
-				return tarType + std::to_string(i);
-		}
+		if (UnitName(tarType + std::to_string(i)) == tankName)
+			return tarType + std::to_string(i);
 	}
 	return "";
 }

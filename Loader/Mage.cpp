@@ -226,8 +226,8 @@ void ListAI::MageDps() {
 					Functions::CastSpellByName("Shoot");
 				}
 			}
-			else if (!Combat && !IsSitting && IsInGroup) {
-				Functions::FollowMultibox("Saelwyn");
+			else if (!Combat && !IsSitting && IsInGroup && meleeName != "null") {
+				Functions::FollowMultibox(meleeName);
 				Moving = 4;
 			}
 		} );

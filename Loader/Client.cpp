@@ -43,6 +43,22 @@ void Client::recvMessage() {
 		char* buffTmp = subchar(buffer, 6, 7);
 		playerSpec = ((int)buffTmp[0] - '0');
 	}
+	else if (strstr(buffer, "Tank:")) {
+		char* buffTmp = subchar(buffer, 6, 25);
+		int y = 0;
+		for (unsigned int i = 0; i < strlen(buffTmp); i++) {
+			if ((buffTmp[i] >= 'a' && buffTmp[i] <= 'z') || (buffTmp[i] >= 'A' && buffTmp[i] <= 'Z')) y++;
+		}
+		tankName = subchar(buffTmp, 0, y);
+	}
+	else if (strstr(buffer, "Melee:")) {
+		char* buffTmp = subchar(buffer, 7, 25);
+		int y = 0;
+		for (unsigned int i = 0; i < strlen(buffTmp); i++) {
+			if ((buffTmp[i] >= 'a' && buffTmp[i] <= 'z') || (buffTmp[i] >= 'A' && buffTmp[i] <= 'Z')) y++;
+		}
+		meleeName = subchar(buffTmp, 0, y);
+	}
 }
 
 void Client::ConnectToServer(const char* addr, int port) {

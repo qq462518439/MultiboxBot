@@ -71,9 +71,8 @@ void Game::MainLoop() {
 						//Stop Drinking
 						IsSitting = false;
 						Functions::pressKey(0x28);
-						Moving = 0;
 						Functions::releaseKey(0x28);
-						//std::cout << "called\n";
+						Moving = 0;
 					}
 
 					Combat = localPlayer->flags & UNIT_FLAG_IN_COMBAT;
@@ -220,7 +219,7 @@ std::vector<unsigned long long> HasAggro[40];
 bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false;
 int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 3, tankIndex = 0;
 float distTarget = 0;
-std::string tarType = "party", playerClass = "null";
+std::string tarType = "party", playerClass = "null", tankName = "null", meleeName = "null";
 std::vector<int> HealTargetArray;
 std::vector<int> listIndexCloseEnemies;
 WoWUnit* ccTarget = NULL; WoWUnit* targetUnit = NULL;

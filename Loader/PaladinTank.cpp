@@ -5,15 +5,13 @@
 static int LastTarget = 0;
 
 static void PaladinAttack() {
-	if (targetUnit == NULL || targetUnit->unitReaction > Neutral || targetUnit->isdead) {
-		for(int i = NumGroupMembers; i >= 0; i--) {
-			if (HasAggro[i].size() > 0) {
-				localPlayer->SetTarget(HasAggro[i][0]);
-				break;
-			}
+	for(int i = NumGroupMembers; i >= 0; i--) {
+		if (HasAggro[i].size() > 0) {
+			localPlayer->SetTarget(HasAggro[i][0]);
+			break;
 		}
 	}
-	else if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
+	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SoRIDs[9] = { 20154, 21084, 20287, 20288, 20289, 20290, 20291, 20292, 20293 };
@@ -116,7 +114,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if ((nbrAggro == 0 || nbrEnemyPlayer > 0) && (distAlly < 40.0f) && (HpRatio < 25) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
+	else if (!Combat && (distAlly < 40.0f) && (HpRatio < 80) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
 		//Flash of Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash of Light");
@@ -124,7 +122,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if ((nbrAggro == 0 || nbrEnemyPlayer > 0) && (distAlly < 40.0f) && (HpRatio < 40) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
+	else if (!Combat && (distAlly < 40.0f) && (HpRatio < 50) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
 		//Holy Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Holy Light");
@@ -138,7 +136,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 void ListAI::PaladinTank() {
 	int FoLIDs[6] = { 19750, 19939, 19940, 19941, 19942, 19943 };
 	int holyLightIDs[9] = { 635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292 };
-	if ((localPlayer->isCasting(holyLightIDs, 9) && (ListUnits[LastTarget].prctHP > 60)) || (localPlayer->isCasting(FoLIDs, 6) && (ListUnits[LastTarget].prctHP > 80))) {
+	if ((localPlayer->isCasting(holyLightIDs, 9) && (ListUnits[LastTarget].prctHP > 80)) || (localPlayer->isCasting(FoLIDs, 6) && (ListUnits[LastTarget].prctHP > 95))) {
 		Functions::pressKey(0x28);
 		Functions::releaseKey(0x28);
 	}

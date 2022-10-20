@@ -313,6 +313,15 @@ class Interface(tk.Tk):
 
 def rgb_hack(rgb):
     return "#%02x%02x%02x" % rgb 
+    
+def isATank(Class, Spec):
+    if(Spec == "Protection" or Spec == "Feral"): return True
+    else: return False
+    
+def isAMelee(Class, Spec):
+    if(not isATank(Class, Spec) and (Class == "Warrior" or Class == "Rogue" or (Class == "Paladin" and Spec == "Retribution") or (Class == "Shaman" and Spec == "Enhancement"))):
+        return True
+    else: return False
 
 class client_thread(threading.Thread):
     def __init__(self, index, conn, addr):
@@ -323,6 +332,8 @@ class client_thread(threading.Thread):
         self.index = index
         self.currentSpec = "Null"
         self.specChoice = 0
+        self.Name = ""
+        self.Class = ""
        
     def run(self):
         interface.after(500, self.checkSpecChange)
@@ -333,44 +344,44 @@ class client_thread(threading.Thread):
                     data = data.decode('utf-8')
                     ind = data.find("Class")
                     if(ind > -1):
-                        Name = data[5:ind]
-                        Class = data[ind+6::]
-                        interface.Name_Label[self.index].config(text=Name)
-                        interface.Class_Label[self.index].config(text=Class)
-                        if(Class == "Druid"):
+                        self.Name = data[5:ind]
+                        self.Class = data[ind+6::]
+                        interface.Name_Label[self.index].config(text=self.Name)
+                        interface.Class_Label[self.index].config(text=self.Class)
+                        if(self.Class == "Druid"):
                             interface.OptionList[self.index] = ['Balance', 'Feral', 'Restoration']
                             color = "orange"
-                        elif(Class == "Hunter"):
+                        elif(self.Class == "Hunter"):
                             interface.OptionList[self.index] = ['Beast Mastery', 'Marksmanship', 'Survival']
                             color = "green"
-                        elif(Class == "Mage"):
+                        elif(self.Class == "Mage"):
                             interface.OptionList[self.index] = ['Arcane', 'Fire', 'Frost']
                             color = rgb_hack((0, 210, 255))
-                        elif(Class == "Paladin"):
+                        elif(self.Class == "Paladin"):
                             interface.OptionList[self.index] = ['Holy', 'Protection', 'Retribution']
                             color = rgb_hack((255, 0, 122))
-                        elif(Class == "Priest"):
+                        elif(self.Class == "Priest"):
                             interface.OptionList[self.index] = ['Discipline', 'Holy', 'Shadow']
                             color = rgb_hack((210, 210, 210))
-                        elif(Class == "Rogue"):
+                        elif(self.Class == "Rogue"):
                             interface.OptionList[self.index] = ['Assassination', 'Combat', 'Subtlety']
                             color = rgb_hack((255, 210, 0))
-                        elif(Class == "Shaman"):
+                        elif(self.Class == "Shaman"):
                             interface.OptionList[self.index] = ['Elemental', 'Enhancement', 'Restoration']
                             color = "blue"
-                        elif(Class == "Warlock"):
+                        elif(self.Class == "Warlock"):
                             interface.OptionList[self.index] = ['Affliction', 'Demonology', 'Destruction']
                             color = "purple"
-                        elif(Class == "Warrior"):
+                        elif(self.Class == "Warrior"):
                             interface.OptionList[self.index] = ['Arms', 'Fury', 'Protection']
                             color = "brown" 
-                        elif(Class == "Null"):
+                        elif(self.Class == "Null"):
                             interface.OptionList[self.index] = ['Null'] 
                             color = "grey"
                         interface.Specialisation_Menu[self.index]['menu'].delete(0, tk.END)
                         for option in interface.OptionList[self.index]:
                             interface.Specialisation_Menu[self.index]['menu'].add_command(label=option, command=tk._setit(interface.SpecialisationList[self.index], option))
-                        if(Class != "Null"): interface.SpecialisationList[self.index].set(interface.OptionList[self.index][self.specChoice])
+                        if(self.Class != "Null"): interface.SpecialisationList[self.index].set(interface.OptionList[self.index][self.specChoice])
                         else: interface.SpecialisationList[self.index].set(interface.OptionList[self.index][0])
                         interface.Name_Label[self.index].config(foreground="black")
                         interface.Class_Label[self.index].config(foreground=color)
@@ -387,7 +398,31 @@ class client_thread(threading.Thread):
         if(self.running):
             SpecTMP = interface.SpecialisationList[self.index].get()
             if(self.currentSpec != SpecTMP):
+                if(isATank(self.Class, self.currentSpec) and not isATank(self.Class, SpecTMP)): #Was a Tank but changed
+                    self.currentSpec = SpecTMP; msg = ""
+                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5): #Who is a Tank in group
+                        if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                            msg = ('Tank: '+interface.serverthread.clients_thread[i].Name)
+                    if(msg != ""): #If there is one then change
+                        for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
+                            interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
+                elif(isAMelee(self.Class, self.currentSpec) and not isAMelee(self.Class, SpecTMP)): #Was a Melee but changed
+                    self.currentSpec = SpecTMP; msg = ""
+                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5): #Who is a Melee in group
+                        if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                            msg = ('Melee: '+interface.serverthread.clients_thread[i].Name)
+                    if(msg != ""): #If there is one then change
+                        for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
+                            interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
                 self.currentSpec = SpecTMP
+                if(isATank(self.Class, self.currentSpec)): #Is now a Tank
+                    msg = ('Tank: '+self.Name)
+                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
+                        interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
+                elif(isAMelee(self.Class, self.currentSpec)): #Is now a Melee
+                    msg = ('Melee: '+self.Name)
+                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
+                        interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):
                         if(self.currentSpec != "Null"): self.specChoice = i

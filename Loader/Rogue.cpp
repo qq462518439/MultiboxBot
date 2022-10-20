@@ -101,6 +101,9 @@ void ListAI::RogueDps() {
 					Functions::CastSpellByName("Sinister Strike");
 				}
 			}
+			else if (!Combat && !IsSitting && IsInGroup && tankName != "null") {
+				Functions::FollowMultibox(tankName);
+			}
 		});
 	}
 }

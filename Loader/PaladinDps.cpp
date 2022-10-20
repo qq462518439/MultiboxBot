@@ -64,8 +64,8 @@ static void PaladinAttack() {
 			Functions::CastSpellByName("Hammer of Wrath");
 		}
 	}
-	else if (!Combat && !IsSitting && IsInGroup) {
-		Functions::FollowMultibox("Nihal");
+	else if (!Combat && !IsSitting && IsInGroup && tankName != "null") {
+		Functions::FollowMultibox(tankName);
 	}
 }
 
