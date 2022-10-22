@@ -32,7 +32,6 @@ void ListAI::HunterDps() {
 			if (!Functions::HasPetUI() && Functions::IsPlayerSpell("Call Pet")) {
 				//Call Pet
 				Functions::CastSpellByName("Call Pet");
-				Functions::PlaceItem(120, Functions::HasMeat()); Functions::UseAction(120);
 			}
 			else if (Functions::UnitIsDeadOrGhost("pet") && Functions::IsSpellReady("Revive Pet")) {
 				//Revive Pet
@@ -49,18 +48,15 @@ void ListAI::HunterDps() {
 			}
 			else if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 				//Healthstone
-				Functions::PlaceItem(120, "Healthstone");
-				Functions::UseAction(120);
+				Functions::UseItem("Healthstone");
 			}
 			else if (Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
 				//Healing Potion
-				Functions::PlaceItem(120, "Healing Potion");
-				Functions::UseAction(120);
+				Functions::UseItem("Healing Potion");
 			}
 			else if (Combat && (localPlayer->prctMana < 10) && (Functions::GetMPotionCD() < 1.25)) {
 				//Mana Potion
-				Functions::PlaceItem(120, "Mana Potion");
-				Functions::UseAction(120);
+				Functions::UseItem("Mana Potion");
 			}
 			else if ((nbrEnemyPlayer == 0) && (nbrAggro > 0) && IsInGroup && Functions::IsSpellReady("Feign Death")) {
 				//Feign Death (Aggro PvE)

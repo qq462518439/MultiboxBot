@@ -31,13 +31,11 @@ void ListAI::RogueDps() {
 
 			if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 				//Healthstone
-				Functions::PlaceItem(120, "Healthstone");
-				Functions::UseAction(120);
+				Functions::UseItem("Healthstone");
 			}
 			else if (Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
 				//Healing Potion
-				Functions::PlaceItem(120, "Healing Potion");
-				Functions::UseAction(120);
+				Functions::UseItem("Healing Potion");
 			}
 			else if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && !targetUnit->isdead) {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;

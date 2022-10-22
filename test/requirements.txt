@@ -3,4 +3,3 @@ pillow
 pynput
 numpy
 mouse
-playsound

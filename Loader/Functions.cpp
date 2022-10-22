@@ -377,7 +377,7 @@ int Functions::GetPetHappiness() {
 
 void Functions::SellUselessItems() {
 	for (int i = 0; i <= 4; i++) {
-		for (int y = 1; y < GetContainerNumSlots(i); y++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
 			if (GetItemQuality(i, y) == 0) {
 				std::string command = "UseContainerItem(" + std::to_string(i) + ", " + std::to_string(y) + ")";
 				LuaCall(command.c_str());
@@ -399,7 +399,7 @@ float Functions::GetTime() {
 
 float Functions::GetItemCooldownDuration(int item_id) {
 	for (int i = 0; i <= 4; i++) {
-		for (int y = 1; y < GetContainerNumSlots(i); y++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
 			std::string item_link = GetContainerItemLink(i, y);
 			int link_nbr = GetIntFromChar(item_link.c_str());
 			if (link_nbr == item_id) {
@@ -468,7 +468,7 @@ std::string Functions::GetContainerItemLink(int bag, int slot) {
 
 bool Functions::IsInventoryFull() {
 	for (int i = 0; i <= 4; i++) {
-		for (int y = 1; y < GetContainerNumSlots(i); y++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
 			std::string texture;
 			std::tie(texture, std::ignore) = GetContainerItemInfo(i, y);
 			if (texture == "") return false;
@@ -481,7 +481,7 @@ int Functions::GetItemCount(std::string item_info) {
 	//Trouve par le nom la quantité d'item similaire dans l'inventaire
 	int total = 0;
 	for (int i = 0; i <= 4; i++) {
-		for (int y = 1; y < GetContainerNumSlots(i); y++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
 			std::string item_link = GetContainerItemLink(i, y);
 			if (item_link.find(item_info) != std::string::npos) {
 				int itemCount;
@@ -497,7 +497,7 @@ int Functions::GetItemCount(int item_id) {
 	//Trouve par l'ID la quantité d'item similaire dans l'inventaire
 	int total = 0;
 	for (int i = 0; i <= 4; i++) {
-		for (int y = 1; y < GetContainerNumSlots(i); y++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
 			std::string item_link = GetContainerItemLink(i, y);
 			int link_nbr = GetIntFromChar(item_link.c_str());
 			if (link_nbr == item_id) {
@@ -525,9 +525,22 @@ int Functions::GetItemQuality(int bag, int slot) {
 
 void Functions::PickupItem(std::string item_info) {
 	for (int i = 0; i <= 4; i++) {
-		for (int y = 1; y < GetContainerNumSlots(i); y++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
 			std::string item_link = GetContainerItemLink(i, y);
 			if (item_link.find(item_info) != std::string::npos) {
+				std::string command = "PickupContainerItem(" + std::to_string(i) + ", " + std::to_string(y) + ")";
+				LuaCall(command.c_str());
+			}
+		}
+	}
+}
+
+void Functions::PickupItem(int item_id) {
+	for (int i = 0; i <= 4; i++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
+			std::string item_link = GetContainerItemLink(i, y);
+			int link_nbr = GetIntFromChar(item_link.c_str());
+			if (link_nbr == item_id) {
 				std::string command = "PickupContainerItem(" + std::to_string(i) + ", " + std::to_string(y) + ")";
 				LuaCall(command.c_str());
 			}
@@ -542,24 +555,38 @@ void Functions::PlaceItem(int slot, std::string itemName) {
 	LuaCall((command + " ClearCursor()").c_str());
 }
 
-void Functions::PickupItem(int item_id) {
+void Functions::PlaceItem(int slot, int item_id) {
+	//Place l'objet dans le slot indiqué
+	PickupItem(item_id);
+	std::string command = "PlaceAction(" + std::to_string(slot) + ")";
+	LuaCall((command + " ClearCursor()").c_str());
+}
+
+void Functions::UseItem(std::string item_info) {
+	//Use the indicated item
 	for (int i = 0; i <= 4; i++) {
-		for (int y = 1; y < GetContainerNumSlots(i); y++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
 			std::string item_link = GetContainerItemLink(i, y);
-			int link_nbr = GetIntFromChar(item_link.c_str());
-			if (link_nbr == item_id) {
-				std::string command = "PickupContainerItem(" + std::to_string(i) + ", " + std::to_string(y) + ")";
+			if (item_link.find(item_info) != std::string::npos) {
+				std::string command = "UseContainerItem(" + std::to_string(i) + ", " + std::to_string(y) + ")";
 				LuaCall(command.c_str());
 			}
 		}
 	}
 }
 
-void Functions::PlaceItem(int slot, int item_id) {
-	//Place l'objet dans le slot indiqué
-	PickupItem(item_id);
-	std::string command = "PlaceAction(" + std::to_string(slot) + ")";
-	LuaCall((command + " ClearCursor()").c_str());
+void Functions::UseItem(int item_id) {
+	//Use the indicated item
+	for (int i = 0; i <= 4; i++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
+			std::string item_link = GetContainerItemLink(i, y);
+			int link_nbr = GetIntFromChar(item_link.c_str());
+			if (link_nbr == item_id) {
+				std::string command = "UseContainerItem(" + std::to_string(i) + ", " + std::to_string(y) + ")";
+				LuaCall(command.c_str());
+			}
+		}
+	}
 }
 
 int Functions::HasDrink() {
@@ -594,9 +621,10 @@ bool Functions::HasHPotion() {
 float Functions::GetHPotionCD() {
 	int listID[6] = { 118, 858, 929, 1710, 3928, 13446 };
 	for (int i = 0; i < 6; i++) {
-		if (GetItemCount(listID[i]) > 0) return GetItemCooldownDuration(listID[i]);
+		float CD = GetItemCooldownDuration(listID[i]);
+		if (CD < 999) return CD;
 	}
-	return 99999;
+	return 999;
 }
 
 bool Functions::HasMPotion() {
@@ -614,9 +642,10 @@ bool Functions::HasMPotion() {
 float Functions::GetMPotionCD() {
 	int listID[6] = { 2455, 3385, 3827, 6149, 13443, 13444 };
 	for (int i = 0; i < 6; i++) {
-		if (GetItemCount(listID[i]) > 0) return GetItemCooldownDuration(listID[i]);
+		float CD = GetItemCooldownDuration(listID[i]);
+		if (CD < 999) return CD;
 	}
-	return 99999;
+	return 999;
 }
 
 bool Functions::HasHealthstone() {
@@ -631,11 +660,12 @@ bool Functions::HasHealthstone() {
 }
 
 float Functions::GetHealthstoneCD() {
-	int listID[15] = {5512, 19004, 19005, 5511, 19006, 19007, 5509, 19008, 19009, 5510, 19010, 19011, 9421, 19012, 19013};
+	int listID[15] = { 5512, 19004, 19005, 5511, 19006, 19007, 5509, 19008, 19009, 5510, 19010, 19011, 9421, 19012, 19013 };
 	for (int i = 0; i < 15; i++) {
-		if (GetItemCount(listID[i] > 0)) return GetItemCooldownDuration(listID[i]);
+		float CD = GetItemCooldownDuration(listID[i]);
+		if (CD < 999) return CD;
 	}
-	return 99999;
+	return 999;
 }
 
 //======================================================================//

@@ -84,21 +84,19 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		}
 		else return 1;
 	}
-	else if (Combat && isPlayer && (HpRatio < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
+	else if (Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
 		//Divine Protection / Divine Shield
 		Functions::CastSpellByName("Divine Protection"); Functions::CastSpellByName("Divine Shield");
 		return 0;
 	}
-	else if (Combat && isPlayer && (HpRatio < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+	else if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
-		Functions::PlaceItem(120, "Healthstone");
-		Functions::UseAction(120);
+		Functions::UseItem("Healthstone");
 		return 0;
 	}
-	else if (Combat && isPlayer && (HpRatio < 35) && (Functions::GetHPotionCD() < 1.25)) {
+	else if (Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
 		//Healing Potion
-		Functions::PlaceItem(120, "Healing Potion");
-		Functions::UseAction(120);
+		Functions::UseItem("Healing Potion");
 		return 0;
 	}
 	else if (Combat && isParty && (HpRatio < 20) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
@@ -218,8 +216,7 @@ void ListAI::PaladinHeal() {
 			}
 			else if (Combat && (localPlayer->prctMana < 10) && (Functions::GetMPotionCD() < 1.25)) {
 				//Mana Potion
-				Functions::PlaceItem(120, "Mana Potion");
-				Functions::UseAction(120);
+				Functions::UseItem("Mana Potion");
 			}
 			else if ((localPlayer->prctMana > 25) && Functions::GetUnitDispel("player", "Disease", "Poison") && Functions::IsSpellReady("Purify")) {
 				//Purify (self)
@@ -243,8 +240,7 @@ void ListAI::PaladinHeal() {
 			}
 			else if (!Combat && (localPlayer->speed == 0) && !IsSitting && (localPlayer->prctMana < 33) && (Functions::HasDrink() > 0)) {
 				//Drink
-				Functions::PlaceItem(120, Functions::HasDrink());
-				Functions::UseAction(120);
+				Functions::UseItem(Functions::HasDrink());
 			}
 			else {
 				int tmp = 1; unsigned int index = 0;

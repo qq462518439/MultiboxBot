@@ -43,8 +43,10 @@ class Functions {
 		static int GetItemCount(int item_info);
 		static void PickupItem(std::string item_info);
 		static void PickupItem(int item_id);
-		static void PlaceItem(int slot, std::string itemName);
-		static void PlaceItem(int slot, int item_id);
+		static void PlaceItem(int slot, std::string item_info);
+		static void PlaceItem(int slot, int item_info);
+		static void UseItem(std::string itemName);
+		static void UseItem(int item_id);
 		static int HasDrink(); static int HasMeat();
 		static bool HasHPotion(); static bool HasMPotion(); static bool HasHealthstone();
 		static float GetHPotionCD(); static float GetMPotionCD(); static float GetHealthstoneCD();

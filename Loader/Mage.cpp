@@ -25,11 +25,10 @@ bool HasManaStone() {
 float GetManaStoneCD() {
 	int listID[4] = { 5514, 5513, 8007, 8008 };
 	for (int i = 0; i < 4; i++) {
-		if (Functions::GetItemCount(listID[i]) > 0) {
-			return Functions::GetItemCooldownDuration(listID[i]);
-		}
+		float CD = Functions::GetItemCooldownDuration(listID[i]);
+		if(CD < 999) return CD;
 	}
-	return 99999;
+	return 999;
 }
 
 void ListAI::MageDps() {
@@ -105,8 +104,7 @@ void ListAI::MageDps() {
 			}
 			else if (!Combat && (localPlayer->speed == 0) && !IsSitting && (localPlayer->prctMana < 33) && (Functions::HasDrink() > 0)) {
 				//Drink
-				Functions::PlaceItem(120, Functions::HasDrink());
-				Functions::UseAction(120);
+				Functions::UseItem(Functions::HasDrink());
 			}
 			else if (!IceBarrierBuff && Functions::IsSpellReady("Ice Barrier")) {
 				//Ice Barrier
@@ -118,18 +116,15 @@ void ListAI::MageDps() {
 			}
 			else if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 				//Healthstone
-				Functions::PlaceItem(120, "Healthstone");
-				Functions::UseAction(120);
+				Functions::UseItem("Healthstone");
 			}
 			else if (Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
 				//Healing Potion
-				Functions::PlaceItem(120, "Healing Potion");
-				Functions::UseAction(120);
+				Functions::UseItem("Healing Potion");
 			}
 			else if (Combat && (localPlayer->prctMana < 15) && (GetManaStoneCD() < 1.25)) {
 				//Mana Stone
-				Functions::PlaceItem(120, "Mana ");
-				Functions::UseAction(120);
+				Functions::UseItem("Mana ");
 			}
 			else if (Combat && (localPlayer->speed == 0) && (localPlayer->prctMana < 15) && (nbrCloseEnemy == 0) && Functions::IsSpellReady("Evocation")) {
 				//Evocation
@@ -137,8 +132,7 @@ void ListAI::MageDps() {
 			}
 			else if (Combat && (localPlayer->prctMana < 10) && (Functions::GetMPotionCD() < 1.25)) {
 				//Mana Potion
-				Functions::PlaceItem(120, "Mana Potion");
-				Functions::UseAction(120);
+				Functions::UseItem("Mana Potion");
 			}
 			else if (Functions::GetUnitDispel("player", "Curse") && Functions::IsSpellReady("Remove Lesser Curse")) {
 				//Remove Lesser Curse (self)

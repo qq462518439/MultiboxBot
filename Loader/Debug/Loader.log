@@ -14,7 +14,7 @@ C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp
   PaladinHeal.cpp
   PaladinTank.cpp
   Rogue.cpp
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Rogue.cpp(83,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Rogue.cpp(81,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Warlock.cpp
   WoWObject.cpp
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\WoWObject.cpp(138,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
