@@ -2,13 +2,38 @@
 
 ## Table of contents
 * [General infos](#general-infos)
-* [Requirements](#requirements)
-* [MultiboxBot 1.12.1](#multiboxbot-1121)
+* [Requirements and compilation](#requirements-and-compilation)
 
 ## General Infos
 
-A bot for multiboxing on WoW with up to 25 accounts using DLL injection, hooking and sockets.
+MultiboxBot is an **in-process** bot for multiboxing on WoW 1.12.1 with up to 25 accounts using DLL injection, hooking and sockets.
 
-**WARNING: This project is still in development, I am planing on improving the interface a lot and adding options for the user in order to set up the perfect team !!**
+This project is the continuation of the **out-of-process** project <a href=https://github.com/Serenalyw/PixelBot>PixelBot</a>.
 
-In order to use it you need to compile the C++ code then paste **"Loader.dll"** and **"Bootstrap.exe"** into the **"test/src"** folder then execute **"start.bat"** and finally you have to add the WoW folder with the interface *(there is a button in the option tab)*.
+And this is an exemple of how the interface looks like using 2 monitors:
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/65224852/197351935-a953706f-99dd-41a5-b3d3-757358d0ce93.png">
+</p>
+
+All windows are placed automatically by the program the button **Launch** is used, if a window crash or move you can use the button **Repair** to replace it.
+
+You can set the role and specialisation of every account by clicking on the menu next to the character's name:
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/65224852/197352712-319a7010-d16d-4455-be4b-2fa4820c3bc5.png">
+</p>
+
+*Melee characters will follow the tank of the current group and ranged will follow melee characters of the current group.*
+
+Finally you can register every account credentials (password and username) on a .config file to connect to your accounts faster:
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/65224852/197352750-1a52138c-ed3e-45c8-994a-3fb7258dce8b.png">
+</p>
+
+## Requirements and compilation
+
+To use this project you'll need to compile the C++ code then paste **"Loader.dll"** and **"Bootstrap.exe"** into the **"test/src"** folder then execute **"start.bat"** that will take care of everything *(even the python part)*, to finish you have to add the WoW folder within the interface *(there is a button in the option tab)*.
+
+In order to edit and compile the code I am using Visual studio 2022. There is no particular requirements, just use the latest version of C++. *(C++ 17)*
