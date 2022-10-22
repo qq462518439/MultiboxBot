@@ -6,7 +6,7 @@
 
 ## General Infos
 
-MultiboxBot is an **in-process** bot for multiboxing on WoW 1.12.1 with up to 25 accounts using DLL injection, hooking and sockets.
+MultiboxBot is an **in-process** bot for multiboxing on WoW 1.12.1 (a 2.4.3 and 3.3.5 versions are planned) with up to 25 accounts using DLL injection, hooking and sockets.
 
 This project is the continuation of the **out-of-process** project <a href=https://github.com/Serenalyw/PixelBot>PixelBot</a>.
 
