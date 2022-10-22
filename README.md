@@ -18,7 +18,7 @@ And this is an exemple of how the interface looks like using 2 monitors:
 <img src="https://user-images.githubusercontent.com/65224852/197351935-a953706f-99dd-41a5-b3d3-757358d0ce93.png">
 </p>
 
-All windows are placed automatically by the program the button **Launch** is used, if a window crash or move you can use the button **Repair** to replace it.
+All windows are placed automatically by the program when the button **Launch** is pushed, if a window crash or move you can use the button **Repair** to replace it.
 
 You can set the role and specialisation of every account by clicking on the menu next to the character's name:
 
