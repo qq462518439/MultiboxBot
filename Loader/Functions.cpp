@@ -584,6 +584,7 @@ void Functions::UseItem(int item_id) {
 			if (link_nbr == item_id) {
 				std::string command = "UseContainerItem(" + std::to_string(i) + ", " + std::to_string(y) + ")";
 				LuaCall(command.c_str());
+				return;
 			}
 		}
 	}

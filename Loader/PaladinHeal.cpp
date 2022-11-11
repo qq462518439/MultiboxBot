@@ -6,9 +6,9 @@ static int LastTarget = 0;
 
 static void PaladinAttack() {
 
-	if (IsInGroup && (tankIndex > 0) && (GroupMembersIndex[tankIndex] > -1) && ListUnits[GroupMembersIndex[tankIndex]].targetGuid != 0)
+	if (IsInGroup && (tankIndex > 0) && (GroupMembersIndex[tankIndex] > -1) && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && ListUnits[GroupMembersIndex[tankIndex]].targetGuid != 0)
 		localPlayer->SetTarget(ListUnits[GroupMembersIndex[tankIndex]].targetGuid);
-	else if (Combat && (targetUnit == NULL || targetUnit->unitReaction > Neutral) && (HasAggro[0].size() > 0)) {
+	else if (Combat && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && (HasAggro[0].size() > 0)) {
 		if (listIndexCloseEnemies.size() > 0) localPlayer->SetTarget(ListUnits[listIndexCloseEnemies[0]].Guid);
 	}
 

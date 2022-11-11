@@ -27,12 +27,14 @@ class Interface(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.quit_program)
         self.iconphoto(True, ImageTk.PhotoImage(Image.open(r"assets/icon.jpg")))
         self.iconWoW = tk.PhotoImage(file='assets/iconWoW.png')
+        self.iconKeybind = tk.PhotoImage(file='assets/iconKeybind.png')
         self.attributes('-topmost', True)
         
          # Variables
         parser.init_config('config.conf')
         self.PATH_WoW = parser.get_value('config.conf', 'PATH_WoW', '=')
-        self.ACC_Info = parser.get_multiplevalues('config.conf', 'ACC_Infos', '(', ',', ')')
+        self.ACC_Info = parser.get_multiplevalues('config.conf', 'ACC_Infos')
+        self.KEYBIND_Info = parser.get_multiplevalues('config.conf', 'KEYBIND_Infos')
         self.MOVEMENT_KEY = [win32con.VK_RIGHT, win32con.VK_UP, win32con.VK_DOWN, win32con.VK_LEFT]
         
         self.listCoord = []
@@ -49,9 +51,9 @@ class Interface(tk.Tk):
         tabControl = ttk.Notebook(self)
         tab1 = ttk.Frame(tabControl)
         tab2 = ttk.Frame(tabControl)
+        tabControl.pack(expand = 1, fill ="both")
         tabControl.add(tab1, text='Menu')
         tabControl.add(tab2, text='Options')
-        tabControl.pack(expand = 1, fill ="both")
         
          # Widgets
         OptionList = ['1', '5', '10', '15', '20']
@@ -59,14 +61,19 @@ class Interface(tk.Tk):
         self.numberClientsList.set(OptionList[0])
         self.NBR_ACCOUNT = int(self.numberClientsList.get())
         self.WoWDirButton = tk.Button(tab2, image=self.iconWoW, command=lambda: self.selectWoWDir())
-        self.WoWDirEntry = tk.Entry(tab2, state='normal', width = 26)
+        self.WoWDirEntry = tk.Entry(tab2, state='normal', width = 39)
         self.WoWDirEntry.insert(0,self.PATH_WoW)
         self.WoWDirEntry.configure(state='disabled')
         self.ModifyCredentials_Button = tk.Button(tab2, text='Modify credentials', command=lambda: self.open_credentials_tab(), padx=5, pady=5)
+        self.ModifyKeyBindings_Button = tk.Button(tab2, text='Modify key bindings', command=lambda: self.open_keybindings_tab(), padx=5, pady=5)
         self.LaunchRepair_Button = tk.Button(tab1, text='Launch', command=lambda: self.launch_repair_clients(), padx=5, pady=5)
         self.ScriptOnOff_Label = tk.Label(tab1, text="OFF", foreground='red')
         self.NbrClient_Menu = tk.OptionMenu(tab1, self.numberClientsList, *OptionList)
         self.NbrClient_Label = tk.Label(tab1, text="Number clients:")
+        self.TankAutoFocus = tk.IntVar()
+        self.TankAutoFocus_CheckBtn = tk.Checkbutton(tab1, text = "Tank: auto focus", variable = self.TankAutoFocus, command=lambda: self.sendCheckbox("1"+str(self.TankAutoFocus.get())), onvalue = 1, offvalue = 0, height=2, width = 15)
+        self.TankAutoMove = tk.IntVar()
+        self.TankAutoMove_CheckBtn = tk.Checkbutton(tab1, text = "Tank: auto move", variable = self.TankAutoMove, command=lambda: self.sendCheckbox("2"+str(self.TankAutoMove.get())), onvalue = 1, offvalue = 0, height=2, width = 15)
         
          # Players and informations related
         self.Group_Label = tk.Label(tab1, text="Players detected:")
@@ -87,26 +94,34 @@ class Interface(tk.Tk):
         
          # Grid
         self.WoWDirButton.grid(row=0, column=0, sticky=tk.E, padx=2, pady=10)
-        self.WoWDirEntry.grid(row=0, column=1, columnspan=2, padx=2)
-        self.ModifyCredentials_Button.grid(row=2, column=1)
+        self.WoWDirEntry.grid(row=0, column=1, columnspan=6, padx=2)
+        self.ModifyCredentials_Button.grid(row=1, column=0, columnspan=3)
+        self.ModifyKeyBindings_Button.grid(row=1, column=4, columnspan=3)
         self.ScriptOnOff_Label.grid(row=0, column=5, sticky=tk.E)
-        self.LaunchRepair_Button.grid(row=1, column=0, columnspan=2)
-        self.NbrClient_Label.grid(row=1, column=3, columnspan=2)
+        self.LaunchRepair_Button.grid(row=1, column=0, columnspan=2, pady=2)
+        self.NbrClient_Label.grid(row=1, column=3, columnspan=2, sticky=tk.E)
         self.NbrClient_Menu.grid(row=1, column=5, sticky=tk.W)
-        self.Group_Label.grid(row=2, column=2, columnspan=3, pady=10)
+        self.TankAutoFocus_CheckBtn.grid(row=2, column=0, columnspan=3)
+        self.TankAutoMove_CheckBtn.grid(row=2, column=3, columnspan=3)
         
     def show_infoAccounts(self, nbr):
         y = 0
+        self.Group_Label.grid(row=3, column=2, columnspan=3, pady=10)
         for i in range(nbr):
             if(i%2 == 0):
-                self.Name_Label[i].grid(row=3+y, column=0)
-                self.Class_Label[i].grid(row=3+y, column=1)
-                self.Specialisation_Menu[i].grid(row=3+y, column=2)
+                self.Name_Label[i].grid(row=4+y, column=0)
+                self.Class_Label[i].grid(row=4+y, column=1)
+                self.Specialisation_Menu[i].grid(row=4+y, column=2)
             else:
-                self.Name_Label[i].grid(row=3+y, column=3)
-                self.Class_Label[i].grid(row=3+y, column=4)
-                self.Specialisation_Menu[i].grid(row=3+y, column=5)
+                self.Name_Label[i].grid(row=4+y, column=3)
+                self.Class_Label[i].grid(row=4+y, column=4)
+                self.Specialisation_Menu[i].grid(row=4+y, column=5)
                 y = y+1
+        self.WoWDirEntry.configure(width=60)
+        
+    def sendCheckbox(self, msg):
+        msg = "C"+msg
+        self.serverthread.sendTankClients(bytes(msg, 'utf-8'))
         
     def quit_program(self):
         #Disconnect clients
@@ -170,19 +185,95 @@ class Interface(tk.Tk):
         parser.modify_config('config.conf', acc_info=self.ACC_Info)
         credentialTab.destroy()
         
+    #==================================================#
+        
+    def open_keybindings_tab(self):
+        global keybindingsTab
+        global keybind_Entry
+        try:
+            if(keybindingsTab.state() == "normal"): keybindingsTab.focus()
+        except:
+            keybindingsTab = tk.Toplevel(self)
+            keybindingsTab.title('Credentials')
+            keybindingsTab.resizable(False,False)
+            keybindingsTab.attributes('-topmost', True)
+            keybind_Label = []; keybind_Entry = []; keybind_Button = []
+            
+            keybind_Label.append(tk.Label(keybindingsTab, text="Use Hearthstone:"))
+            keybind_Entry.append(tk.Entry(keybindingsTab, state='normal', width = 15))
+            keybind_Entry[0].delete(0,tk.END)
+            keybind_Entry[0].insert(0, self.KEYBIND_Info[0][1])
+            keybind_Entry[0].configure(state='disabled')
+            keybind_Button.append(tk.Button(keybindingsTab, image=self.iconKeybind, command=lambda: self.bindKey(0)))
+            
+            keybind_Label.append(tk.Label(keybindingsTab, text="Use Mount:"))
+            keybind_Entry.append(tk.Entry(keybindingsTab, state='normal', width = 15))
+            keybind_Entry[1].delete(0,tk.END)
+            keybind_Entry[1].insert(0, self.KEYBIND_Info[1][1])
+            keybind_Entry[1].configure(state='disabled')
+            keybind_Button.append(tk.Button(keybindingsTab, image=self.iconKeybind, command=lambda: self.bindKey(1)))
+            
+            keybind_Label.append(tk.Label(keybindingsTab, text="Order to target:"))
+            keybind_Entry.append(tk.Entry(keybindingsTab, state='normal', width = 15))
+            keybind_Entry[2].delete(0,tk.END)
+            keybind_Entry[2].insert(0, self.KEYBIND_Info[2][1])
+            keybind_Entry[2].configure(state='disabled')
+            keybind_Button.append(tk.Button(keybindingsTab, image=self.iconKeybind, command=lambda: self.bindKey(2)))
+            
+            for i in range(len(keybind_Entry)):
+                keybind_Label[i].grid(row=i, column=0)
+                keybind_Entry[i].grid(row=i, column=1)
+                keybind_Button[i].grid(row=i, column=2)
+        
+    def bindKey(self, index):
+        if(index == 0): keybindingsTab.bind("<Key>", self.key_pressed_Hearthstone)
+        elif(index == 1): keybindingsTab.bind("<Key>", self.key_pressed_Mount)
+        elif(index == 2): keybindingsTab.bind("<Key>", self.key_pressed_Target)
+        
+    def key_pressed_Hearthstone(self, event):
+        keybindingsTab.unbind("<Key>")
+        keybind_Entry[0].configure(state='normal')
+        keybind_Entry[0].delete(0,tk.END)
+        keybind_Entry[0].insert(0, event.keysym)
+        keybind_Entry[0].configure(state='disabled')
+        self.KEYBIND_Info[0] = (str(event.keycode), event.keysym)
+        parser.modify_config('config.conf', keybind_info=self.KEYBIND_Info)
+        
+    def key_pressed_Mount(self, event):
+        keybindingsTab.unbind("<Key>")
+        keybind_Entry[1].configure(state='normal')
+        keybind_Entry[1].delete(0,tk.END)
+        keybind_Entry[1].insert(0, event.keysym)
+        keybind_Entry[1].configure(state='disabled')
+        self.KEYBIND_Info[1] = (str(event.keycode), event.keysym)
+        parser.modify_config('config.conf', keybind_info=self.KEYBIND_Info)
+        
+    def key_pressed_Target(self, event):
+        keybindingsTab.unbind("<Key>")
+        keybind_Entry[2].configure(state='normal')
+        keybind_Entry[2].delete(0,tk.END)
+        keybind_Entry[2].insert(0, event.keysym)
+        keybind_Entry[2].configure(state='disabled')
+        self.KEYBIND_Info[2] = (str(event.keycode), event.keysym)
+        parser.modify_config('config.conf', keybind_info=self.KEYBIND_Info)
+        
+    #==================================================#
+        
     def send_client_txt(self, hwnd, txt):
         #Send text to window
         for c in txt:
             win32api.SendMessage(hwnd, win32con.WM_CHAR, ord(c), 0)
     
     def on_KeyPress(self, key):
-        if(key == keyboard.Key.page_up):
-            for i in range(self.NBR_ACCOUNT//5):
-                if(win32gui.GetForegroundWindow() in self.hwndACC[i*5:(i*5)+5]):
-                    for y in range(i*5, (i*5)+5):
-                        win32api.SendMessage(self.hwndACC[y], win32con.WM_KEYDOWN, win32con.VK_PRIOR, 0)
-                        win32api.SendMessage(self.hwndACC[y], win32con.WM_KEYUP, win32con.VK_PRIOR, 0)
-                    return
+        try:
+            key_code = key.vk
+        except AttributeError:
+            key_code = key.value.vk
+        for i in range(3):
+            if(str(key_code) == self.KEYBIND_Info[i][0]):
+                msg = "K"+str(i+1)
+                self.serverthread.sendGroupClients(bytes(msg, 'utf-8'))
+                break
         
     def adapt_listCoord(self):
         screenWidth = 1920; screenHeight = 1080
@@ -400,27 +491,27 @@ class client_thread(threading.Thread):
             if(self.currentSpec != SpecTMP):
                 if(isATank(self.Class, self.currentSpec) and not isATank(self.Class, SpecTMP)): #Was a Tank but changed
                     self.currentSpec = SpecTMP; msg = "null"
-                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5): #Who is a Tank in group
-                        if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
-                            msg = ('Tank: '+interface.serverthread.clients_thread[i].Name)
-                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
-                        interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
+                    if(interface.NBR_ACCOUNT > 1):
+                        for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5): #Who is a Tank in group
+                            if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                                msg = ('Tank: '+interface.serverthread.clients_thread[i].Name)
+                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 elif(isAMelee(self.Class, self.currentSpec) and not isAMelee(self.Class, SpecTMP)): #Was a Melee but changed
                     self.currentSpec = SpecTMP; msg = "null"
-                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5): #Who is a Melee in group
-                        if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
-                            msg = ('Melee: '+interface.serverthread.clients_thread[i].Name)
-                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
-                        interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
+                    if(interface.NBR_ACCOUNT > 1):
+                        for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5): #Who is a Melee in group
+                            if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                                msg = ('Melee: '+interface.serverthread.clients_thread[i].Name)
+                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 self.currentSpec = SpecTMP
                 if(isATank(self.Class, self.currentSpec)): #Is now a Tank
                     msg = ('Tank: '+self.Name)
-                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
-                        interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
+                    print(msg)
+                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 elif(isAMelee(self.Class, self.currentSpec)): #Is now a Melee
                     msg = ('Melee: '+self.Name)
-                    for i in range((self.index-(self.index%5))*5, ((self.index-(self.index%5))*5)+5):
-                        interface.serverthread.clients[i][0].send(bytes(msg, 'utf-8'))
+                    print(msg)
+                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):
                         if(self.currentSpec != "Null"): self.specChoice = i
@@ -464,6 +555,31 @@ class server_thread(threading.Thread):
     def sendAllClients(self, msg):
         for i in range(len(self.clients)):
             if(self.clients[i] != 0): self.clients[i][0].send(msg)
+        
+    def sendGroupClients(self, msg, index=-1):
+        if(len(self.clients) > 0):
+            if(interface.NBR_ACCOUNT == 1):
+                if(self.clients[0] != 0): self.clients[0][0].send(msg)
+            elif(index == -1):
+                for i in range(interface.NBR_ACCOUNT):
+                    if(win32gui.GetForegroundWindow() in interface.hwndACC[i*5:(i*5)+5]):
+                        for y in range(i*5, (i*5)+5):
+                            if(self.clients[y] != 0): self.clients[y][0].send(msg)
+                            """win32api.SendMessage(self.hwndACC[y], win32con.WM_KEYDOWN, key_code, 0)
+                            win32api.SendMessage(self.hwndACC[y], win32con.WM_KEYUP, key_code, 0)"""
+                        return
+            else:
+                for y in range((index-(index%5))*5, ((index-(index%5))*5)+5):
+                    if(self.clients[y] != 0): self.clients[y][0].send(msg)
+                return
+                
+    def sendTankClients(self, msg):
+        if(len(self.clients) > 0):
+            if(interface.NBR_ACCOUNT == 1):
+                if(self.clients[0] != 0): self.clients[0][0].send(msg)
+            else:
+                for i in range(interface.NBR_ACCOUNT//5):
+                    if(self.clients[i*5] != 0): self.clients[i*5][0].send(msg)
         
     #Main :
 if __name__== "__main__" :

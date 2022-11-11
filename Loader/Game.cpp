@@ -27,6 +27,23 @@ void Game::MainLoop() {
 			infoB = false;
 			Client::sendMessage("Name Null Class Null");
 		}
+
+		if (keyTarget) {
+			ThreadSynchronizer::RunOnMainThread([]() {
+				std::string msg = "AssistByName('" + tankName + "')";
+				Functions::LuaCall(msg.c_str());
+				});
+			keyTarget = false;
+		}
+		else if (keyHearthstone) {
+			ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem("Hearthstone"); });
+			keyHearthstone = false;
+		}
+		else if (keyMount) {
+			ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem("Bridle"); });
+			keyMount = false;
+		}
+
 		while (Client::bot_running == true) {
 			if (Functions::GetPlayerGuid() > 0) { //in-game
 
@@ -35,6 +52,22 @@ void Game::MainLoop() {
 				// ========================================== //
 
 				auto start = std::chrono::high_resolution_clock::now();
+
+				if (keyTarget) {
+					ThreadSynchronizer::RunOnMainThread([]() {
+						std::string msg = "AssistByName('" + tankName + "')";
+						Functions::LuaCall(msg.c_str());
+						});
+					keyTarget = false;
+				}
+				else if (keyHearthstone) {
+					ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem("Hearthstone"); });
+					keyHearthstone = false;
+				}
+				else if (keyMount) {
+					ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem("Bridle"); });
+					keyMount = false;
+				}
 
 				ThreadSynchronizer::RunOnMainThread(
 					[]() {
@@ -59,7 +92,7 @@ void Game::MainLoop() {
 					std::tie(nbrEnemy, nbrCloseEnemy, nbrCloseEnemyFacing, nbrEnemyPlayer) = Functions::countEnemies();
 
 					IsFacing = false;
-					if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && targetUnit->prctHP > 0) IsFacing = localPlayer->isFacing(targetUnit->position, 0.4f);
+					if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && !targetUnit->isdead) IsFacing = localPlayer->isFacing(targetUnit->position, 0.4f);
 
 					distTarget = 0;
 					if (targetUnit != NULL) distTarget = localPlayer->position.DistanceTo(targetUnit->position);
@@ -151,7 +184,7 @@ void Game::MainLoop() {
 							Moving = 0;
 						}
 					}
-					else if (targetUnit != NULL && !Functions::PlayerIsRanged() && (localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
+					else if (targetUnit != NULL && !Functions::PlayerIsRanged() && (tankName != playerName || tankAutoMove) && (localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
 						if (distTarget > 5.0f && !IsSitting) {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 							Moving = 2;
@@ -215,7 +248,8 @@ void Game::MainLoop() {
 
 int GroupMembersIndex[40];
 std::vector<unsigned long long> HasAggro[40];
-bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false;
+bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false, tankAutoFocus = false, tankAutoMove = false,
+	keyTarget = false, keyHearthstone = false, keyMount = false;
 int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 3, tankIndex = 0;
 float distTarget = 0;
 std::string tarType = "party", playerClass = "null", tankName = "null", meleeName = "null";

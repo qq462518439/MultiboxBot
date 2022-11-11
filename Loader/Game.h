@@ -11,7 +11,8 @@ public:
 };
 
 //Global Variables
-extern bool Combat, IsSitting, bossFight, IsInGroup, IsFacing, hasTargetAggro;
+extern bool Combat, IsSitting, bossFight, IsInGroup, IsFacing, hasTargetAggro, tankAutoFocus, tankAutoMove,
+	keyTarget, keyHearthstone, keyMount;
 extern float distTarget;
 extern WoWUnit* targetUnit;
 extern int GroupMembersIndex[40];

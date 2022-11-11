@@ -21,15 +21,15 @@ def get_value(file_path, info, start):
                     if(tmp != "\n"): return tmp
     return ''
     
-def get_multiplevalues(file_path, info, start, bet, end):
+def get_multiplevalues(file_path, info):
     tmpTab = []
     with open(file_path, 'r') as file:
         for line in file:
-            if(line.find(info) >= 0 and line.find(start) >= 0 and line.find(end) >= 0):
-                while(line.find(start) >= 0 and line.find(end) >= 0):
-                    start_pos = line.find(start)
-                    bet_pos = line.find(bet)
-                    end_pos = line.find(end)
+            if(line.find(info) >= 0 and line.find('(') >= 0 and line.find(')') >= 0):
+                while(line.find('(') >= 0 and line.find(')') >= 0):
+                    start_pos = line.find('(')
+                    bet_pos = line.find(',')
+                    end_pos = line.find(')')
                     tmp = line[start_pos+2:bet_pos-1]
                     tmp2 = line[bet_pos+2:end_pos-1]
                     if(tmp2 != "\n"):
@@ -39,12 +39,16 @@ def get_multiplevalues(file_path, info, start, bet, end):
     for i in range(25): tmpTab.append(('', ''))
     return tmpTab
     
-def modify_config(file_path, path_wow='', path_screen='', acc_info=''):
+def modify_config(file_path, path_wow='', keybind_info='', acc_info=''):
     if(path_wow == ''): path_wow = get_value('config.conf', 'PATH_WoW', '=')
-    if(path_screen == ''): path_screen = get_value('config.conf', 'PATH_Screenshot', '=')
-    if(acc_info == ''): acc_info = get_multiplevalues('config.conf', 'ACC_Infos', '(', ',', ')')
+    if(keybind_info == ''): keybind_info = get_multiplevalues('config.conf', 'KEYBIND_Infos')
+    if(acc_info == ''): acc_info = get_multiplevalues('config.conf', 'ACC_Infos')
     with open(file_path, 'w') as file:
-        file.write("PATH_WoW="+path_wow+"\nPATH_Screenshot="+path_screen+"\nACC_Infos=[")
+        file.write("PATH_WoW="+path_wow+"\nKEYBIND_Infos=[")
+        for i in range(len(keybind_info)):
+            file.write("('"+keybind_info[i][0]+"','"+keybind_info[i][1]+"')")
+            if(i+1 < len(keybind_info)): file.write(", ")
+        file.write("]\nACC_Infos=[")
         for i in range(len(acc_info)):
             file.write("('"+acc_info[i][0]+"','"+acc_info[i][1]+"')")
             if(i+1 < len(acc_info)): file.write(", ")

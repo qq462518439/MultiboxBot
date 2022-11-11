@@ -3,6 +3,8 @@
 
 #include "Client.h"
 #include "Game.h"
+#include "Functions.h"
+#include "MemoryManager.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -28,7 +30,8 @@ void Client::sendMessage(std::string msg) {
 void Client::recvMessage() {
 	char buffer[128];
 	recv(sock, buffer, sizeof(buffer), 0);
-	if (strstr(buffer, "Bot:")) {
+	std::cout << buffer << "\n";
+	if (buffer[0] == 'B') {
 		char* buffTmp = subchar(buffer, 5, 7);
 		if (strcmp(buffTmp, "ON") == 0) {
 			std::cout << "ON activated" << "\n";
@@ -39,11 +42,11 @@ void Client::recvMessage() {
 		}
 		std::cout << "Bot running: " << bot_running << "\n";
 	}
-	else if (strstr(buffer, "Spec:")) {
+	else if (buffer[0] == 'S') {
 		char* buffTmp = subchar(buffer, 6, 7);
 		playerSpec = ((int)buffTmp[0] - '0');
 	}
-	else if (strstr(buffer, "Tank:")) {
+	else if (buffer[0] == 'T') {
 		char* buffTmp = subchar(buffer, 6, 25);
 		int y = 0;
 		for (unsigned int i = 0; i < strlen(buffTmp); i++) {
@@ -51,13 +54,30 @@ void Client::recvMessage() {
 		}
 		tankName = subchar(buffTmp, 0, y);
 	}
-	else if (strstr(buffer, "Melee:")) {
+	else if (buffer[0] == 'M') {
 		char* buffTmp = subchar(buffer, 7, 25);
 		int y = 0;
 		for (unsigned int i = 0; i < strlen(buffTmp); i++) {
 			if ((buffTmp[i] >= 'a' && buffTmp[i] <= 'z') || (buffTmp[i] >= 'A' && buffTmp[i] <= 'Z')) y++;
 		}
 		meleeName = subchar(buffTmp, 0, y);
+	}
+	else if (buffer[0] == 'K' && buffer[1] == '1') {
+		keyHearthstone = true;
+	}
+	else if (buffer[0] == 'K' && buffer[1] == '2') {
+		keyMount = true;
+	}
+	else if (buffer[0] == 'K' && buffer[1] == '3') {
+		keyTarget = true;
+	}
+	else if (buffer[0] == 'C' && buffer[1] == '1') {
+		//Tank auto focus
+		tankAutoFocus = ((int)buffer[2] - '0');
+	}
+	else if (buffer[0] == 'C' && buffer[1] == '2') {
+		//Tank auto move
+		tankAutoMove = ((int)buffer[2] - '0');
 	}
 }
 
