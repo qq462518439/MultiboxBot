@@ -126,13 +126,14 @@ class Interface(tk.Tk):
     def quit_program(self):
         #Disconnect clients
         self.script_running = False
+        listener.stop()
         for hwnd in self.hwndACC:
             if(win32gui.IsWindow(hwnd)):
                 win32api.SendMessage(hwnd, win32con.WM_CLOSE, 0, 0)
         self.serverthread.running = False
         tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcp_socket.connect(('localhost', 50001))
-        self.destroy()
+        tcp_socket.close()
         
     def selectWoWDir(self):
         tmp = filedialog.askopenfile(title='Select your wow vanilla client', filetypes=[('WoW', ['exe'])], initialdir=self.PATH_WoW)
@@ -393,13 +394,11 @@ class Interface(tk.Tk):
             self.serverthread.sendAllClients(b"Bot: OFF")
             self.ScriptOnOff_Label.config(text='OFF')
             self.ScriptOnOff_Label.config(foreground='red')
-            print("Stop")
         else:
             self.script_running = True
             self.serverthread.sendAllClients(b"Bot: ON")
             self.ScriptOnOff_Label.config(text='ON')
             self.ScriptOnOff_Label.config(foreground='green')
-            print("Running")
         
 
 def rgb_hack(rgb):
@@ -506,11 +505,9 @@ class client_thread(threading.Thread):
                 self.currentSpec = SpecTMP
                 if(isATank(self.Class, self.currentSpec)): #Is now a Tank
                     msg = ('Tank: '+self.Name)
-                    print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 elif(isAMelee(self.Class, self.currentSpec)): #Is now a Melee
                     msg = ('Melee: '+self.Name)
-                    print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):
@@ -551,6 +548,7 @@ class server_thread(threading.Thread):
             clientthread.running = False
             clientthread.conn.close()
         print("server over...")
+        interface.destroy()
         
     def sendAllClients(self, msg):
         for i in range(len(self.clients)):
@@ -591,3 +589,5 @@ if __name__== "__main__" :
     listener.start()
 
     interface.mainloop()
+    
+    print("\nYou can close this window...")

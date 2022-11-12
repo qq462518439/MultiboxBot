@@ -151,7 +151,7 @@ void Game::MainLoop() {
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if ((distTarget < 11.0f) && (Moving == 0 || Moving == 1) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
+						else if ((distTarget < 11.0f) && (Moving == 0 || Moving == 1 || Moving == 4) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
 							if (localPlayer->speed == 0) {
 								Position oppositeDir = localPlayer->getOppositeDirection(targetUnit->position);
 								ThreadSynchronizer::RunOnMainThread([oppositeDir]() { localPlayer->ClickToMove(Move, targetUnit->Guid, oppositeDir); });

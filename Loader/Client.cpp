@@ -30,7 +30,6 @@ void Client::sendMessage(std::string msg) {
 void Client::recvMessage() {
 	char buffer[128];
 	recv(sock, buffer, sizeof(buffer), 0);
-	std::cout << buffer << "\n";
 	if (buffer[0] == 'B') {
 		char* buffTmp = subchar(buffer, 5, 7);
 		if (strcmp(buffTmp, "ON") == 0) {
