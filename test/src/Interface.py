@@ -56,7 +56,7 @@ class Interface(tk.Tk):
         tabControl.add(tab2, text='Options')
         
          # Widgets
-        OptionList = ['1', '5', '10', '15', '20']
+        OptionList = ['1', '2', '5', '10', '15', '20']
         self.numberClientsList = tk.StringVar(self)
         self.numberClientsList.set(OptionList[0])
         self.NBR_ACCOUNT = int(self.numberClientsList.get())
@@ -280,7 +280,7 @@ class Interface(tk.Tk):
         screenWidth = 1920; screenHeight = 1080
         coefPixel = [0.3015, 0.5666]
         coefPixel2 = [0.278, 0.58]
-        if(self.NBR_ACCOUNT == 1):
+        if(self.NBR_ACCOUNT < 5):
             NBR_ACCOUNT_SCREEN1 = 1
             wWidth1 = screenWidth
             wHeight1 = screenHeight
@@ -312,7 +312,10 @@ class Interface(tk.Tk):
             elif(i == 3):
                 self.listCoord.append((-8, wHeight1-37, wWidth1, wHeight1))
                 self.PIXEL_COORD.append(( int((wWidth1-8)*coefPixel[0]), int(self.PIXEL_COORD[0][1]+wHeight1-37) ))
-            if(self.NBR_ACCOUNT > 1):
+            if(self.NBR_ACCOUNT == 2):
+                self.listCoord.append((screenWidth-8, 0, screenWidth, screenHeight))
+                self.PIXEL_COORD.append(( int(int((screenWidth-8)*coefPixel2[0])+screenWidth), int(screenHeight*coefPixel2[1]) ))
+            elif(self.NBR_ACCOUNT > 2):
                 for y in range(4):
                     if(tmp == 0):
                         if(tmp2 == 0):
@@ -359,7 +362,9 @@ class Interface(tk.Tk):
                 win32gui.SetWindowText(hwnd, "WoW"+str(i+1))
                 self.hwndACC.append(hwnd)
                 if(i == 0 and self.NBR_ACCOUNT <= 5): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
-                else: win32gui.MoveWindow(hwnd, self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
+                else:
+                    win32gui.MoveWindow(hwnd, self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
+                    if(i == 1 and self.NBR_ACCOUNT == 2): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
             for i in range(self.NBR_ACCOUNT): #Enter username/password
                 self.send_client_txt(self.hwndACC[i], self.ACC_Info[i][0])
                 win32api.SendMessage(self.hwndACC[i], win32con.WM_KEYDOWN, win32con.VK_TAB, 0)
