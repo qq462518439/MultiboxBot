@@ -49,8 +49,9 @@ static void PaladinAttack() {
 			Functions::CastSpellByName("Hammer of Wrath");
 		}
 	}
-	else if (!Combat && !IsSitting && IsInGroup && meleeName != "null") {
-		Functions::FollowMultibox(meleeName);
+	else if (!Combat && !IsSitting && IsInGroup) {
+		if(meleeName != "null") Functions::FollowMultibox(meleeName);
+		else if(tankName != "null") Functions::FollowMultibox(tankName);
 	}
 }
 

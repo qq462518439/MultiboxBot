@@ -1139,23 +1139,23 @@ void Functions::FollowUnit(std::string target) {
 	LuaCall(command.c_str());
 }
 
-void Functions::FollowMultibox(std::string unit_name) {
+int Functions::FollowMultibox(std::string unit_name) {
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if (UnitName(tarType + std::to_string(i)) == unit_name) {
 			if (Functions::CheckInteractDistance(tarType + std::to_string(i), 4)) {
 				FollowUnit(tarType + std::to_string(i));
-				return;
+				return 0;
 			}
-			else break;
+			else {
+				for (unsigned int y = 0; y < ListUnits.size(); y++) {
+					if (ListUnits[y].name == unit_name) {
+						float dist = localPlayer->position.DistanceTo(ListUnits[y].position);
+						if (dist < 60.0f) localPlayer->ClickToMove(Move, ListUnits[y].Guid, ListUnits[y].position);
+						return 0;
+					}
+				}
+			}
 		}
 	}
-	for (unsigned int y = 0; y < ListUnits.size(); y++) {
-		if (ListUnits[y].name == unit_name) {
-			float dist = localPlayer->position.DistanceTo(ListUnits[y].position);
-			if (dist < 60.0f) {
-				localPlayer->ClickToMove(Move, ListUnits[y].Guid, ListUnits[y].position);
-			}
-			return;
-		}
-	}
+	return 1;
 }

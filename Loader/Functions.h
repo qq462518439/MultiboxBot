@@ -103,7 +103,7 @@ class Functions {
 		static bool IsCurrentAction(int slot);
 		static float UnitAttackSpeed(std::string target);
 		static void FollowUnit(std::string target);
-		static void FollowMultibox(std::string unit_name);
+		static int FollowMultibox(std::string unit_name);
 
 	private:
 		const static uintptr_t OBJECT_TYPE_OFFSET = 0x14;

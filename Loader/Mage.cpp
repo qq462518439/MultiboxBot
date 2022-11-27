@@ -220,9 +220,9 @@ void ListAI::MageDps() {
 					Functions::CastSpellByName("Shoot");
 				}
 			}
-			else if (!Combat && !IsSitting && IsInGroup && meleeName != "null") {
-				Functions::FollowMultibox(meleeName);
-				Moving = 4;
+			else if (!Combat && !IsSitting && IsInGroup) {
+				if (meleeName != "null" && Functions::FollowMultibox(meleeName) == 0) Moving = 4;
+				else if (tankName != "null" && Functions::FollowMultibox(tankName) == 0) Moving = 4;
 			}
 		} );
 	}

@@ -695,12 +695,14 @@ class client_thread(threading.Thread):
                     for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1): #Who is a Tank in group
                         if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                             msg = ('Tank: '+interface.serverthread.clients_thread[i].Name)
+                            print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 elif(isAMelee(self.Class, self.currentSpec) and not isAMelee(self.Class, SpecTMP)): #Was a Melee but changed
                     self.currentSpec = SpecTMP; msg = "null"
                     for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1): #Who is a Melee in group
                         if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                             msg = ('Melee: '+interface.serverthread.clients_thread[i].Name)
+                            print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 self.currentSpec = SpecTMP
                 if(isATank(self.Class, self.currentSpec)): #Is now a Tank
@@ -709,6 +711,7 @@ class client_thread(threading.Thread):
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 elif(isAMelee(self.Class, self.currentSpec)): #Is now a Melee
                     msg = ('Melee: '+self.Name)
+                    print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):
