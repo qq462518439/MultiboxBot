@@ -50,8 +50,8 @@ static void PaladinAttack() {
 		}
 	}
 	else if (!Combat && !IsSitting && IsInGroup) {
-		if(meleeName != "null") Functions::FollowMultibox(meleeName);
-		else if(tankName != "null") Functions::FollowMultibox(tankName);
+		if (meleeName != "null" && Functions::FollowMultibox(meleeName) == 0) Moving = 4;
+		else if (tankName != "null" && Functions::FollowMultibox(tankName) == 0) Moving = 4;
 	}
 }
 
