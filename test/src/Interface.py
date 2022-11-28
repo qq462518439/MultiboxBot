@@ -695,23 +695,19 @@ class client_thread(threading.Thread):
                     for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1): #Who is a Tank in group
                         if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                             msg = ('Tank: '+interface.serverthread.clients_thread[i].Name)
-                            print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 elif(isAMelee(self.Class, self.currentSpec) and not isAMelee(self.Class, SpecTMP)): #Was a Melee but changed
                     self.currentSpec = SpecTMP; msg = "null"
                     for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1): #Who is a Melee in group
                         if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                             msg = ('Melee: '+interface.serverthread.clients_thread[i].Name)
-                            print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 self.currentSpec = SpecTMP
                 if(isATank(self.Class, self.currentSpec)): #Is now a Tank
                     msg = ('Tank: '+self.Name)
-                    print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 elif(isAMelee(self.Class, self.currentSpec)): #Is now a Melee
                     msg = ('Melee: '+self.Name)
-                    print(msg)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):
@@ -763,7 +759,7 @@ class server_thread(threading.Thread):
             if(index == -1):
                 for i in range(interface.NBR_ACCOUNT//5):
                     if(win32gui.GetForegroundWindow() in interface.hwndACC[i*5:(i*5)+((interface.NBR_ACCOUNT-1)%5)+1]):
-                        for y in range(i*5, (i*5)+(interface.NBR_ACCOUNT%5)+1):
+                        for y in range(i*5, (i*5)+((interface.NBR_ACCOUNT-1)%5)+1):
                             if(self.clients[y] != 0): self.clients[y][0].send(msg)
                             """win32api.SendMessage(self.hwndACC[y], win32con.WM_KEYDOWN, key_code, 0)
                             win32api.SendMessage(self.hwndACC[y], win32con.WM_KEYUP, key_code, 0)"""
