@@ -23,7 +23,7 @@ All windows are placed automatically by the program when the button **Launch** i
 You can set the role and specialisation of every account by clicking on the menu next to the character's name:
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/65224852/197352712-319a7010-d16d-4455-be4b-2fa4820c3bc5.png">
+<img src="https://user-images.githubusercontent.com/65224852/204256381-dd4b8998-c72c-4ac3-91d8-ede0aff2101a.png">
 </p>
 
 *Melee characters will follow the tank of the current group and ranged will follow melee characters of the current group.*
