@@ -15,7 +15,7 @@ This project is the continuation of the **out-of-process** project <a href=https
 And this is an exemple of how the interface looks like using 2 monitors:
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/65224852/197351935-a953706f-99dd-41a5-b3d3-757358d0ce93.png">
+<img src="https://user-images.githubusercontent.com/65224852/204255664-b6724d95-9df1-42df-8076-947da46f8220.png">
 </p>
 
 All windows are placed automatically by the program when the button **Launch** is pushed, if a window crash or move you can use the button **Repair** to replace it.
