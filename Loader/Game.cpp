@@ -80,6 +80,7 @@ void Game::MainLoop() {
 						IsInGroup = Functions::IsInGroup();
 
 						Functions::EnumerateVisibleObjects(0);
+						Functions::ClassifyHeal();
 
 						playerClass = Functions::UnitClass("player");
 
@@ -91,7 +92,6 @@ void Game::MainLoop() {
 				);
 				if (localPlayer != NULL) {
 
-					Functions::ClassifyHeal();
 					std::tie(nbrEnemy, nbrCloseEnemy, nbrCloseEnemyFacing, nbrEnemyPlayer) = Functions::countEnemies();
 
 					IsFacing = false;

@@ -120,14 +120,14 @@ void Functions::ClickAOE(Position position) {
 }
 
 void Functions::ClassifyHeal() {
-	//Heal all friendly players or NPC within 40 yards
+	//Heal all friendly players or NPC within 60 yards
 	std::vector<float> PrctHp;
 	HealTargetArray.clear();
 	AoEHeal = 0;
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
 		if (ListUnits[i].unitReaction > Neutral && !ListUnits[i].isdead) {
 			float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
-			if (dist < 60) {
+			if (dist < 60 && !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5), Position(ListUnits[i].position.X, ListUnits[i].position.Y, ListUnits[i].position.Z + 5))) {
 				PrctHp.push_back(ListUnits[i].prctHP);
 				if (ListUnits[i].objectType == Player && ListUnits[i].prctHP < 60) AoEHeal = AoEHeal + 1;
 				HealTargetArray.push_back(i);
@@ -775,7 +775,9 @@ bool Functions::GetUnitDispel(std::string target, std::string dispellType1, std:
 int Functions::GetDispelKey(std::string dispellType1, std::string dispellType2, std::string dispellType3) {
 	//Retourne le joueur du groupe à dispel
 	for (int i = 1; i <= NumGroupMembers; i++) {
-		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)) return i;
+		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z+5)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z+5))) return i;
 	}
 	return 0;
 }

@@ -561,7 +561,9 @@ class Interface(tk.Tk):
                     win32gui.SetWindowText(hwnd, "WoW"+str(i+1))
                     self.hwndACC.append(hwnd)
                     if(i == 0 and self.NBR_ACCOUNT <= 5): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
-                    else: win32gui.MoveWindow(hwnd, self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
+                    else:
+                        win32gui.MoveWindow(hwnd, self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
+                        if(i == 1 and self.NBR_ACCOUNT == 2): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
                 for i in range(self.NBR_ACCOUNT): #Enter username/password
                     self.send_client_txt(self.hwndACC[i], self.ACC_Info[i][0])
                     win32api.SendMessage(self.hwndACC[i], win32con.WM_KEYDOWN, win32con.VK_TAB, 0)
