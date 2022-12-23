@@ -9,6 +9,9 @@
 
 static bool infoB = false;
 static std::string playerName = "";
+static bool obstacle_front = false;
+static bool obstacle_back = false;
+static bool los_target = false;
 
 void Game::MainLoop() {
 	while (Client::client_running == true) {
@@ -80,7 +83,7 @@ void Game::MainLoop() {
 
 						playerClass = Functions::UnitClass("player");
 
-						if(localPlayer != NULL) targetUnit = localPlayer->getTarget();
+						if (localPlayer != NULL) targetUnit = localPlayer->getTarget();
 
 						if (Functions::GetRepairAllCost() > 0) Functions::LuaCall("RepairAllItems()");
 						if (Functions::GetMerchantNumItems() > 0) Functions::SellUselessItems();
@@ -129,7 +132,7 @@ void Game::MainLoop() {
 				auto end = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<double, std::milli> float_ms = end - start;
 				std::cout << "Initialisation: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
-
+				
 				// ========================================== //
 				// ==============   Movements   ============= //
 				// ========================================== //
@@ -137,7 +140,16 @@ void Game::MainLoop() {
 				start = std::chrono::high_resolution_clock::now();
 
 				if (localPlayer != NULL) {
-
+					float halfPI = acos(0.0);
+					Position player_pos = Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5);
+					Position front_pos = Position(cos(localPlayer->facing) * 5 + localPlayer->position.X, sin(localPlayer->facing) * 5 + localPlayer->position.Y, localPlayer->position.Z + 5);
+					Position back_pos = Position(cos(localPlayer->facing + (2 * halfPI)) * 5 + localPlayer->position.X, sin(localPlayer->facing + (2 * halfPI)) * 5 + localPlayer->position.Y, localPlayer->position.Z + 5);
+					los_target = false;
+					ThreadSynchronizer::RunOnMainThread([=]() {
+						obstacle_front = Functions::GetDepth(front_pos) > 10;
+						obstacle_back = Functions::GetDepth(back_pos) > 10;
+						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 5));
+					});
 					if (IsSitting && ((localPlayer->prctMana > 80) || Combat)) {
 						//Stop Drinking
 						IsSitting = false;
@@ -146,62 +158,64 @@ void Game::MainLoop() {
 						Moving = 0;
 					}
 					else if (targetUnit != NULL && Functions::PlayerIsRanged() && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && distTarget < 11.0f)) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && (!targetUnit->isdead)) {
-						if (Moving == 4 && (distTarget < 30.0f)) {
+						if ((Moving == 4 || Moving == 2 || Moving == 5) && ((distTarget < 30.0f && los_target) || obstacle_front)) {
+							//Running and ((target < 30 yard && LoS) || obstacle in front) => stop
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if ((distTarget < 11.0f) && (Moving == 0 || Moving == 1 || Moving == 4) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
+						else if ((distTarget < 11.0f) && !obstacle_back && (Moving == 0 || Moving == 1 || Moving == 4) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
+							//Player stunned or rooted < 11 yard => Run away
 							if (localPlayer->speed == 0) {
 								Position oppositeDir = localPlayer->getOppositeDirection(targetUnit->position);
 								ThreadSynchronizer::RunOnMainThread([oppositeDir]() { localPlayer->ClickToMove(Move, targetUnit->Guid, oppositeDir); });
 							}
 							Moving = 1;
 						}
-						else if ((Moving == 0) && !IsFacing) {
-							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
-						}
-						else if ((distTarget < 11.0f) && (Moving == 0) && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && !hasTargetAggro && playerClass == "Hunter") || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
+						else if ((distTarget < 11.0f) && !obstacle_back && (Moving == 0) && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && !hasTargetAggro && playerClass == "Hunter") || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
+							//(Creature not aggro && Hunter) || Player slowed < 11 yard => Walk backward
 							Functions::pressKey(0x28);
 							Moving = 3;
 						}
-						else if (distTarget > 30.0f && !IsSitting && (Moving == 0 || Moving == 2 || Moving == 5)) {
+						else if ((distTarget > 30.0f || !los_target) && !obstacle_front && !IsSitting && (Moving == 0 || Moving == 2 || Moving == 5)) {
+							//(Target > 30 yard || LoS lost) and no obstacle => Run to it
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 							Moving = 2;
 						}
-						else if (Moving == 1 && (distTarget > 11.0f || !(targetUnit->flags & UNIT_FLAG_CONFUSED) || targetUnit->speed > 0)) {
+						else if (Moving == 1 && (obstacle_front || distTarget > 11.0f || !(targetUnit->flags & UNIT_FLAG_CONFUSED) || targetUnit->speed > 0)) {
+							//Running away and (target > 11 yard || target confused || target moving)
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if ((Moving == 2 || Moving == 5) && (distTarget < 30.0f)) {
-							Functions::pressKey(0x28);
+						else if (Moving == 3 && (obstacle_back || (distTarget > 11.0f) || (!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed >= 7))) {
+							//Walking backward and (target > 11 yard || Creature aggro || target running)
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
-						else if (Moving == 3 && ((distTarget > 11.0f) || (!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed >= 7))) {
-							Functions::releaseKey(0x28);
-							Moving = 0;
+						else if ((Moving == 0) && !IsFacing) {
+							//Nothing to do: face target
+							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 						}
 					}
 					else if (targetUnit != NULL && !Functions::PlayerIsRanged() && (tankName != playerName || tankAutoMove) && (localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
-						if (distTarget > 5.0f && !IsSitting) {
+						if (distTarget > 5.0f && !IsSitting && !obstacle_front) {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 							Moving = 2;
 						}
-						else if (Moving == 2 || Moving == 5) {
+						else if (Moving == 2 || Moving == 5 || (Moving == 4 && obstacle_front)) {
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
 						else if (!IsFacing) ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 					}
-					else if (Moving > 0 && Moving < 4) {
-						if (Moving < 3) Functions::pressKey(0x28);
+					else if ((Moving > 0 && Moving < 4) || (Moving == 4 && obstacle_front)) {
+						if (Moving < 3 || Moving == 4) Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
 						Moving = 0;
 					}
-					else if (Moving == 5 && (targetUnit == NULL || ((targetUnit->unitReaction > Neutral) && (distTarget < 30.0f)))) {
+					else if (Moving == 5 && (obstacle_front || targetUnit == NULL || ((targetUnit->unitReaction > Neutral) && (distTarget < 30.0f)))) {
 						Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
 						Moving = 0;
@@ -211,7 +225,7 @@ void Game::MainLoop() {
 				end = std::chrono::high_resolution_clock::now();
 				float_ms = end - start;
 				std::cout << "Movement: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
-
+				
 				// ========================================== //
 				// ===============   Actions   ============== //
 				// ========================================== //

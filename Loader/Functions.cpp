@@ -14,6 +14,31 @@ void Functions::releaseKey(unsigned int key) {
 	SendMessageW(ThreadSynchronizer::windowHandle, WM_KEYUP, key, 0);
 }
 
+bool Functions::Intersect(Position start, Position end) {
+	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
+	func* function = (func*)INTERSECT_FUN;
+	Position* p1 = new Position(start.X, start.Y, start.Z);
+	Position* p2 = new Position(end.X, end.Y, end.Z);
+	Position* intersection = new Position(0, 0, 0);
+	float* distance = new float(start.DistanceTo(end));
+	bool result = function(p1, p2, 0, intersection, distance, 0x00100111);
+	delete p1, p2, distance, intersection;
+	return result;
+}
+
+float Functions::GetDepth(Position pos) {
+	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
+	func* function = (func*)INTERSECT_FUN;
+	Position* p1 = new Position(pos.X, pos.Y, pos.Z);
+	Position* p2 = new Position(pos.X, pos.Y, pos.Z-20);
+	Position* intersection = new Position(0, 0, 0);
+	float* distance = new float(pos.DistanceTo(*p2));
+	function(p1, p2, 0, intersection, distance, 0x00100111);
+	float result = pos.DistanceTo(*intersection);
+	delete p1, p2, distance, intersection;
+	return result;
+}
+
 unsigned long Functions::GetPlayerGuid() {
 	typedef unsigned long func();
 	func* function = (func*)GET_PLAYER_GUID_FUN_PTR;

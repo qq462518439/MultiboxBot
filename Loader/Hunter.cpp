@@ -9,8 +9,8 @@ void ListAI::HunterDps() {
 		int nbrAggro = HasAggro[0].size();
 		bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
 		bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
-		int TrueshotAuraIDs[1] = { 19506 };
-		bool TrueshotAuraBuff = localPlayer->hasBuff(TrueshotAuraIDs, 1);
+		int TrueshotAuraIDs[3] = { 19506, 20905, 20906 };
+		bool TrueshotAuraBuff = localPlayer->hasBuff(TrueshotAuraIDs, 3);
 		int AspectMonkeyIDs[1] = { 13163 };
 		bool AspectMonkeyBuff = localPlayer->hasBuff(AspectMonkeyIDs, 1);
 		int AspectHawkIDs[7] = { 13165, 14318, 14319, 14320, 14321, 14322, 25296 };
@@ -29,7 +29,7 @@ void ListAI::HunterDps() {
 				if (listIndexCloseEnemies.size() > 0) localPlayer->SetTarget(ListUnits[listIndexCloseEnemies[0]].Guid);
 			}
 
-			if (!Functions::HasPetUI() && Functions::IsPlayerSpell("Call Pet")) {
+			if (!Functions::HasPetUI() && Functions::IsSpellReady("Call Pet")) {
 				//Call Pet
 				Functions::CastSpellByName("Call Pet");
 			}

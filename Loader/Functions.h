@@ -7,6 +7,8 @@ class Functions {
 	public:
 		static void pressKey(unsigned int key);
 		static void releaseKey(unsigned int key);
+		static bool Intersect(Position start, Position end);
+		static float GetDepth(Position pos);
 		static unsigned long GetPlayerGuid();
 		static void EnumerateVisibleObjects(int filter);
 		static uintptr_t GetObjectPtr(unsigned long long guid);
@@ -113,6 +115,7 @@ class Functions {
 		const static uintptr_t LUA_CALL_FUN_PTR = 0x00704CD0;
 		const static uintptr_t LUA_GET_TEXT_FUN_PTR = 0x00703bf0;
 		const static uintptr_t SPELL_C_HANDLETERRAINCLICK_FUN_PTR = 0x006E60F0;
+		const static uintptr_t INTERSECT_FUN = 0x00672170;
 
 		static int Callback(unsigned long long guid, int filter);
 };
