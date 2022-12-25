@@ -23,10 +23,12 @@ void ListAI::RogueDps() {
 			int ComboPoints = Functions::GetComboPoints();
 			int SprintTalent = Functions::GetTalentInfo(2, 9);
 
-			if (IsInGroup && (tankIndex > 0) && (GroupMembersIndex[tankIndex] > -1) && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && ListUnits[GroupMembersIndex[tankIndex]].targetGuid != 0)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[tankIndex]].targetGuid);
+			if (IsInGroup && tankName != "null" && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral)) {
+				std::string msg = "AssistByName('" + tankName + "')";
+				Functions::LuaCall(msg.c_str());
+			}
 			else if (Combat && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && (HasAggro[0].size() > 0)) {
-				if (listIndexCloseEnemies.size() > 0) localPlayer->SetTarget(ListUnits[listIndexCloseEnemies[0]].Guid);
+				localPlayer->SetTarget(HasAggro[0][0]);
 			}
 
 			if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
@@ -99,8 +101,8 @@ void ListAI::RogueDps() {
 					Functions::CastSpellByName("Sinister Strike");
 				}
 			}
-			else if (!Combat && !IsSitting && IsInGroup && tankName != "null") {
-				Functions::FollowMultibox(tankName);
+			else if (!Combat && !IsSitting && IsInGroup) {
+				if (Functions::FollowMultibox(0, 0)) Moving = 4;
 			}
 		});
 	}

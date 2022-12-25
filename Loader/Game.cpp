@@ -144,7 +144,6 @@ void Game::MainLoop() {
 					Position player_pos = Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5);
 					Position front_pos = Position(cos(localPlayer->facing) * 5 + localPlayer->position.X, sin(localPlayer->facing) * 5 + localPlayer->position.Y, localPlayer->position.Z + 5);
 					Position back_pos = Position(cos(localPlayer->facing + (2 * halfPI)) * 5 + localPlayer->position.X, sin(localPlayer->facing + (2 * halfPI)) * 5 + localPlayer->position.Y, localPlayer->position.Z + 5);
-					los_target = false;
 					ThreadSynchronizer::RunOnMainThread([=]() {
 						obstacle_front = Functions::GetDepth(front_pos) > 10;
 						obstacle_back = Functions::GetDepth(back_pos) > 10;
@@ -172,12 +171,7 @@ void Game::MainLoop() {
 							}
 							Moving = 1;
 						}
-						else if ((distTarget < 11.0f) && !obstacle_back && (Moving == 0) && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && !hasTargetAggro && playerClass == "Hunter") || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
-							//(Creature not aggro && Hunter) || Player slowed < 11 yard => Walk backward
-							Functions::pressKey(0x28);
-							Moving = 3;
-						}
-						else if ((distTarget > 30.0f || !los_target) && !obstacle_front && !IsSitting && (Moving == 0 || Moving == 2 || Moving == 5)) {
+						else if ((distTarget > 30.0f || !los_target) && !obstacle_front && !IsSitting && (Moving == 0 || Moving == 2 || Moving == 4 || Moving == 5)) {
 							//(Target > 30 yard || LoS lost) and no obstacle => Run to it
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 							Moving = 2;
@@ -197,9 +191,14 @@ void Game::MainLoop() {
 							//Nothing to do: face target
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 						}
+						else if ((distTarget < 11.0f) && !obstacle_back && (Moving == 0) && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && !hasTargetAggro && playerClass == "Hunter") || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
+							//(Creature not aggro && Hunter) || Player slowed < 11 yard => Walk backward
+							Functions::pressKey(0x28);
+							Moving = 3;
+						}
 					}
 					else if (targetUnit != NULL && !Functions::PlayerIsRanged() && (tankName != playerName || tankAutoMove) && (localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
-						if (distTarget > 5.0f && !IsSitting && !obstacle_front) {
+						if ((distTarget > 5.0f || !los_target) && !IsSitting && !obstacle_front) {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 							Moving = 2;
 						}

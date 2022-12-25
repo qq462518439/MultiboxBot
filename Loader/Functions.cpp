@@ -1166,23 +1166,29 @@ void Functions::FollowUnit(std::string target) {
 	LuaCall(command.c_str());
 }
 
-int Functions::FollowMultibox(std::string unit_name) {
-	for (int i = 1; i <= NumGroupMembers; i++) {
-		if (UnitName(tarType + std::to_string(i)) == unit_name) {
-			if (Functions::CheckInteractDistance(tarType + std::to_string(i), 4)) {
-				FollowUnit(tarType + std::to_string(i));
-				return 0;
-			}
-			else {
-				for (unsigned int y = 0; y < ListUnits.size(); y++) {
-					if (ListUnits[y].name == unit_name) {
-						float dist = localPlayer->position.DistanceTo(ListUnits[y].position);
-						if (dist < 60.0f) localPlayer->ClickToMove(Move, ListUnits[y].Guid, ListUnits[y].position);
-						return 0;
-					}
+int Functions::FollowMultibox(int ranged, int placement) {
+	std::string target_name = "";
+	if ((ranged == 1 && meleeName != "null") || tankName != "null") {
+		int range = 2;
+		if (tankName != "null") {
+			target_name = tankName;
+			if (ranged == 1) range = 4;
+		}
+		else if (ranged == 1 && meleeName != "null") target_name = meleeName;
+		for (unsigned int i = 0; i < ListUnits.size(); i++) {
+			if (ListUnits[i].name == target_name) {
+				float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
+				if (dist < 60.0f && dist > range+1) {
+					float cst = 0.25f;
+					if (placement == 1) cst = -cst;
+					if (ranged == 1) cst = cst / 2;
+					float PI = acos(0.0) * 2;
+					Position target_pos = Position((cos(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.X, (sin(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.Y, ListUnits[i].position.Z);
+					localPlayer->ClickToMove(Move, ListUnits[i].Guid, target_pos);
+					return 1;
 				}
 			}
 		}
 	}
-	return 1;
+	return 0;
 }
