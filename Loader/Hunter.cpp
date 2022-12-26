@@ -6,21 +6,21 @@ void ListAI::HunterDps() {
 	int FeignDeathIDs[1] = { 5384 };
 	int RaptorStrikeIDs[8] = { 2973, 14260, 14261, 14262, 14263, 14264, 14265, 14266 };
 	if (localPlayer->hasBuff(FeignDeathIDs, 1) || ((localPlayer->castInfo == 0 || localPlayer->isCasting(RaptorStrikeIDs, 8)) && (localPlayer->channelInfo == 0) && !localPlayer->isdead)) {
-		int nbrAggro = HasAggro[0].size();
-		bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
-		bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
-		int TrueshotAuraIDs[3] = { 19506, 20905, 20906 };
-		bool TrueshotAuraBuff = localPlayer->hasBuff(TrueshotAuraIDs, 3);
-		int AspectMonkeyIDs[1] = { 13163 };
-		bool AspectMonkeyBuff = localPlayer->hasBuff(AspectMonkeyIDs, 1);
-		int AspectHawkIDs[7] = { 13165, 14318, 14319, 14320, 14321, 14322, 25296 };
-		bool AspectHawkBuff = localPlayer->hasBuff(AspectHawkIDs, 7);
-
-		//Specific for Volley cast:
-		Position cluster_center = Position(0, 0, 0); int cluster_unit;
-		std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(30, 35);
-
 		ThreadSynchronizer::RunOnMainThread([=]() {
+			int nbrAggro = HasAggro[0].size();
+			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
+			bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
+			int TrueshotAuraIDs[3] = { 19506, 20905, 20906 };
+			bool TrueshotAuraBuff = localPlayer->hasBuff(TrueshotAuraIDs, 3);
+			int AspectMonkeyIDs[1] = { 13163 };
+			bool AspectMonkeyBuff = localPlayer->hasBuff(AspectMonkeyIDs, 1);
+			int AspectHawkIDs[7] = { 13165, 14318, 14319, 14320, 14321, 14322, 25296 };
+			bool AspectHawkBuff = localPlayer->hasBuff(AspectHawkIDs, 7);
+
+			//Specific for Volley cast:
+			Position cluster_center = Position(0, 0, 0); int cluster_unit;
+			std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(30, 35);
+
 			bool FeedingBuff = Functions::GetUnitBuff("pet", "Interface\\Icons\\Ability_Hunter_BeastTraining");
 
 			if (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) {

@@ -35,29 +35,29 @@ void ListAI::MageDps() {
 	PolymorphTimer = PolymorphInnerCD - (time(0) - current_time_polymorph);
 	if (PolymorphTimer < 0) PolymorphTimer = 0;
 	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
-		int nbrAggro = HasAggro[0].size();
-		bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
-		bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
-		int FrostArmorIDs[7] = { 168, 7300, 7301, 7302, 7320, 10219, 10220};
-		bool FrostArmorBuff = localPlayer->hasBuff(FrostArmorIDs, 7);
-		int MageArmorIDs[3] = { 6117, 22782, 22783 };
-		bool MageArmorBuff = localPlayer->hasBuff(MageArmorIDs, 3);
-		int IceBarrierIDs[4] = { 11426, 13031, 13032, 13033 };
-		bool IceBarrierBuff = localPlayer->hasBuff(IceBarrierIDs, 4);
-		int ManaShieldIDs[6] = { 1463, 8494, 8495, 10191, 10192, 10193 };
-		bool ManaShieldBuff = localPlayer->hasBuff(IceBarrierIDs, 6);
-		int ArcaneIntellectIDs[5] = { 1459, 1460, 1461, 10156, 10157 };
-		bool ArcaneIntellectBuff = localPlayer->hasBuff(ArcaneIntellectIDs, 5);
-		int PolymorphIDs[6] = { 118, 12824, 12825, 12826, 28271, 28272 };
-		bool PolymorphDebuff = false;
-		if(targetUnit != NULL) PolymorphDebuff = targetUnit->hasDebuff(PolymorphIDs, 6);
-		int ArcaneIntellectKey = Functions::GetBuffKey(ArcaneIntellectIDs, 5);
+		ThreadSynchronizer::RunOnMainThread([=]() {
+			int nbrAggro = HasAggro[0].size();
+			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
+			bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
+			int FrostArmorIDs[7] = { 168, 7300, 7301, 7302, 7320, 10219, 10220 };
+			bool FrostArmorBuff = localPlayer->hasBuff(FrostArmorIDs, 7);
+			int MageArmorIDs[3] = { 6117, 22782, 22783 };
+			bool MageArmorBuff = localPlayer->hasBuff(MageArmorIDs, 3);
+			int IceBarrierIDs[4] = { 11426, 13031, 13032, 13033 };
+			bool IceBarrierBuff = localPlayer->hasBuff(IceBarrierIDs, 4);
+			int ManaShieldIDs[6] = { 1463, 8494, 8495, 10191, 10192, 10193 };
+			bool ManaShieldBuff = localPlayer->hasBuff(IceBarrierIDs, 6);
+			int ArcaneIntellectIDs[5] = { 1459, 1460, 1461, 10156, 10157 };
+			bool ArcaneIntellectBuff = localPlayer->hasBuff(ArcaneIntellectIDs, 5);
+			int PolymorphIDs[6] = { 118, 12824, 12825, 12826, 28271, 28272 };
+			bool PolymorphDebuff = false;
+			if (targetUnit != NULL) PolymorphDebuff = targetUnit->hasDebuff(PolymorphIDs, 6);
+			int ArcaneIntellectKey = Functions::GetBuffKey(ArcaneIntellectIDs, 5);
 
-		//Specific for Blizzard cast:
-		Position cluster_center = Position(0, 0, 0); int cluster_unit;
-		std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(30, 30);
+			//Specific for Blizzard cast:
+			Position cluster_center = Position(0, 0, 0); int cluster_unit;
+			std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(30, 30);
 
-		ThreadSynchronizer::RunOnMainThread([=]() { //BOOM Lua
 			int RemoveCurseKey = Functions::GetDispelKey("Curse");
 			std::string RankConjureMana = GetSpellRank("Conjure Mana");
 

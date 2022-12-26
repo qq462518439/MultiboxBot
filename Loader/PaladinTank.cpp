@@ -142,15 +142,15 @@ void ListAI::PaladinTank() {
 		Functions::releaseKey(0x28);
 	}
 	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead) {
-		int BoSanctuaryIDs[4] = { 20911, 20912, 20913, 20914 };
-		bool BoSanctuaryBuff = localPlayer->hasBuff(BoSanctuaryIDs, 4);
-		int RetributionAuraIDs[5] = { 7294, 10298, 10299, 10300, 10301 };
-		bool RetributionAuraBuff = localPlayer->hasBuff(RetributionAuraIDs, 5);
-		int RighteousFuryIDs[1] = { 25780 };
-		bool RighteousFuryBuff = localPlayer->hasBuff(RighteousFuryIDs, 1);
-		int BoSalvationIDs[1] = { 1038 };
-		int BoSalvationKey = Functions::GetBuffKey(BoSalvationIDs, 1);
 		ThreadSynchronizer::RunOnMainThread([=]() {
+			int BoSanctuaryIDs[4] = { 20911, 20912, 20913, 20914 };
+			bool BoSanctuaryBuff = localPlayer->hasBuff(BoSanctuaryIDs, 4);
+			int RetributionAuraIDs[5] = { 7294, 10298, 10299, 10300, 10301 };
+			bool RetributionAuraBuff = localPlayer->hasBuff(RetributionAuraIDs, 5);
+			int RighteousFuryIDs[1] = { 25780 };
+			bool RighteousFuryBuff = localPlayer->hasBuff(RighteousFuryIDs, 1);
+			int BoSalvationIDs[1] = { 1038 };
+			int BoSalvationKey = Functions::GetBuffKey(BoSalvationIDs, 1);
 			int PurifyDispelKey = Functions::GetDispelKey("Disease", "Poison");
 			int CleanseDispelKey = Functions::GetDispelKey("Disease", "Poison", "Magic");
 			if (!RetributionAuraBuff && Functions::IsPlayerSpell("Retribution Aura")) {

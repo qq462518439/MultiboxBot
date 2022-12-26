@@ -9,9 +9,6 @@
 
 static bool infoB = false;
 static std::string playerName = "";
-static bool obstacle_front = false;
-static bool obstacle_back = false;
-static bool los_target = false;
 
 void Game::MainLoop() {
 	while (Client::client_running == true) {
@@ -141,13 +138,14 @@ void Game::MainLoop() {
 
 				if (localPlayer != NULL) {
 					float halfPI = acos(0.0);
-					Position player_pos = Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5);
+					Position player_pos = Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 3);
 					Position front_pos = Position(cos(localPlayer->facing) * 5 + localPlayer->position.X, sin(localPlayer->facing) * 5 + localPlayer->position.Y, localPlayer->position.Z + 5);
 					Position back_pos = Position(cos(localPlayer->facing + (2 * halfPI)) * 5 + localPlayer->position.X, sin(localPlayer->facing + (2 * halfPI)) * 5 + localPlayer->position.Y, localPlayer->position.Z + 5);
 					ThreadSynchronizer::RunOnMainThread([=]() {
-						obstacle_front = Functions::GetDepth(front_pos) > 10;
-						obstacle_back = Functions::GetDepth(back_pos) > 10;
-						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 5));
+						obstacle_front = !(localPlayer->movement_flags & MOVEFLAG_SWIMMING) && Functions::GetDepth(front_pos) > 13;
+						obstacle_back = !(localPlayer->movement_flags & MOVEFLAG_SWIMMING) && Functions::GetDepth(back_pos) > 13;
+						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos
+							, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 3));
 					});
 					if (IsSitting && ((localPlayer->prctMana > 80) || Combat)) {
 						//Stop Drinking
@@ -262,7 +260,7 @@ void Game::MainLoop() {
 int GroupMembersIndex[40];
 std::vector<unsigned long long> HasAggro[40];
 bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false, tankAutoFocus = false, tankAutoMove = false,
-	keyTarget = false, keyHearthstone = false, keyMount = false;
+	keyTarget = false, keyHearthstone = false, keyMount = false, obstacle_front = false, obstacle_back = false, los_target = false;
 int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 3, tankIndex = 0;
 float distTarget = 0;
 std::string tarType = "party", playerClass = "null", tankName = "null", meleeName = "null";

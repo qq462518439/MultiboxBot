@@ -11,15 +11,15 @@ void ListAI::RogueDps() {
 	SliceDiceTimer = SliceDiceDuration - (time(0) - current_time);
 	if (SliceDiceTimer < 0) SliceDiceTimer = 0;
 	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
-		int nbrAggro = HasAggro[0].size();
-		bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
-		bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
-		int StealthIDs[4] = { 1784, 1785, 1786, 1787 };
-		bool StealthBuff = localPlayer->hasBuff(StealthIDs, 4);
-		int SliceDiceIDs[2] = { 5171, 6774 };
-		bool SliceDiceBuff = localPlayer->hasBuff(SliceDiceIDs, 2);
-
 		ThreadSynchronizer::RunOnMainThread([=]() {
+			int nbrAggro = HasAggro[0].size();
+			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
+			bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
+			int StealthIDs[4] = { 1784, 1785, 1786, 1787 };
+			bool StealthBuff = localPlayer->hasBuff(StealthIDs, 4);
+			int SliceDiceIDs[2] = { 5171, 6774 };
+			bool SliceDiceBuff = localPlayer->hasBuff(SliceDiceIDs, 2);
+
 			int ComboPoints = Functions::GetComboPoints();
 			int SprintTalent = Functions::GetTalentInfo(2, 9);
 

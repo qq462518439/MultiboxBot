@@ -93,6 +93,34 @@ enum UnitFlags : unsigned int {
     UNIT_FLAG_SHEATHE = 1 << 30, // ??
 };
 
+enum MovementFlags: unsigned int {
+    MOVEFLAG_NONE = 0x00000000,
+    MOVEFLAG_FORWARD = 0x00000001,
+    MOVEFLAG_BACKWARD = 0x00000002,
+    MOVEFLAG_STRAFE_LEFT = 0x00000004,
+    MOVEFLAG_STRAFE_RIGHT = 0x00000008,
+    MOVEFLAG_TURN_LEFT = 0x00000010,
+    MOVEFLAG_TURN_RIGHT = 0x00000020,
+    MOVEFLAG_PITCH_UP = 0x00000040, // ??
+    MOVEFLAG_PITCH_DOWN = 0x00000080, // ??
+    MOVEFLAG_WALK_MODE = 0x00000100, // Walking
+    MOVEFLAG_ONTRANSPORT = 0x00000200, // Used for flying on some creatures
+    MOVEFLAG_LEVITATING = 0x00000400,
+    MOVEFLAG_ROOT = 0x00000800,
+    MOVEFLAG_FALLING = 0x00001000,
+    MOVEFLAG_FALLINGFAR = 0x00004000, // ??
+    MOVEFLAG_SWIMMING = 0x00200000, // appears with fly flag also
+    MOVEFLAG_ASCENDING = 0x00400000, // swim up also
+    MOVEFLAG_CAN_FLY = 0x00800000, // ??
+    MOVEFLAG_FLYING = 0x01000000, // ??
+    MOVEFLAG_FLYING2 = 0x02000000, // Actual flying mode
+    MOVEFLAG_SPLINE_ELEVATION = 0x04000000, // used for flight paths
+    MOVEFLAG_SPLINE_ENABLED = 0x08000000, // used for flight paths
+    MOVEFLAG_WATERWALKING = 0x10000000, // prevent unit from falling through water
+    MOVEFLAG_SAFE_FALL = 0x20000000, // active rogue safe fall spell (passive)
+    MOVEFLAG_HOVER = 0x40000000
+};
+
 class Position {
 public:
     float X, Y, Z;
@@ -121,7 +149,7 @@ class WoWObject {
 class WoWUnit : public WoWObject {
     public:
         Position position; float prctHP; float prctMana; int rage; int energy;
-        UnitFlags flags; int buff[30]; int debuff[16]; bool isdead;
+        UnitFlags flags; MovementFlags movement_flags; int buff[30]; int debuff[16]; bool isdead;
         CreatureType creatureType; float speed; unsigned long long targetGuid;
         float facing; int level; char* name; int channelInfo; UnitReaction unitReaction;
 
@@ -143,6 +171,7 @@ class WoWUnit : public WoWObject {
         const uintptr_t MAXPOWER1_OFFSET = 0x74;
         const uintptr_t LEVEL_OFFSET = 0x88;
         const uintptr_t UNIT_FLAG_OFFSET = 0xB8;
+        const uintptr_t MOVEMENT_FLAG_OFFSET = 0x9E8;
         const uintptr_t BUFF_BASE_OFFSET = 0xBC;
         const uintptr_t DEBUFF_BASE_OFFSET = 0x13C;
         const uintptr_t CHANNEL_OFFSET = 0x240;

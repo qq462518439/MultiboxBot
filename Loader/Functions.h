@@ -23,7 +23,8 @@ class Functions {
 		static bool PlayerIsRanged();
 		static int getTankIndex();
 		static void MoveToAlly(int unitIndex);
-		// === Lua Game Functions === //
+		static int FollowMultibox(int ranged = 0, int placement = 0);
+			// === Lua Game Functions === //
 		static int GetNumGroupMembers();
 		static bool IsInGroup();
 		static bool IsInRaid();
@@ -59,7 +60,6 @@ class Functions {
 		static bool GetUnitBuff(std::string target, std::string texture);
 		static bool GetUnitDebuff(std::string target, std::string texture);
 		static int GetStackDebuff(std::string target, std::string texture);
-		static int GetBuffKey(std::string buffTexture, std::string buffTexture2 = "Null");
 		static bool GetUnitDispel(std::string target, std::string dispellType1, std::string dispellType2="Null", std::string dispellType3="Null");
 		static int GetDispelKey(std::string dispellType1, std::string dispellType2="Null", std::string dispellType3="Null");
 		// === Status === //
@@ -105,7 +105,6 @@ class Functions {
 		static bool IsCurrentAction(int slot);
 		static float UnitAttackSpeed(std::string target);
 		static void FollowUnit(std::string target);
-		static int FollowMultibox(int ranged = 0, int placement = 0);
 
 	private:
 		const static uintptr_t OBJECT_TYPE_OFFSET = 0x14;

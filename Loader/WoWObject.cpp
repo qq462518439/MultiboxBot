@@ -69,6 +69,7 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
     energy = *(int*)(descriptor + POWER4_OFFSET);
 
     flags = *(UnitFlags*)(descriptor + UNIT_FLAG_OFFSET);
+    movement_flags = *(MovementFlags*)(Pointer + MOVEMENT_FLAG_OFFSET);
 
     uintptr_t currentBuffOffset = BUFF_BASE_OFFSET;
     for (int i = 0; i < 30; i++) {

@@ -195,12 +195,12 @@ void ListAI::PaladinDps() {
 		Functions::releaseKey(0x28);
 	}
 	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead) {
-		int BoWisdomIDs[6] = { 19742, 19850, 19852, 19853, 19854, 25290 };
-		bool BoWisdomBuff = localPlayer->hasBuff(BoWisdomIDs, 6);
-		int SanctityAuraIDs[1] = { 20218 };
-		bool SanctityAuraBuff = localPlayer->hasBuff(SanctityAuraIDs, 1);
-		int BoWisdomKey = Functions::GetBuffKey(BoWisdomIDs, 6);
 		ThreadSynchronizer::RunOnMainThread([=]() {
+			int BoWisdomIDs[6] = { 19742, 19850, 19852, 19853, 19854, 25290 };
+			bool BoWisdomBuff = localPlayer->hasBuff(BoWisdomIDs, 6);
+			int SanctityAuraIDs[1] = { 20218 };
+			bool SanctityAuraBuff = localPlayer->hasBuff(SanctityAuraIDs, 1);
+			int BoWisdomKey = Functions::GetBuffKey(BoWisdomIDs, 6);
 			int PurifyDispelKey = Functions::GetDispelKey("Disease", "Poison");
 			int CleanseDispelKey = Functions::GetDispelKey("Disease", "Poison", "Magic");
 			if (!SanctityAuraBuff && Functions::IsPlayerSpell("Sanctity Aura")) {

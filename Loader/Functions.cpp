@@ -127,7 +127,8 @@ void Functions::ClassifyHeal() {
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
 		if (ListUnits[i].unitReaction > Neutral && !ListUnits[i].isdead) {
 			float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
-			if (dist < 60 && !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5), Position(ListUnits[i].position.X, ListUnits[i].position.Y, ListUnits[i].position.Z + 5))) {
+			if (dist < 60 && !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 3)
+				, Position(ListUnits[i].position.X, ListUnits[i].position.Y, ListUnits[i].position.Z + 3))) {
 				PrctHp.push_back(ListUnits[i].prctHP);
 				if (ListUnits[i].objectType == Player && ListUnits[i].prctHP < 60) AoEHeal = AoEHeal + 1;
 				HealTargetArray.push_back(i);
@@ -283,7 +284,9 @@ int Functions::getNbrCreatureType(int range, CreatureType type1, CreatureType ty
 int Functions::GetBuffKey(int* IDs, int size) {
 	//Retourne le joueur auquel il manque le buff
 	for (int i = 1; i <= NumGroupMembers; i++) {
-		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction >= Friendly) && !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)) {
+		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction >= Friendly) && !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 3)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 3))) {
 			if (!ListUnits[GroupMembersIndex[i]].hasBuff(IDs, size)) return i;
 		}
 	}
@@ -742,23 +745,6 @@ int Functions::GetStackDebuff(std::string target, std::string texture) {
 	return 0;
 }
 
-int Functions::GetBuffKey(std::string buffTexture, std::string buffTexture2) {
-	//Retourne le joueur auquel il manque le buff
-	for (int i = 1; i <= NumGroupMembers; i++) {
-		bool buffB = false;
-		if (!UnitCanAttack("player", tarType+std::to_string(i)) && !UnitIsDeadOrGhost(tarType + std::to_string(i)) && CheckInteractDistance(tarType+std::to_string(i), 4)
-			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5)
-				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 5))) {
-			for (int y = 1; y < 40; y++) {
-				std::string buff = UnitBuff(tarType + std::to_string(i), y);
-				if (buff == buffTexture || buff == buffTexture2) buffB = true;
-			}
-			if (buffB == false) return i;
-		}
-	}
-	return 0;
-}
-
 bool Functions::GetUnitDispel(std::string target, std::string dispellType1, std::string dispellType2, std::string dispellType3) {
 	//Retourne si la cible a un debuff à dispel
 	std::string args[3] = { dispellType1, dispellType2, dispellType3 };
@@ -778,8 +764,8 @@ int Functions::GetDispelKey(std::string dispellType1, std::string dispellType2, 
 	//Retourne le joueur du groupe à dispel
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)
-			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z+5)
-				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z+5))) return i;
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z+3)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z+3))) return i;
 	}
 	return 0;
 }
@@ -1172,7 +1158,7 @@ int Functions::FollowMultibox(int ranged, int placement) {
 	std::string target_name = "";
 	if ((ranged == 1 && meleeName != "null") || tankName != "null") {
 		int range = 2;
-		float cst = 0.25f;
+		float cst = 0.30f;
 		if (placement == 1) cst = -cst;
 		if (tankName != "null") {
 			target_name = tankName;
@@ -1191,7 +1177,8 @@ int Functions::FollowMultibox(int ranged, int placement) {
 				if (dist < 60.0f && dist > range+1) {
 					float PI = acos(0.0) * 2;
 					Position target_pos = Position((cos(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.X, (sin(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.Y, ListUnits[i].position.Z);
-					localPlayer->ClickToMove(Move, ListUnits[i].Guid, target_pos);
+					if(obstacle_front) localPlayer->ClickToMove(FaceTarget, ListUnits[i].Guid, target_pos);
+					else localPlayer->ClickToMove(Move, ListUnits[i].Guid, target_pos);
 					return 1;
 				}
 			}

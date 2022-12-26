@@ -194,12 +194,12 @@ void ListAI::PaladinHeal() {
 		Functions::releaseKey(0x28);
 	}
 	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead) {
-		int BoKingsIDs[1] = { 20217 };
-		bool BoKingsBuff = localPlayer->hasBuff(BoKingsIDs, 1);
-		int DevotionAuraIDs[7] = { 465, 10290, 643, 10291, 1032, 10292, 10293 };
-		bool DevotionAuraBuff = localPlayer->hasBuff(DevotionAuraIDs, 7);
-		int BoKingsKey = Functions::GetBuffKey(BoKingsIDs, 1);
 		ThreadSynchronizer::RunOnMainThread([=]() {
+			int BoKingsIDs[1] = { 20217 };
+			bool BoKingsBuff = localPlayer->hasBuff(BoKingsIDs, 1);
+			int BoKingsKey = Functions::GetBuffKey(BoKingsIDs, 1);
+			int DevotionAuraIDs[7] = { 465, 10290, 643, 10291, 1032, 10292, 10293 };
+			bool DevotionAuraBuff = localPlayer->hasBuff(DevotionAuraIDs, 7);
 			int PurifyDispelKey = Functions::GetDispelKey("Disease", "Poison");
 			int CleanseDispelKey = Functions::GetDispelKey("Disease", "Poison", "Magic");
 			if (!DevotionAuraBuff && Functions::IsPlayerSpell("Devotion Aura")) {
