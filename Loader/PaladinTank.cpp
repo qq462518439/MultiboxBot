@@ -5,13 +5,15 @@
 static int LastTarget = 0;
 
 static void PaladinAttack() {
-	for(int i = NumGroupMembers; i >= 0; i--) {
-		if (tankAutoFocus && HasAggro[i].size() > 0) {
-			if((i > 0) || (i == 0 && (targetUnit == NULL || targetUnit->unitReaction > Neutral || targetUnit->isdead)))
+	if (tankAutoFocus && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral)) {
+		for (int i = NumGroupMembers; i >= 0; i--) {
+			if (HasAggro[i].size() > 0) {
 				localPlayer->SetTarget(HasAggro[i][0]);
-			break;
+				break;
+			}
 		}
 	}
+
 	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;

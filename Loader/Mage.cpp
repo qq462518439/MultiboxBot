@@ -61,13 +61,18 @@ void ListAI::MageDps() {
 			int RemoveCurseKey = Functions::GetDispelKey("Curse");
 			std::string RankConjureMana = GetSpellRank("Conjure Mana");
 
-			if (IsInGroup && (tankName != "null" || meleeName != "null") && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral)) {
-				std::string msg = "AssistByName('" + tankName + "')";
-				if (tankName == "null") msg = "AssistByName('" + meleeName + "')";
-				Functions::LuaCall(msg.c_str());
-			}
-			else if (Combat && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && (HasAggro[0].size() > 0)) {
-				localPlayer->SetTarget(HasAggro[0][0]);
+			if (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) {
+				for (int i = 0; i <= NumGroupMembers; i++) {
+					if (HasAggro[i].size() > 0) {
+						localPlayer->SetTarget(HasAggro[i][0]);
+						break;
+					}
+				}
+				if ((targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
+					std::string msg = "AssistByName('" + tankName + "')";
+					if (tankName == "null") msg = "AssistByName('" + meleeName + "')";
+					Functions::LuaCall(msg.c_str());
+				}
 			}
 
 			if ((IsStunned || Moving == 1) && Functions::IsSpellReady("Blink")) {

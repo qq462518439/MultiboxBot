@@ -5,14 +5,18 @@
 static int LastTarget = 0;
 
 static void PaladinAttack() {
-
-	if (IsInGroup && (tankName != "null" || meleeName != "null") && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral)) {
-		std::string msg = "AssistByName('" + tankName + "')";
-		if(tankName == "null") msg = "AssistByName('" + meleeName + "')";
-		Functions::LuaCall(msg.c_str());
-	}
-	else if (Combat && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && (HasAggro[0].size() > 0)) {
-		localPlayer->SetTarget(HasAggro[0][0]);
+	if (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) {
+		for (int i = 0; i <= NumGroupMembers; i++) {
+			if (HasAggro[i].size() > 0) {
+				localPlayer->SetTarget(HasAggro[i][0]);
+				break;
+			}
+		}
+		if ((targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
+			std::string msg = "AssistByName('" + tankName + "')";
+			if (tankName == "null") msg = "AssistByName('" + meleeName + "')";
+			Functions::LuaCall(msg.c_str());
+		}
 	}
 
 	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {

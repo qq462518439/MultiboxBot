@@ -248,14 +248,14 @@ void Game::MainLoop() {
 				infoB = false;
 				Client::sendMessage("Name Null Class Null");
 			}
-			Sleep(300);
+			Sleep(250);
 		}
 		if (Moving > 0) {
 			if (Moving < 3) Functions::pressKey(0x28);
 			Functions::releaseKey(0x28);
 			Moving = 0;
 		}
-		Sleep(300);
+		Sleep(250);
 	}
 }
 

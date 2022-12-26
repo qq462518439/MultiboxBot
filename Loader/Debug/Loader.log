@@ -6,7 +6,7 @@ C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\dllmain.cpp(2
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(328,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(346,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(348,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(1185,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(1192,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Game.cpp
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Game.cpp(143,19): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Hunter.cpp
@@ -16,7 +16,7 @@ C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Game.cpp(143,
   PaladinHeal.cpp
   PaladinTank.cpp
   Rogue.cpp
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Rogue.cpp(83,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Rogue.cpp(88,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Warlock.cpp
   WoWObject.cpp
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\WoWObject.cpp(138,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data

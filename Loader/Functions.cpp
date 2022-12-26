@@ -746,7 +746,9 @@ int Functions::GetBuffKey(std::string buffTexture, std::string buffTexture2) {
 	//Retourne le joueur auquel il manque le buff
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		bool buffB = false;
-		if (!UnitCanAttack("player", tarType+std::to_string(i)) && !UnitIsDeadOrGhost(tarType + std::to_string(i)) && CheckInteractDistance(tarType+std::to_string(i), 4)) {
+		if (!UnitCanAttack("player", tarType+std::to_string(i)) && !UnitIsDeadOrGhost(tarType + std::to_string(i)) && CheckInteractDistance(tarType+std::to_string(i), 4)
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 5))) {
 			for (int y = 1; y < 40; y++) {
 				std::string buff = UnitBuff(tarType + std::to_string(i), y);
 				if (buff == buffTexture || buff == buffTexture2) buffB = true;
@@ -1170,18 +1172,23 @@ int Functions::FollowMultibox(int ranged, int placement) {
 	std::string target_name = "";
 	if ((ranged == 1 && meleeName != "null") || tankName != "null") {
 		int range = 2;
+		float cst = 0.25f;
+		if (placement == 1) cst = -cst;
 		if (tankName != "null") {
 			target_name = tankName;
-			if (ranged == 1) range = 4;
+			if (ranged == 1) {
+				range = 4;
+				cst = cst / 2;
+			}
 		}
-		else if (ranged == 1 && meleeName != "null") target_name = meleeName;
+		else if (ranged == 1 && meleeName != "null") {
+			target_name = meleeName;
+			cst = cst * 2;
+		}
 		for (unsigned int i = 0; i < ListUnits.size(); i++) {
 			if (ListUnits[i].name == target_name) {
 				float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
 				if (dist < 60.0f && dist > range+1) {
-					float cst = 0.25f;
-					if (placement == 1) cst = -cst;
-					if (ranged == 1) cst = cst / 2;
 					float PI = acos(0.0) * 2;
 					Position target_pos = Position((cos(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.X, (sin(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.Y, ListUnits[i].position.Z);
 					localPlayer->ClickToMove(Move, ListUnits[i].Guid, target_pos);
