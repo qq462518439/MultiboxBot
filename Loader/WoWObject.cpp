@@ -56,7 +56,6 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
     position = Position(x, y, z);
 
     int health = *(int*)(descriptor + HEALTH_OFFSET);
-    isdead = false; if ((objType == Player && health <= 1) || (objType == Unit && health <= 0)) isdead = true;
     int max_health = *(int*)(descriptor + MAX_HEALTH_OFFSET);
     prctHP = ((float)health / (float)max_health) * 100;
     int max_mana = *(int*)(descriptor + MAXPOWER1_OFFSET);
@@ -70,6 +69,8 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
 
     flags = *(UnitFlags*)(descriptor + UNIT_FLAG_OFFSET);
     movement_flags = *(MovementFlags*)(Pointer + MOVEMENT_FLAG_OFFSET);
+
+    isdead = false; if ((objType == Player && health <= 1 && !(flags & UNIT_FLAG_UNK_29)) || (objType == Unit && health <= 0)) isdead = true;
 
     uintptr_t currentBuffOffset = BUFF_BASE_OFFSET;
     for (int i = 0; i < 30; i++) {
@@ -106,6 +107,7 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
     channelInfo = *(int*)(descriptor + CHANNEL_OFFSET);
 
     unitReaction = Neutral;
+    attackable = false;
 }
 
 int WoWUnit::getHealth() {
@@ -165,6 +167,12 @@ bool WoWUnit::isBehind(WoWUnit target) {
 UnitReaction WoWUnit::getUnitReaction(uintptr_t unitPtr2) {
     typedef UnitReaction(__thiscall* func)(uintptr_t unitPtr1, uintptr_t unitPtr2);
     func function = (func)GET_UNIT_REACTION_FUN_PTR;
+    return function(Pointer, unitPtr2);
+}
+
+bool WoWUnit::canAttack(uintptr_t unitPtr2) {
+    typedef bool(__thiscall* func)(uintptr_t unitPtr1, uintptr_t unitPtr2);
+    func function = (func)CAN_ATTACK_UNIT_FUN_PTR;
     return function(Pointer, unitPtr2);
 }
 

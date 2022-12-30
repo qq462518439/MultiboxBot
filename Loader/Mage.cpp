@@ -61,14 +61,14 @@ void ListAI::MageDps() {
 			int RemoveCurseKey = Functions::GetDispelKey("Curse");
 			std::string RankConjureMana = GetSpellRank("Conjure Mana");
 
-			if (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) {
+			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 				for (int i = 0; i <= NumGroupMembers; i++) {
 					if (HasAggro[i].size() > 0) {
 						localPlayer->SetTarget(HasAggro[i][0]);
 						break;
 					}
 				}
-				if ((targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
+				if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
 					std::string msg = "AssistByName('" + tankName + "')";
 					if (tankName == "null") msg = "AssistByName('" + meleeName + "')";
 					Functions::LuaCall(msg.c_str());
@@ -110,8 +110,9 @@ void ListAI::MageDps() {
 				//Conjure Water
 				Functions::CastSpellByName("Conjure Water");
 			}
-			else if (!Combat && (localPlayer->speed == 0) && !IsSitting && (localPlayer->prctMana < 33) && (Functions::HasDrink() > 0)) {
+			else if (!Combat && (localPlayer->speed == 0) && (localPlayer->movement_flags == MOVEFLAG_NONE) && (localPlayer->prctMana < 33) && (Functions::HasDrink() > 0)) {
 				//Drink
+				IsSitting = true;
 				Functions::UseItem(Functions::HasDrink());
 			}
 			else if (!IceBarrierBuff && Functions::IsSpellReady("Ice Barrier")) {
@@ -154,7 +155,7 @@ void ListAI::MageDps() {
 				Functions::CastSpellByName("Remove Lesser Curse");
 				if(Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && !targetUnit->isdead) {
+			else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
 				bool targetStunned = targetUnit->flags & UNIT_FLAG_CONFUSED;
 				bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
@@ -227,9 +228,6 @@ void ListAI::MageDps() {
 					//Wand
 					Functions::CastSpellByName("Shoot");
 				}
-			}
-			else if (!Combat && !IsSitting && IsInGroup) {
-				if (Functions::FollowMultibox(1, 0)) Moving = 4;
 			}
 		} );
 	}

@@ -7,20 +7,20 @@ static time_t current_time = time(0);
 static float HealInnerTimer = 0;
 
 static void PaladinAttack() {
-	if (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) {
+	if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 		for (int i = 0; i <= NumGroupMembers; i++) {
 			if (HasAggro[i].size() > 0) {
 				localPlayer->SetTarget(HasAggro[i][0]);
 				break;
 			}
 		}
-		if ((targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && IsInGroup && !Combat && tankName != "null") {
+		if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat && tankName != "null") {
 			std::string msg = "AssistByName('" + tankName + "')";
 			Functions::LuaCall(msg.c_str());
 		}
 	}
 
-	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
+	if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SotCIDs[6] = { 21082, 20162, 20305, 20306, 20307, 20308 };
@@ -69,9 +69,6 @@ static void PaladinAttack() {
 			//Hammer of Wrath
 			Functions::CastSpellByName("Hammer of Wrath");
 		}
-	}
-	else if (!Combat && !IsSitting && IsInGroup) {
-		if(Functions::FollowMultibox(0, 0)) Moving = 4;
 	}
 }
 
@@ -254,6 +251,6 @@ void ListAI::PaladinDps() {
 				}
 				if (tmp == 1) PaladinAttack();
 			}
-			});
+		});
 	}
 }

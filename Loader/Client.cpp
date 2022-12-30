@@ -45,6 +45,10 @@ void Client::recvMessage() {
 		char* buffTmp = subchar(buffer, 6, 7);
 		playerSpec = ((int)buffTmp[0] - '0');
 	}
+	else if (buffer[0] == 'P') {
+		char* buffTmp = subchar(buffer, 5, 6);
+		positionCircle = ((int)buffTmp[0] - '0');
+	}
 	else if (buffer[0] == 'T') {
 		char* buffTmp = subchar(buffer, 6, 25);
 		int y = 0;

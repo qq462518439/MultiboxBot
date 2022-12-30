@@ -21,9 +21,8 @@ class Functions {
 		static int getNbrCreatureType(int range, CreatureType type1, CreatureType type2=Null, CreatureType type3=Null);
 		static int GetBuffKey(int* IDs, int size);
 		static bool PlayerIsRanged();
-		static int getTankIndex();
 		static void MoveToAlly(int unitIndex);
-		static int FollowMultibox(int ranged = 0, int placement = 0);
+		static int FollowMultibox(int ranged = 0, int placement = 0, int who = 0);
 			// === Lua Game Functions === //
 		static int GetNumGroupMembers();
 		static bool IsInGroup();
@@ -82,6 +81,7 @@ class Functions {
 		static bool HasAction(int slot);
 		static std::string GetActionTexture(int slot);
 		static bool IsConsumableAction(int slot);
+		static bool IsActionInRange(int slot);
 		static int GetSlot(std::string spell_name, std::string slot_type="SPELL");
 		// === Unit === //
 		static void TargetUnit(std::string target);

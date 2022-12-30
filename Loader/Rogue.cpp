@@ -23,14 +23,14 @@ void ListAI::RogueDps() {
 			int ComboPoints = Functions::GetComboPoints();
 			int SprintTalent = Functions::GetTalentInfo(2, 9);
 
-			if (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) {
+			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 				for (int i = 0; i <= NumGroupMembers; i++) {
 					if (HasAggro[i].size() > 0) {
 						localPlayer->SetTarget(HasAggro[i][0]);
 						break;
 					}
 				}
-				if ((targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && IsInGroup && !Combat && tankName != "null") {
+				if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat && tankName != "null") {
 					std::string msg = "AssistByName('" + tankName + "')";
 					Functions::LuaCall(msg.c_str());
 				}
@@ -44,7 +44,7 @@ void ListAI::RogueDps() {
 				//Healing Potion
 				Functions::UseItem("Healing Potion");
 			}
-			else if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && !targetUnit->isdead) {
+			else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
 				bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 				bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
@@ -105,9 +105,6 @@ void ListAI::RogueDps() {
 					//Sinister Strike
 					Functions::CastSpellByName("Sinister Strike");
 				}
-			}
-			else if (!Combat && !IsSitting && IsInGroup) {
-				if (Functions::FollowMultibox(0, 0)) Moving = 4;
 			}
 		});
 	}

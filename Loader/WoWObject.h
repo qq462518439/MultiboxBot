@@ -152,6 +152,7 @@ class WoWUnit : public WoWObject {
         UnitFlags flags; MovementFlags movement_flags; int buff[30]; int debuff[16]; bool isdead;
         CreatureType creatureType; float speed; unsigned long long targetGuid;
         float facing; int level; char* name; int channelInfo; UnitReaction unitReaction;
+        bool attackable;
 
         WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType);
         bool hasBuff(int* IDs, int size);
@@ -159,6 +160,7 @@ class WoWUnit : public WoWObject {
         bool isFacing(Position, float);
         bool isBehind(WoWUnit target);
         UnitReaction getUnitReaction(uintptr_t);
+        bool canAttack(uintptr_t);
         int getHealth(); int getMaxHealth();
 
     protected:
@@ -183,6 +185,7 @@ class WoWUnit : public WoWObject {
         const uintptr_t NAME_OFFSET = 0xB30;
         const uintptr_t GET_CREATURE_TYPE_FUN_PTR = 0x00605570;
         const uintptr_t GET_UNIT_REACTION_FUN_PTR = 0x006061E0;
+        const uintptr_t CAN_ATTACK_UNIT_FUN_PTR = 0x00606980;
 
         const uintptr_t NAME_BASE_OFFSET = 0xC0E230;
         const uintptr_t NEXT_NAME_OFFSET = 0xC;

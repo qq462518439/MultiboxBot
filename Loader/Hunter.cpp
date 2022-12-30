@@ -3,9 +3,8 @@
 #include <iostream>
 
 void ListAI::HunterDps() {
-	int FeignDeathIDs[1] = { 5384 };
 	int RaptorStrikeIDs[8] = { 2973, 14260, 14261, 14262, 14263, 14264, 14265, 14266 };
-	if (localPlayer->hasBuff(FeignDeathIDs, 1) || ((localPlayer->castInfo == 0 || localPlayer->isCasting(RaptorStrikeIDs, 8)) && (localPlayer->channelInfo == 0) && !localPlayer->isdead)) {
+	if ((localPlayer->castInfo == 0 || localPlayer->isCasting(RaptorStrikeIDs, 8)) && ((localPlayer->channelInfo == 0) || (localPlayer->flags & UNIT_FLAG_UNK_29)) && !localPlayer->isdead) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 			int nbrAggro = HasAggro[0].size();
 			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
@@ -23,14 +22,14 @@ void ListAI::HunterDps() {
 
 			bool FeedingBuff = Functions::GetUnitBuff("pet", "Interface\\Icons\\Ability_Hunter_BeastTraining");
 
-			if (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) {
+			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 				for (int i = 0; i <= NumGroupMembers; i++) {
 					if (HasAggro[i].size() > 0) {
 						localPlayer->SetTarget(HasAggro[i][0]);
 						break;
 					}
 				}
-				if ((targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
+				if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
 					std::string msg = "AssistByName('" + tankName + "')";
 					if (tankName == "null") msg = "AssistByName('" + meleeName + "')";
 					Functions::LuaCall(msg.c_str());
@@ -70,7 +69,7 @@ void ListAI::HunterDps() {
 				//Feign Death (Aggro PvE)
 				Functions::CastSpellByName("Feign Death");
 			}
-			else if (targetUnit != NULL && targetUnit->unitReaction <= Neutral && !targetUnit->isdead) {
+			else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
 				bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 				bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
@@ -82,16 +81,17 @@ void ListAI::HunterDps() {
 				bool HunterMarkDebuff = targetUnit->hasDebuff(HunterMarkIDs, 4);
 				int FreezingTrapIDs[3] = { 1499,  14310, 14311 };
 				bool FreezingTrapDebuff = targetUnit->hasDebuff(FreezingTrapIDs, 3);
-				if (FreezingTrapDebuff || targetConfused) { if (Functions::IsCurrentAction(Functions::GetSlot("Attack"))) Functions::CastSpellByName("Attack"); }
-				else if ((distTarget < 8) && !Functions::IsCurrentAction(Functions::GetSlot("Attack"))) Functions::CastSpellByName("Attack");
-				if ((distTarget > 8) && !Functions::IsAutoRepeatAction(Functions::GetSlot("Auto Shot"))) Functions::CastSpellByName("Auto Shot");
+				bool attacking = Functions::IsCurrentAction(Functions::GetSlot("Attack"));
+				bool autoShotInRange = Functions::IsActionInRange(Functions::GetSlot("Auto Shot"));
+				if ((FreezingTrapDebuff || targetConfused) && attacking) Functions::CastSpellByName("Attack");
+				else if (!autoShotInRange && !attacking) Functions::CastSpellByName("Attack");
+				if (autoShotInRange && !Functions::IsAutoRepeatAction(Functions::GetSlot("Auto Shot"))) Functions::CastSpellByName("Auto Shot");
 				if (targetUnit->flags & UNIT_FLAG_IN_COMBAT) Functions::LuaCall("PetAttack()");
-				int distMove = 15; if (FreezingTrapDebuff) distMove = 30;
-				if ((distTarget < 5) && (localPlayer->prctMana > 10) && targetPlayer && Functions::IsSpellReady("Feign Death")) {
+				if ((distTarget < 5.0f) && (localPlayer->prctMana > 10) && targetPlayer && Functions::IsSpellReady("Feign Death")) {
 					//Feign Death
 					Functions::CastSpellByName("Feign Death");
 				}
-				else if (!Combat && (distTarget < 5) && targetPlayer && Functions::IsSpellReady("Freezing Trap")) {
+				else if (!Combat && (distTarget < 5.0f) && targetPlayer&& Functions::IsSpellReady("Freezing Trap")) {
 					//Freezing Trap
 					Functions::CastSpellByName("Freezing Trap");
 				}
@@ -99,39 +99,39 @@ void ListAI::HunterDps() {
 					//Explosive trap (AoE)
 					Functions::CastSpellByName("Explosive Trap");
 				}
-				else if ((distTarget < 15) && targetPlayer && !FreezingTrapDebuff && Functions::IsSpellReady("Scatter Shot")) {
+				else if ((distTarget < 15.0f) && targetPlayer && !FreezingTrapDebuff && Functions::IsSpellReady("Scatter Shot")) {
 					//Scatter Shot
 					Functions::CastSpellByName("Scatter Shot");
 				}
-				else if ((distTarget < 5) && targetPlayer && !WingClipDebuff && !FreezingTrapDebuff && Functions::IsSpellReady("Wing Clip")) {
+				else if ((distTarget < 5.0f) && targetPlayer && !WingClipDebuff && !FreezingTrapDebuff && Functions::IsSpellReady("Wing Clip")) {
 					//Wing Clip
 					Functions::CastSpellByName("Wing Clip");
 				}
-				else if (IsFacing && targetUnit->channelInfo > 0 && (distTarget < 15) && Functions::IsSpellReady("Scatter Shot")) {
+				else if (IsFacing && targetUnit->channelInfo > 0 && (distTarget < 15.0f) && Functions::IsSpellReady("Scatter Shot")) {
 					//Scatter Shot (Silence)
 					Functions::CastSpellByName("Scatter Shot");
 				}
-				else if ((distTarget < 5) && (nbrAggro > 0) && !AspectMonkeyBuff && Functions::IsSpellReady("Aspect of the Monkey")) {
+				else if ((distTarget < 5.0f) && (nbrAggro > 0) && !AspectMonkeyBuff && Functions::IsSpellReady("Aspect of the Monkey")) {
 					//Aspect of the Monkey
 					Functions::CastSpellByName("Aspect of the Monkey");
 				}
-				else if ((((distTarget > 8) && !targetPlayer) || ((distTarget > 20) && targetPlayer)) && !AspectHawkBuff && Functions::IsSpellReady("Aspect of the Hawk")) {
+				else if (((autoShotInRange && !targetPlayer) || ((distTarget > 20.0f) && targetPlayer)) && !AspectHawkBuff && Functions::IsSpellReady("Aspect of the Hawk")) {
 					//Aspect of the Hawk
 					Functions::CastSpellByName("Aspect of the Hawk");
 				}
-				else if (IsFacing && (distTarget > 8) && targetPlayer && Functions::IsSpellReady("Concussive Shot")) {
+				else if (IsFacing && autoShotInRange && targetPlayer && Functions::IsSpellReady("Concussive Shot")) {
 					//Concussive Shot (PvP)
 					Functions::CastSpellByName("Concussive Shot");
 				}
-				else if (IsFacing && !targetPlayer && hasTargetAggro && (distTarget < 5) && Functions::IsSpellReady("Disengage")) {
+				else if (IsFacing && !targetPlayer && hasTargetAggro && (distTarget < 5.0f) && Functions::IsSpellReady("Disengage")) {
 					//Disengage
 					Functions::CastSpellByName("Disengage");
 				}
-				else if (IsFacing && (distTarget < 5) && Functions::IsSpellReady("Mongoose Bite")) {
+				else if (IsFacing && (distTarget < 5.0f) && Functions::IsSpellReady("Mongoose Bite")) {
 					//Mongoose Bite
 					Functions::CastSpellByName("Mongoose Bite");
 				}
-				else if (IsFacing && (distTarget < 5) && Functions::IsSpellReady("Raptor Strike")) {
+				else if (IsFacing && (distTarget < 5.0f) && Functions::IsSpellReady("Raptor Strike")) {
 					//Raptor Strike
 					Functions::CastSpellByName("Raptor Strike");
 				}
@@ -144,29 +144,26 @@ void ListAI::HunterDps() {
 					//Hunter's Mark
 					Functions::CastSpellByName("Hunter's Mark");
 				}
-				else if ((localPlayer->speed == 0) && (((distTarget > 8) && !targetPlayer) || ((distTarget > 20) && targetPlayer)) && Functions::UnitIsElite("target") && Functions::IsSpellReady("Rapid Fire")) {
+				else if ((localPlayer->speed == 0) && ((autoShotInRange && !targetPlayer) || ((distTarget > 20.0f) && targetPlayer)) && Functions::UnitIsElite("target") && Functions::IsSpellReady("Rapid Fire")) {
 					//Rapid Fire
 					Functions::CastSpellByName("Rapid Fire");
 				}
-				else if (IsFacing && (distTarget > 8) && targetPlayer && !SerpentStingDebuff && Functions::IsSpellReady("Serpent Sting")) {
+				else if (IsFacing && autoShotInRange && targetPlayer && !SerpentStingDebuff && Functions::IsSpellReady("Serpent Sting")) {
 					//Serpent Sting (PvP)
 					Functions::CastSpellByName("Serpent Sting");
 				}
-				else if (IsFacing && (distTarget > 8) && (localPlayer->speed > 0) && Functions::IsSpellReady("Arcane Shot")) {
+				else if (IsFacing && autoShotInRange && (localPlayer->speed > 0) && Functions::IsSpellReady("Arcane Shot")) {
 					//Arcane Shot (Movement)
 					Functions::CastSpellByName("Arcane Shot");
 				}
-				else if (IsFacing && (((distTarget > 8) && !targetPlayer) || ((distTarget > 20) && targetPlayer)) && (localPlayer->speed == 0) && Functions::IsSpellReady("Aimed Shot")) {
+				else if (IsFacing && ((autoShotInRange && !targetPlayer) || ((distTarget > 20.0f) && targetPlayer)) && (localPlayer->speed == 0) && Functions::IsSpellReady("Aimed Shot")) {
 					//Aimed Shot
 					Functions::CastSpellByName("Aimed Shot");
 				}
-				else if (IsFacing && (distTarget > 8) && (localPlayer->speed == 0) && Functions::IsSpellReady("Multi-Shot")) {
+				else if (IsFacing && autoShotInRange && (localPlayer->speed == 0) && Functions::IsSpellReady("Multi-Shot")) {
 					//Multi-Shot
 					Functions::CastSpellByName("Multi-Shot");
 				}
-			}
-			else if (!Combat && !IsSitting && IsInGroup) {
-				if (Functions::FollowMultibox(1, 1)) Moving = 4;
 			}
 		});
 	}

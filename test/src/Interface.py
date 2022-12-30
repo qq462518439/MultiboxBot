@@ -542,9 +542,9 @@ class Interface(tk.Tk):
         
     def launch_repair_clients(self):
         #Launch or Repair clients
+        nbr_monitor = win32api.GetSystemMetrics(win32con.SM_CMONITORS)
         if self.LaunchRepair_Button.config('text')[-1] == 'Launch':
             if(self.NbrClient_Entry.get() != ""): self.NBR_ACCOUNT = int(self.NbrClient_Entry.get())
-            nbr_monitor = win32api.GetSystemMetrics(win32con.SM_CMONITORS)
             if(self.NbrClient_Entry.get() == ""): messagebox.showerror('Error', 'You must specify the number of clients !')
             elif(self.NBR_ACCOUNT <= 0): messagebox.showerror('Error', 'You can\'t have '+str(self.NBR_ACCOUNT)+' clients !')
             elif((self.NBR_ACCOUNT > 5 and nbr_monitor <= 1) or (self.NBR_ACCOUNT > 20)): #25 soon...
@@ -560,10 +560,10 @@ class Interface(tk.Tk):
                     hwnd = win32gui.FindWindow(None, "World of Warcraft")
                     win32gui.SetWindowText(hwnd, "WoW"+str(i+1))
                     self.hwndACC.append(hwnd)
-                    if(i == 0 and self.NBR_ACCOUNT <= 5): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+                    if(i == 0 and ((self.NBR_ACCOUNT <= 5 and nbr_monitor == 2) or (self.NBR_ACCOUNT == 1))): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
                     else:
                         win32gui.MoveWindow(hwnd, self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
-                        if(i == 1 and self.NBR_ACCOUNT == 2): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+                        if(i == 1 and self.NBR_ACCOUNT == 2 and nbr_monitor == 2): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
                 for i in range(self.NBR_ACCOUNT): #Enter username/password
                     self.send_client_txt(self.hwndACC[i], self.ACC_Info[i][0])
                     win32api.SendMessage(self.hwndACC[i], win32con.WM_KEYDOWN, win32con.VK_TAB, 0)
@@ -588,8 +588,10 @@ class Interface(tk.Tk):
                     time.sleep(0.1)
                     win32api.SendMessage(self.hwndACC[i], win32con.WM_KEYDOWN, win32con.VK_RETURN, 0)
                     win32api.SendMessage(self.hwndACC[i], win32con.WM_KEYUP, win32con.VK_RETURN, 0)
-                if(i == 0 and self.NBR_ACCOUNT == 5): win32gui.ShowWindow(self.hwndACC[i], win32con.SW_MAXIMIZE)
-                else: win32gui.MoveWindow(self.hwndACC[i], self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
+                    if(i == 0 and ((self.NBR_ACCOUNT <= 5 and nbr_monitor == 2) or (self.NBR_ACCOUNT == 1))): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+                    else:
+                        win32gui.MoveWindow(hwnd, self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
+                        if(i == 1 and self.NBR_ACCOUNT == 2 and nbr_monitor == 2): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
             
     def activateBot(self):
         self.MOVEMENT_KEY = [win32con.VK_RIGHT, win32con.VK_UP, win32con.VK_DOWN, win32con.VK_LEFT]
@@ -613,7 +615,7 @@ def isATank(Class, Spec):
     else: return False
     
 def isAMelee(Class, Spec):
-    if(not isATank(Class, Spec) and (Class == "Warrior" or Class == "Rogue" or (Class == "Paladin" and Spec == "Retribution") or (Class == "Shaman" and Spec == "Enhancement"))):
+    if(not isATank(Class, Spec) and (Class == "Warrior" or Class == "Rogue" or Class == "Paladin" or (Class == "Shaman" and Spec == "Enhancement"))):
         return True
     else: return False
 
@@ -625,9 +627,9 @@ class client_thread(threading.Thread):
         self.addr = addr
         self.index = index
         self.currentSpec = "Null"
-        self.specChoice = 0
         self.Name = ""
         self.Class = ""
+        self.CheckingSpec = True
        
     def run(self):
         interface.after(500, self.checkSpecChange)
@@ -675,10 +677,11 @@ class client_thread(threading.Thread):
                         interface.Specialisation_Menu[self.index]['menu'].delete(0, tk.END)
                         for option in interface.OptionList[self.index]:
                             interface.Specialisation_Menu[self.index]['menu'].add_command(label=option, command=tk._setit(interface.SpecialisationList[self.index], option))
-                        if(self.Class != "Null"): interface.SpecialisationList[self.index].set(interface.OptionList[self.index][self.specChoice])
+                        if(self.Class != "Null"): interface.SpecialisationList[self.index].set(interface.OptionList[self.index][0])
                         else: interface.SpecialisationList[self.index].set(interface.OptionList[self.index][0])
                         interface.Name_Label[self.index].config(foreground="black")
                         interface.Class_Label[self.index].config(foreground=color)
+                        self.currentSpec = interface.OptionList[self.index][0]
                     #print("Client " + self.addr[0] + ":" + str(self.addr[1]) + " - message: " + data)
             except Exception as e:
                 interface.serverthread.clients[self.index] = 0
@@ -692,31 +695,43 @@ class client_thread(threading.Thread):
         if(self.running):
             SpecTMP = interface.SpecialisationList[self.index].get()
             if(self.currentSpec != SpecTMP):
-                if(isATank(self.Class, self.currentSpec) and not isATank(self.Class, SpecTMP)): #Was a Tank but changed
-                    self.currentSpec = SpecTMP; msg = "null"
+                self.currentSpec = SpecTMP
+                if(not isATank(self.Class, self.currentSpec)): #Not a tank => look for tank
+                    msg = "null"
                     for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1): #Who is a Tank in group
                         if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                             msg = ('Tank: '+interface.serverthread.clients_thread[i].Name)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
-                elif(isAMelee(self.Class, self.currentSpec) and not isAMelee(self.Class, SpecTMP)): #Was a Melee but changed
-                    self.currentSpec = SpecTMP; msg = "null"
+                else: #Is now a Tank
+                    msg = ('Tank: '+self.Name)
+                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
+                if(not isAMelee(self.Class, self.currentSpec)): #Not a melee => look for melee
+                    msg = "null"
                     for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1): #Who is a Melee in group
                         if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                             msg = ('Melee: '+interface.serverthread.clients_thread[i].Name)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
-                self.currentSpec = SpecTMP
-                if(isATank(self.Class, self.currentSpec)): #Is now a Tank
-                    msg = ('Tank: '+self.Name)
-                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
-                elif(isAMelee(self.Class, self.currentSpec)): #Is now a Melee
+                else: #Is now a Melee
                     msg = ('Melee: '+self.Name)
                     interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
+                #Specialisation
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):
-                        if(self.currentSpec != "Null"): self.specChoice = i
                         msg = ('Spec: '+str(i)+' ')
                         self.conn.send(bytes(msg, 'utf-8'))
+                #Position follow
+                melee_counter = 0; ranged_counter = 0
+                for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1):
+                    if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                        msg = ('Pos: '+str(melee_counter)+' ')
+                        interface.serverthread.clients_thread[i].conn.send(bytes(msg, 'utf-8'))
+                        melee_counter = melee_counter + 1
+                    elif(not isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec) and not isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                        msg = ('Pos: '+str(ranged_counter)+' ')
+                        interface.serverthread.clients_thread[i].conn.send(bytes(msg, 'utf-8'))
+                        ranged_counter = ranged_counter + 1
             interface.after(500, self.checkSpecChange)
+        else: self.CheckingSpec = False
         
 class server_thread(threading.Thread):
     def __init__(self):

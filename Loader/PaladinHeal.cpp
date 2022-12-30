@@ -5,21 +5,21 @@
 static int LastTarget = 0;
 
 static void PaladinAttack() {
-	if (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) {
+	if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 		for (int i = 0; i <= NumGroupMembers; i++) {
 			if (HasAggro[i].size() > 0) {
 				localPlayer->SetTarget(HasAggro[i][0]);
 				break;
 			}
 		}
-		if ((targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
+		if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
 			std::string msg = "AssistByName('" + tankName + "')";
 			if (tankName == "null") msg = "AssistByName('" + meleeName + "')";
 			Functions::LuaCall(msg.c_str());
 		}
 	}
 
-	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && !targetUnit->isdead) {
+	if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SoLIDs[4] = { 20165, 20347, 20348, 20349 };
@@ -55,9 +55,6 @@ static void PaladinAttack() {
 			//Hammer of Wrath
 			Functions::CastSpellByName("Hammer of Wrath");
 		}
-	}
-	else if (!Combat && !IsSitting && IsInGroup) {
-		if (Functions::FollowMultibox(0, 1)) Moving = 4;
 	}
 }
 
@@ -195,6 +192,9 @@ void ListAI::PaladinHeal() {
 	}
 	else if ((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && !localPlayer->isdead) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
+			int BoMightIDs[7] = { 19740, 19834, 19835, 19836, 19837, 19838, 25291 };
+			bool BoMightBuff = localPlayer->hasBuff(BoMightIDs, 7);
+			int BoMightKey = Functions::GetBuffKey(BoMightIDs, 7);
 			int BoKingsIDs[1] = { 20217 };
 			bool BoKingsBuff = localPlayer->hasBuff(BoKingsIDs, 1);
 			int BoKingsKey = Functions::GetBuffKey(BoKingsIDs, 1);
@@ -210,6 +210,16 @@ void ListAI::PaladinHeal() {
 				//Redemption
 				localPlayer->SetTarget(ListUnits[GroupMembersIndex[Functions::GetGroupDead()]].Guid);
 				Functions::CastSpellByName("Redemption");
+			}
+			else if (!BoMightBuff && !Functions::IsPlayerSpell("Blessing of Kings") && Functions::IsSpellReady("Blessing of Might")) {
+				//Blessing of Might (self)
+				localPlayer->SetTarget(localPlayer->Guid);
+				Functions::CastSpellByName("Blessing of Might");
+			}
+			else if ((BoMightKey > 0) && !Functions::IsPlayerSpell("Blessing of Kings") && (GroupMembersIndex[BoMightKey] > -1) && Functions::IsSpellReady("Blessing of Might")) {
+				//Blessing of Might (Groupe)
+				localPlayer->SetTarget(ListUnits[GroupMembersIndex[BoMightKey]].Guid);
+				Functions::CastSpellByName("Blessing of Might");
 			}
 			else if (!BoKingsBuff && Functions::IsSpellReady("Blessing of Kings")) {
 				//Blessing of Kings (self)
@@ -245,8 +255,9 @@ void ListAI::PaladinHeal() {
 				localPlayer->SetTarget(ListUnits[GroupMembersIndex[CleanseDispelKey]].Guid);
 				Functions::CastSpellByName("Cleanse");
 			}
-			else if (!Combat && (localPlayer->speed == 0) && !IsSitting && (localPlayer->prctMana < 33) && (Functions::HasDrink() > 0)) {
+			else if (!Combat && (localPlayer->speed == 0) && (localPlayer->movement_flags == MOVEFLAG_NONE) && (localPlayer->prctMana < 33) && (Functions::HasDrink() > 0)) {
 				//Drink
+				IsSitting = true;
 				Functions::UseItem(Functions::HasDrink());
 			}
 			else {

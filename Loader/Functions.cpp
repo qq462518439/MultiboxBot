@@ -30,7 +30,7 @@ float Functions::GetDepth(Position pos) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
 	func* function = (func*)INTERSECT_FUN;
 	Position* p1 = new Position(pos.X, pos.Y, pos.Z);
-	Position* p2 = new Position(pos.X, pos.Y, pos.Z-20);
+	Position* p2 = new Position(pos.X, pos.Y, pos.Z-100);
 	Position* intersection = new Position(0, 0, 0);
 	float* distance = new float(pos.DistanceTo(*p2));
 	function(p1, p2, 0, intersection, distance, 0x00100111);
@@ -62,6 +62,7 @@ void Functions::EnumerateVisibleObjects(int filter) {
 
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
 		ListUnits[i].unitReaction = localPlayer->getUnitReaction(ListUnits[i].Pointer);
+		ListUnits[i].attackable = localPlayer->canAttack(ListUnits[i].Pointer);
 	}
 }
 
@@ -127,8 +128,8 @@ void Functions::ClassifyHeal() {
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
 		if (ListUnits[i].unitReaction > Neutral && !ListUnits[i].isdead) {
 			float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
-			if (dist < 60 && !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 3)
-				, Position(ListUnits[i].position.X, ListUnits[i].position.Y, ListUnits[i].position.Z + 3))) {
+			if (dist < 60 && !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5)
+				, Position(ListUnits[i].position.X, ListUnits[i].position.Y, ListUnits[i].position.Z + 5))) {
 				PrctHp.push_back(ListUnits[i].prctHP);
 				if (ListUnits[i].objectType == Player && ListUnits[i].prctHP < 60) AoEHeal = AoEHeal + 1;
 				HealTargetArray.push_back(i);
@@ -169,7 +170,7 @@ std::tuple<Position, int> Functions::getAOETargetPos(float range, float range2) 
 	std::vector<Position> clusters_center;
 	//1- Chaque position est un cluster
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
-		if ((ListUnits[i].flags & UNIT_FLAG_IN_COMBAT) && (ListUnits[i].unitReaction) <= Neutral) {
+		if ((ListUnits[i].flags & UNIT_FLAG_IN_COMBAT) && ListUnits[i].attackable) {
 			std::vector<Position> cluster;
 			cluster.push_back(ListUnits[i].position);
 			clustersArr.push_back(cluster);
@@ -227,10 +228,10 @@ std::tuple<int, int, int, int> Functions::countEnemies() {
 	int nbr = 0, nbrClose = 0, nbrCloseFacing = 0, nbrEnemyPlayer = 0;
 	ccTarget = NULL; bossFight = false;
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
-		if (ListUnits[i].unitReaction <= Neutral) { //Hostile
-			if (ListUnits[i].level == -1 || ListUnits[i].level >= 62) bossFight = true;
+		if (ListUnits[i].attackable) { //Hostile
+			if ((ListUnits[i].level == -1 || ListUnits[i].level >= 62) && (ListUnits[i].flags & UNIT_FLAG_IN_COMBAT)) bossFight = true;
 			for (int y = 0; y <= NumGroupMembers; y++) { //Group member has aggro
-				if ((GroupMembersIndex[y] > -1) && ListUnits[GroupMembersIndex[y]].Guid == ListUnits[i].targetGuid) HasAggro[y].push_back(ListUnits[i].Guid);
+				if ((GroupMembersIndex[y] > -1) && ListUnits[GroupMembersIndex[y]].Guid == ListUnits[i].targetGuid && (ListUnits[i].flags & UNIT_FLAG_IN_COMBAT)) HasAggro[y].push_back(ListUnits[i].Guid);
 			}
 			if (ListUnits[i].flags & UNIT_FLAG_PLAYER_CONTROLLED) { //Enemy player
 				nbrEnemyPlayer++;
@@ -284,9 +285,9 @@ int Functions::getNbrCreatureType(int range, CreatureType type1, CreatureType ty
 int Functions::GetBuffKey(int* IDs, int size) {
 	//Retourne le joueur auquel il manque le buff
 	for (int i = 1; i <= NumGroupMembers; i++) {
-		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction >= Friendly) && !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)
-			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 3)
-				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 3))) {
+		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction > Neutral) && !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 5))) {
 			if (!ListUnits[GroupMembersIndex[i]].hasBuff(IDs, size)) return i;
 		}
 	}
@@ -295,15 +296,8 @@ int Functions::GetBuffKey(int* IDs, int size) {
 
 bool Functions::PlayerIsRanged() {
 	if(playerClass == "Mage" || playerClass == "Priest" || playerClass == "Warlock" || playerClass == "Hunter"
-		|| (playerClass == "Druid" && (playerSpec == 0 || playerSpec == 2)) || (playerClass == "Paladin" && playerSpec == 0 && bossFight) || (playerClass == "Shaman" && (playerSpec == 0 || playerSpec == 2))) return true;
+		|| (playerClass == "Druid" && (playerSpec == 0 || playerSpec == 2)) || (playerClass == "Shaman" && (playerSpec == 0 || playerSpec == 2))) return true;
 	else return false;
-}
-
-int Functions::getTankIndex() {
-	for (int i = 1; i <= NumGroupMembers; i++) {
-		if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].name == tankName) return i;
-	}
-	return 0;
 }
 
 void Functions::MoveToAlly(int unitIndex) {
@@ -764,8 +758,8 @@ int Functions::GetDispelKey(std::string dispellType1, std::string dispellType2, 
 	//Retourne le joueur du groupe à dispel
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)
-			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z+3)
-				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z+3))) return i;
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z+5)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z+5))) return i;
 	}
 	return 0;
 }
@@ -955,6 +949,14 @@ std::string Functions::GetActionTexture(int slot) {
 
 bool Functions::IsConsumableAction(int slot) {
 	std::string command = "res = IsConsumableAction(" + std::to_string(slot) + ")";
+	LuaCall(command.c_str());
+	int result = GetIntFromChar((char*)GetText("res"));
+	if (result == 1) return true;
+	else return false;
+}
+
+bool Functions::IsActionInRange(int slot) {
+	std::string command = "res = IsActionInRange(" + std::to_string(slot) + ")";
 	LuaCall(command.c_str());
 	int result = GetIntFromChar((char*)GetText("res"));
 	if (result == 1) return true;
@@ -1154,33 +1156,27 @@ void Functions::FollowUnit(std::string target) {
 	LuaCall(command.c_str());
 }
 
-int Functions::FollowMultibox(int ranged, int placement) {
+int Functions::FollowMultibox(int ranged, int placement, int who) {
 	std::string target_name = "";
-	if ((ranged == 1 && meleeName != "null") || tankName != "null") {
-		int range = 2;
-		float cst = 0.30f;
-		if (placement == 1) cst = -cst;
-		if (tankName != "null") {
-			target_name = tankName;
-			if (ranged == 1) {
-				range = 4;
-				cst = cst / 2;
-			}
-		}
-		else if (ranged == 1 && meleeName != "null") {
-			target_name = meleeName;
-			cst = cst * 2;
-		}
-		for (unsigned int i = 0; i < ListUnits.size(); i++) {
-			if (ListUnits[i].name == target_name) {
-				float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
-				if (dist < 60.0f && dist > range+1) {
-					float PI = acos(0.0) * 2;
-					Position target_pos = Position((cos(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.X, (sin(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.Y, ListUnits[i].position.Z);
-					if(obstacle_front) localPlayer->ClickToMove(FaceTarget, ListUnits[i].Guid, target_pos);
+	int range = 2;
+	float cst = 0.30f*((int(placement/2)*2)+1);
+	if (placement%2 != 0) cst = -cst;
+	if (who == 0) target_name = tankName; else target_name = meleeName;
+	if (ranged == 1) {
+		range = 4;
+		cst = cst / 2;
+	}
+	for (unsigned int i = 0; i < ListUnits.size(); i++) {
+		if (ListUnits[i].name == target_name) {
+			float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
+			if (dist < 60.0f && dist > range+1) {
+				float PI = acos(0.0) * 2;
+				Position target_pos = Position((cos(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.X, (sin(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.Y, ListUnits[i].position.Z);
+				ThreadSynchronizer::RunOnMainThread([=]() { 
+					if (obstacle_front) localPlayer->ClickToMove(FaceTarget, ListUnits[i].Guid, target_pos);
 					else localPlayer->ClickToMove(Move, ListUnits[i].Guid, target_pos);
-					return 1;
-				}
+				});
+				return 1;
 			}
 		}
 	}

@@ -5,7 +5,7 @@
 static int LastTarget = 0;
 
 static void PaladinAttack() {
-	if (tankAutoFocus && (targetUnit == NULL || targetUnit->isdead || targetUnit->unitReaction > Neutral)) {
+	if (tankAutoFocus && (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable)) {
 		for (int i = NumGroupMembers; i >= 0; i--) {
 			if (HasAggro[i].size() > 0) {
 				localPlayer->SetTarget(HasAggro[i][0]);
@@ -14,7 +14,7 @@ static void PaladinAttack() {
 		}
 	}
 
-	if (targetUnit != NULL && (targetUnit->unitReaction <= Neutral) && (targetUnit->prctHP > 0)) {
+	if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SoRIDs[9] = { 20154, 21084, 20287, 20288, 20289, 20290, 20291, 20292, 20293 };
