@@ -130,8 +130,8 @@ void Game::MainLoop() {
 					Position front_pos = Position(cos(localPlayer->facing) * 4 + localPlayer->position.X, sin(localPlayer->facing) * 4 + localPlayer->position.Y, localPlayer->position.Z + 5);
 					Position back_pos = Position(cos(localPlayer->facing + (2 * halfPI)) * 4 + localPlayer->position.X, sin(localPlayer->facing + (2 * halfPI)) * 4 + localPlayer->position.Y, localPlayer->position.Z + 5);
 					ThreadSynchronizer::RunOnMainThread([=]() {
-						obstacle_front = (localPlayer->movement_flags == MOVEFLAG_NONE) && Functions::GetDepth(front_pos) > 13;
-						obstacle_back = (localPlayer->movement_flags == MOVEFLAG_NONE) && Functions::GetDepth(back_pos) > 13;
+						obstacle_front = !(localPlayer->movement_flags & MOVEFLAG_SWIMMING) && Functions::GetDepth(front_pos) > 13;
+						obstacle_back = !(localPlayer->movement_flags & MOVEFLAG_SWIMMING) && Functions::GetDepth(back_pos) > 13;
 						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos
 							, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 5));
 					});
@@ -194,15 +194,19 @@ void Game::MainLoop() {
 							ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 							Moving = 2;
 						}
-						else if (Moving == 2 || (Moving == 4 && obstacle_front)) {
+						else if ((Moving == 2 || Moving == 4) && obstacle_front) {
 							Functions::pressKey(0x28);
 							Functions::releaseKey(0x28);
 							Moving = 0;
 						}
 						else if (!IsFacing) ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 					}
-					else if ((Moving > 0 && Moving < 4) || (Moving == 4 && obstacle_front)) {
-						if (Moving != 3) Functions::pressKey(0x28);
+					else if (Moving == 1 || Moving == 2 || (Moving == 4 && obstacle_front)) {
+						Functions::pressKey(0x28);
+						Functions::releaseKey(0x28);
+						Moving = 0;
+					}
+					else if (Moving == 3) {
 						Functions::releaseKey(0x28);
 						Moving = 0;
 					}
