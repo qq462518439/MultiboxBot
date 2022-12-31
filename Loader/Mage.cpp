@@ -186,7 +186,7 @@ void ListAI::MageDps() {
 					if(localPlayer->isCasting()) current_time_polymorph = time(0);
 					localPlayer->SetTarget(firstTarget->Guid);
 				}
-				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && (playerSpec == 1) && Functions::IsSpellReady("Flamestrike")) {
+				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && (playerSpec == 1 || localPlayer->level < 20) && Functions::IsSpellReady("Flamestrike")) {
 					//Flamestrike
 					Functions::CastSpellByName("Flamestrike");
 					Functions::ClickAOE(cluster_center);
@@ -196,7 +196,7 @@ void ListAI::MageDps() {
 					Functions::CastSpellByName("Blizzard");
 					Functions::ClickAOE(cluster_center);
 				}
-				else if ((localPlayer->speed > 0) && (nbrCloseEnemy >= 4) && Functions::IsSpellReady("Arcane Explosion")) {
+				else if ((localPlayer->speed > 0 || localPlayer->level < 20) && (nbrCloseEnemy >= 4) && Functions::IsSpellReady("Arcane Explosion")) {
 					//Arcane Explosion
 					Functions::CastSpellByName("Arcane Explosion");
 				}
