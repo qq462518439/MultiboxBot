@@ -233,8 +233,6 @@ std::tuple<Position, int> Functions::getAOETargetPos(float range, float range2) 
 }
 
 std::tuple<int, int, int, int> Functions::countEnemies() {
-	std::vector<float> EnemyDistList;
-	listIndexCloseEnemies.clear();
 	for (int i = 0; i < 40; i++) {
 		HasAggro[i].clear();
 	}
@@ -255,26 +253,12 @@ std::tuple<int, int, int, int> Functions::countEnemies() {
 			}
 			if ((ListUnits[i].flags & UNIT_FLAG_IN_COMBAT) && !(ListUnits[i].flags & UNIT_FLAG_CONFUSED)) { //Combat
 				nbr++;
-				EnemyDistList.push_back(localPlayer->position.DistanceTo(ListUnits[i].position));
-				listIndexCloseEnemies.push_back(i);
 				if (localPlayer->position.DistanceTo(ListUnits[i].position) < 8) {
 					nbrClose++;
 					if (localPlayer->isFacing(ListUnits[i].position, 0.5f)) {
 						nbrCloseFacing++;
 					}
 				}
-			}
-		}
-	}
-	for (int i = listIndexCloseEnemies.size(); i > 0; i--) { //List based on closeness of enemies
-		for (int y = 0; y < i - 1; y++) {
-			if (EnemyDistList[y] > EnemyDistList[y + 1]) {
-				float tmp = EnemyDistList[y];
-				EnemyDistList[y] = EnemyDistList[y + 1];
-				EnemyDistList[y + 1] = tmp;
-				int tmp2 = listIndexCloseEnemies[y];
-				listIndexCloseEnemies[y] = listIndexCloseEnemies[y + 1];
-				listIndexCloseEnemies[y + 1] = tmp2;
 			}
 		}
 	}
