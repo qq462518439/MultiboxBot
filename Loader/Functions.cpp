@@ -242,7 +242,8 @@ std::tuple<int, int, int, int> Functions::countEnemies() {
 		if (ListUnits[i].attackable) { //Hostile
 			if ((ListUnits[i].level == -1 || ListUnits[i].level >= 62) && (ListUnits[i].flags & UNIT_FLAG_IN_COMBAT)) bossFight = true;
 			for (int y = 0; y <= NumGroupMembers; y++) { //Group member has aggro
-				if ((GroupMembersIndex[y] > -1) && ListUnits[GroupMembersIndex[y]].Guid == ListUnits[i].targetGuid && (ListUnits[i].flags & UNIT_FLAG_IN_COMBAT)) HasAggro[y].push_back(ListUnits[i].Guid);
+				if ((GroupMembersIndex[y] > -1) && (ListUnits[GroupMembersIndex[y]].Guid != 0) && (ListUnits[GroupMembersIndex[y]].Guid == ListUnits[i].targetGuid) && (ListUnits[i].flags & UNIT_FLAG_IN_COMBAT))
+					HasAggro[y].push_back(ListUnits[i].Guid);
 			}
 			if (ListUnits[i].flags & UNIT_FLAG_PLAYER_CONTROLLED) { //Enemy player
 				nbrEnemyPlayer++;

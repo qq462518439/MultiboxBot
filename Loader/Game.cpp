@@ -233,7 +233,43 @@ void Game::MainLoop() {
 							}
 						}
 						else if(tankName != playerName || tankAutoMove) {
-							if (distTarget > 5.0f && !IsSitting && !obstacle_front) {
+							if (Moving == 6 && (los_target || obstacle_front)) {
+								//Looking for LoS, found it => stop
+								Functions::pressKey(0x28);
+								Functions::releaseKey(0x28);
+								Moving = 0;
+							}
+							else if ((Moving == 0 || Moving == 6) && !los_target) {
+								//Find LoS
+								ThreadSynchronizer::RunOnMainThread([=]() {
+									for (int i = 0; i < 8; i++) { //Front, left, right...
+										if (i != 6) { //We don't want backward
+											for (int y = 1; y <= 10; y++) { //Every 3 yards up to 30 check for LoS point
+												Position tmp_pos = Position((cos(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.X
+													, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.Y, localPlayer->position.Z + 3);
+												Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 3;
+												bool enemy_close = false;
+												for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
+													if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
+														&& !(ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 5)) {
+														enemy_close = true;
+													}
+												}
+												if (enemy_close) break; //Change direction
+												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 13)) {
+													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 3))) {
+														localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
+														Moving = 6;
+														return;
+													}
+												}
+												else break; //There is an obstacle on this path, we need to change
+											}
+										}
+									}
+								});
+							}
+							else if (distTarget > 5.0f && !IsSitting && !obstacle_front) {
 								ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 								Moving = 2;
 							}
