@@ -9,6 +9,7 @@ class Functions {
 		static void releaseKey(unsigned int key);
 		static bool Intersect(Position start, Position end);
 		static float GetDepth(Position pos);
+		static Position ProjectPos(Position pos);
 		static unsigned long GetPlayerGuid();
 		static void EnumerateVisibleObjects(int filter);
 		static uintptr_t GetObjectPtr(unsigned long long guid);
@@ -43,6 +44,7 @@ class Functions {
 		static bool IsInventoryFull();
 		static int GetItemCount(std::string item_info);
 		static int GetItemCount(int item_info);
+		static int HasItem(int* item_id, int size);
 		static void PickupItem(std::string item_info);
 		static void PickupItem(int item_id);
 		static void PlaceItem(int slot, std::string item_info);

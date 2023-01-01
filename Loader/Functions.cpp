@@ -30,11 +30,24 @@ float Functions::GetDepth(Position pos) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
 	func* function = (func*)INTERSECT_FUN;
 	Position* p1 = new Position(pos.X, pos.Y, pos.Z);
-	Position* p2 = new Position(pos.X, pos.Y, pos.Z-100);
+	Position* p2 = new Position(pos.X, pos.Y, pos.Z - 100);
 	Position* intersection = new Position(0, 0, 0);
 	float* distance = new float(pos.DistanceTo(*p2));
 	function(p1, p2, 0, intersection, distance, 0x00100111);
 	float result = pos.DistanceTo(*intersection);
+	delete p1, p2, distance, intersection;
+	return result;
+}
+
+Position Functions::ProjectPos(Position pos) {
+	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
+	func* function = (func*)INTERSECT_FUN;
+	Position* p1 = new Position(pos.X, pos.Y, pos.Z);
+	Position* p2 = new Position(pos.X, pos.Y, pos.Z - 100);
+	Position* intersection = new Position(0, 0, 0);
+	float* distance = new float(pos.DistanceTo(*p2));
+	function(p1, p2, 0, intersection, distance, 0x00100111);
+	Position result = Position(pos.X, pos.Y, intersection->Z);
 	delete p1, p2, distance, intersection;
 	return result;
 }
@@ -532,6 +545,25 @@ int Functions::GetItemCount(int item_id) {
 	return total;
 }
 
+int Functions::HasItem(int* item_ids, int size) {
+	//Trouve par l'ID si un des items de la liste est présent
+	int total = 0;
+	for (int i = 0; i <= 4; i++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
+			std::string item_link = GetContainerItemLink(i, y);
+			int link_nbr = GetIntFromChar(item_link.c_str());
+			for (int z = 0; z < size; z++) {
+				if (link_nbr == item_ids[z]) {
+					int itemCount;
+					std::tie(std::ignore, itemCount) = GetContainerItemInfo(i, y);
+					return item_ids[z];
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 int Functions::GetItemQuality(int bag, int slot) {
 	std::string item_link = GetContainerItemLink(bag, slot);
 	if (item_link == "") return -1;
@@ -615,29 +647,17 @@ void Functions::UseItem(int item_id) {
 int Functions::HasDrink() {
 	int listID[20] = { 159, 1179, 1205, 1645, 1708, 2136, 2288, 3772, 4791, 5350, 8077
 		, 8078, 8079, 8766, 9451, 10841, 13724, 18300, 19301, 20031 };
-	for (int i = 0; i < 20; i++) {
-		if (GetItemCount(listID[i]) > 0) return listID[i];
-	}
-	return 0;
+	return HasItem(listID, 20);
 }
 
 int Functions::HasMeat() {
 	int CookedlistID[47] = { 117, 724, 1017, 2287, 2679, 2680, 2681, 2684, 2685, 2687, 2888, 3220, 3662, 3664, 3726, 3727, 3728, 3770, 3771, 4457, 4599, 5472, 5474, 5477, 5478, 5479, 7097, 8952, 11444, 12209, 12210, 12211, 12213, 12215, 12216, 12224, 13851, 17119, 17222, 17407, 17408, 18045, 19224, 19304, 19305, 20074, 21023 };
-	for (int i = 0; i < 47; i++) {
-		if (GetItemCount(CookedlistID[i]) > 0) return CookedlistID[i];
-	}
-	return 0;
+	return HasItem(CookedlistID, 47);
 }
 
 bool Functions::HasHPotion() {
-	LuaCall("level = UnitLevel(\"player\")");
-	int levelPlayer = GetIntFromChar((char*)GetText("level"));
-	if (GetItemCount(118) > 0 && levelPlayer < 20) return true;
-	else if (GetItemCount(858) > 0 && levelPlayer < 30) return true;
-	else if (GetItemCount(929) > 0 && levelPlayer < 40) return true;
-	else if (GetItemCount(1710) > 0 && levelPlayer < 50) return true;
-	else if (GetItemCount(3928) > 0) return true;
-	else if (GetItemCount(13446) > 0) return true;
+	int listID[6] = { 118, 858, 929, 1710, 3928, 13446};
+	if (HasItem(listID, 6) > 0) return true;
 	else return false;
 }
 
@@ -651,14 +671,8 @@ float Functions::GetHPotionCD() {
 }
 
 bool Functions::HasMPotion() {
-	LuaCall("level = UnitLevel(\"player\")");
-	int levelPlayer = GetIntFromChar((char*)GetText("level"));
-	if (GetItemCount(2455) > 0 && levelPlayer < 25) return true;
-	else if (GetItemCount(3385) > 0 && levelPlayer < 35) return true;
-	else if (GetItemCount(3827) > 0 && levelPlayer < 45) return true;
-	else if (GetItemCount(6149) > 0 && levelPlayer < 55) return true;
-	else if (GetItemCount(13443) > 0) return true;
-	else if (GetItemCount(13444) > 0) return true;
+	int listID[6] = { 2455, 3385, 3827, 6149, 13443, 13444 };
+	if (HasItem(listID, 6) > 0) return true;
 	else return false;
 }
 
@@ -672,13 +686,8 @@ float Functions::GetMPotionCD() {
 }
 
 bool Functions::HasHealthstone() {
-	LuaCall("level = UnitLevel(\"player\")");
-	int levelPlayer = GetIntFromChar((char*)GetText("level"));
-	if ((((GetItemCount(5512) > 0) || (GetItemCount(19004) > 0) || (GetItemCount(19005) > 0)) && levelPlayer < 30)) return true;
-	else if ((((GetItemCount(5511) > 0) || (GetItemCount(19006) > 0) || (GetItemCount(19007) > 0)) && levelPlayer < 40)) return true;
-	else if ((((GetItemCount(5509) > 0) || (GetItemCount(19008) > 0) || (GetItemCount(19009) > 0)) && levelPlayer < 50)) return true;
-	else if (((GetItemCount(5510) > 0) || (GetItemCount(19010) > 0) || (GetItemCount(19011) > 0))) return true;
-	else if (((GetItemCount(9421) > 0) || (GetItemCount(19012) > 0) || (GetItemCount(19013) > 0))) return true;
+	int listID[] = { 5512, 19004, 19005, 5511, 19006, 19007, 5509, 19008, 19009, 5510, 19010, 19011, 9421, 19012, 19013 };
+	if (HasItem(listID, 6) > 0) return true;
 	else return false;
 }
 

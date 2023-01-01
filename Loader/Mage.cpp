@@ -15,11 +15,9 @@ std::string GetSpellRank(std::string txt) {
 }
 
 bool HasManaStone() {
-	int listID[4] = {5514, 5513, 8007, 8008};
-	for (int i = 0; i < 4; i++) {
-		if (Functions::GetItemCount(listID[i]) > 0) return true;
-	}
-	return false;
+	int listID[4] = { 5514, 5513, 8007, 8008 };
+	if (Functions::HasItem(listID, 4) > 0) return true;
+	else return false;
 }
 
 float GetManaStoneCD() {
@@ -106,14 +104,9 @@ void ListAI::MageDps() {
 				//Conjure Mana (stone)
 				Functions::CastSpellByName(RankConjureMana);
 			}
-			else if (!Combat && (localPlayer->speed == 0) && (Functions::HasDrink() == 0) && Functions::IsSpellReady("Conjure Water")) {
+			else if (!Combat && (localPlayer->speed == 0) && (hasDrink == 0) && Functions::IsSpellReady("Conjure Water")) {
 				//Conjure Water
 				Functions::CastSpellByName("Conjure Water");
-			}
-			else if (!Combat && (localPlayer->speed == 0) && (localPlayer->movement_flags == MOVEFLAG_NONE) && (localPlayer->prctMana < 33) && (Functions::HasDrink() > 0)) {
-				//Drink
-				IsSitting = true;
-				Functions::UseItem(Functions::HasDrink());
 			}
 			else if (!IceBarrierBuff && Functions::IsSpellReady("Ice Barrier")) {
 				//Ice Barrier

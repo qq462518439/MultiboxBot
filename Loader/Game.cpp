@@ -132,8 +132,8 @@ void Game::MainLoop() {
 					ThreadSynchronizer::RunOnMainThread([=]() {
 						obstacle_front = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(front_pos) > 13;
 						obstacle_back = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(back_pos) > 13;
-						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos
-							, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 5));
+						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 5));
+						hasDrink = Functions::HasDrink();
 					});
 					bool playerIsRanged = Functions::PlayerIsRanged();
 					int drinkingIDs[15] = { 430, 431, 432, 1133, 1135, 1137, 24355, 25696, 26261, 26402, 26473, 26475, 29007, 10250, 22734 };
@@ -146,10 +146,21 @@ void Game::MainLoop() {
 						Functions::releaseKey(0x28);
 						Moving = 0;
 					}
+					else if (!Combat && (localPlayer->speed == 0) && (localPlayer->movement_flags == MOVEFLAG_NONE) && (localPlayer->prctMana < 33) && (hasDrink > 0)) {
+						//Drink
+						IsSitting = true;
+						ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem(hasDrink); });
+					}
 					else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && localPlayer->isCasting(RaptorStrikeIDs, 8))) && (localPlayer->channelInfo == 0)) {
 						if (playerIsRanged) {
 							if ((Moving == 4 || Moving == 2 || Moving == 5) && (distTarget < 30.0f || obstacle_front)) {
 								//Running and (target < 30 yard || obstacle in front) => stop
+								Functions::pressKey(0x28);
+								Functions::releaseKey(0x28);
+								Moving = 0;
+							}
+							else if (Moving == 6 && los_target) {
+								//Looking for LoS, found it => stop
 								Functions::pressKey(0x28);
 								Functions::releaseKey(0x28);
 								Moving = 0;
@@ -190,6 +201,24 @@ void Game::MainLoop() {
 								Functions::pressKey(0x28);
 								Moving = 3;
 							}
+							else if ((Moving == 0) && !los_target && distTarget < 30.0f) {
+								//Find LoS
+								ThreadSynchronizer::RunOnMainThread([=]() {
+									for (int i = 0; i < 4; i++) { //Front, left, right, backward...
+										for (int y = 1; y <= 6; y++) { //Every 5 yards up to 30 check for LoS point
+											Position tmp_pos = Position(cos(localPlayer->facing + (i * halfPI)) * (y * 5) + localPlayer->position.X, sin(localPlayer->facing + (i * halfPI)) * (y * 5) + localPlayer->position.Y, localPlayer->position.Z + 5);
+											Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 5;
+											if ((Functions::GetDepth(tmp_pos) < 13) && !Functions::Intersect(player_pos, tmp_pos2)) {
+												if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 5))) {
+													localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
+													Moving = 6;
+													return;
+												}
+											} else break; //There is an obstacle on this path, we need to change
+										}
+									}
+								});
+							}
 						}
 						else if(tankName != playerName || tankAutoMove) {
 							if (distTarget > 5.0f && !IsSitting && !obstacle_front) {
@@ -204,7 +233,7 @@ void Game::MainLoop() {
 							else if (!IsFacing) ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 						}
 					}
-					else if (Moving == 1 || Moving == 2 || (Moving == 4 && obstacle_front)) {
+					else if (Moving == 1 || Moving == 2 || Moving == 6 || (Moving == 4 && obstacle_front)) {
 						Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
 						Moving = 0;
@@ -271,7 +300,7 @@ int GroupMembersIndex[40];
 std::vector<unsigned long long> HasAggro[40];
 bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false, tankAutoFocus = false, tankAutoMove = false,
 	keyTarget = false, keyHearthstone = false, keyMount = false, obstacle_front = false, obstacle_back = false, los_target = false;
-int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 0, positionCircle = 0;
+int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 0, positionCircle = 0, hasDrink = 0;
 float distTarget = 0;
 std::string tarType = "party", playerClass = "null", tankName = "null", meleeName = "null";
 std::vector<int> HealTargetArray;

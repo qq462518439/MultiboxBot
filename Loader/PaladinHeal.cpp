@@ -255,11 +255,6 @@ void ListAI::PaladinHeal() {
 				localPlayer->SetTarget(ListUnits[GroupMembersIndex[CleanseDispelKey]].Guid);
 				Functions::CastSpellByName("Cleanse");
 			}
-			else if (!Combat && (localPlayer->speed == 0) && (localPlayer->movement_flags == MOVEFLAG_NONE) && (localPlayer->prctMana < 33) && (Functions::HasDrink() > 0)) {
-				//Drink
-				IsSitting = true;
-				Functions::UseItem(Functions::HasDrink());
-			}
 			else {
 				int tmp = 1; unsigned int index = 0;
 				while (tmp == 1 and index < HealTargetArray.size()) {
