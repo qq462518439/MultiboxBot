@@ -94,6 +94,7 @@ int Functions::Callback(unsigned long long guid, int filter) {
 			WoWUnit unit = WoWUnit(pointer, guid, objectType);
 			ListUnits.push_back(unit);
 			if (objectType == Player) {
+				if (unit.name == tankName) tankIndex = ListUnits.size() - 1;
 				if (guid == GetPlayerGuid()) {
 					if (localPlayer != NULL) delete(localPlayer);
 					localPlayer = new LocalPlayer(pointer, guid, objectType);
@@ -101,8 +102,7 @@ int Functions::Callback(unsigned long long guid, int filter) {
 				}
 				else {
 					for (int i = 1; i <= NumGroupMembers; i++) {
-						if (unit.name == Functions::UnitName(tarType + std::to_string(i)))
-							GroupMembersIndex[i] = ListUnits.size() - 1;
+						if (unit.name == Functions::UnitName(tarType + std::to_string(i))) GroupMembersIndex[i] = ListUnits.size() - 1;
 					}
 				}
 			}
@@ -141,8 +141,8 @@ void Functions::ClassifyHeal() {
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
 		if (ListUnits[i].unitReaction > Neutral && !ListUnits[i].isdead) {
 			float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
-			if (dist < 60 && !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5)
-				, Position(ListUnits[i].position.X, ListUnits[i].position.Y, ListUnits[i].position.Z + 5))) {
+			if (dist < 60 && !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 2.5f)
+				, Position(ListUnits[i].position.X, ListUnits[i].position.Y, ListUnits[i].position.Z + 2.5f))) {
 				PrctHp.push_back(ListUnits[i].prctHP);
 				if (ListUnits[i].objectType == Player && ListUnits[i].prctHP < 60) AoEHeal = AoEHeal + 1;
 				HealTargetArray.push_back(i);
@@ -242,8 +242,10 @@ std::tuple<int, int, int, int> Functions::countEnemies() {
 		if (ListUnits[i].attackable) { //Hostile
 			if ((ListUnits[i].level == -1 || ListUnits[i].level >= 62) && (ListUnits[i].flags & UNIT_FLAG_IN_COMBAT)) bossFight = true;
 			for (int y = 0; y <= NumGroupMembers; y++) { //Group member has aggro
-				if ((GroupMembersIndex[y] > -1) && (ListUnits[GroupMembersIndex[y]].Guid != 0) && (ListUnits[GroupMembersIndex[y]].Guid == ListUnits[i].targetGuid) && (ListUnits[i].flags & UNIT_FLAG_IN_COMBAT))
+				if ((GroupMembersIndex[y] > -1) && ((ListUnits[i].flags & UNIT_FLAG_IN_COMBAT) == UNIT_FLAG_IN_COMBAT)
+					&& (ListUnits[GroupMembersIndex[y]].Guid != 0) && (ListUnits[GroupMembersIndex[y]].Guid == ListUnits[i].targetGuid)) {
 					HasAggro[y].push_back(ListUnits[i].Guid);
+				}
 			}
 			if (ListUnits[i].flags & UNIT_FLAG_PLAYER_CONTROLLED) { //Enemy player
 				nbrEnemyPlayer++;
@@ -1019,18 +1021,6 @@ bool Functions::UnitAffectingCombat(std::string target) {
 	else return false;
 }
 
-int Functions::GetPlayerRole() {
-	LuaCall("_,_, bonusStat = UnitStat(\"player\", 1)");
-	int bonusStr = GetIntFromChar((char*)GetText("bonusStat"));
-	LuaCall("_,_, bonusStat = UnitStat(\"player\", 2)");
-	int bonusAgi = GetIntFromChar((char*)GetText("bonusStat"));
-	LuaCall("_,_, bonusStat = UnitStat(\"player\", 4)");
-	int bonusIntel = GetIntFromChar((char*)GetText("bonusStat"));
-	if (bonusIntel > bonusStr && bonusIntel > bonusAgi) return 1; //Heal
-	else if (IsShieldEquipped()) return 2; //Tank
-	else return 3; //Dps
-}
-
 std::string Functions::GetTank() {
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if (UnitName(tarType + std::to_string(i)) == tankName)
@@ -1045,19 +1035,10 @@ std::string Functions::UnitClass(std::string target) {
 	return tarClass;
 }
 
-bool Functions::UnitIsRanged(std::string target) {
-	std::string tarClass = UnitClass(target);
-	if (tarClass == "Priest" || tarClass == "Warlock" || tarClass == "Mage" || tarClass == "Hunter") return true;
-	else if (target == "player" && ((tarClass == "Druid" && GetPlayerRole() == 1)
-		|| (tarClass == "Paladin" && GetPlayerRole() == 1) || (tarClass == "Shaman" && GetPlayerRole() < 3))) return true;
-	else return false;
-}
-
 bool Functions::UnitIsCaster(std::string target) {
 	std::string tarClass = UnitClass(target);
 	if (tarClass == "Priest" || tarClass == "Warlock" || tarClass == "Mage") return true;
-	else if (target == "player" && ((tarClass == "Druid" && GetPlayerRole() == 1)
-		|| (tarClass == "Paladin" && GetPlayerRole() == 1) || (tarClass == "Shaman" && GetPlayerRole() < 3))) return true;
+	else if (target == "player" && ((tarClass == "Druid" && (playerSpec == 0 || playerSpec == 2)) || (tarClass == "Shaman" && (playerSpec == 0 || playerSpec == 2)))) return true;
 	else return false;
 }
 

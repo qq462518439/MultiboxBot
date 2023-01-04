@@ -18,7 +18,7 @@ extern WoWUnit* targetUnit;
 extern int GroupMembersIndex[40];
 extern std::vector<unsigned long long> HasAggro[40];
 extern std::vector<int> HealTargetArray;
-extern int AoEHeal, nbrEnemy, nbrCloseEnemy, nbrCloseEnemyFacing, nbrEnemyPlayer, Moving, NumGroupMembers, playerSpec, positionCircle, hasDrink;
+extern int AoEHeal, nbrEnemy, nbrCloseEnemy, nbrCloseEnemyFacing, nbrEnemyPlayer, Moving, NumGroupMembers, playerSpec, positionCircle, hasDrink, tankIndex;
 extern std::string tarType, playerClass, tankName, meleeName;
 extern WoWUnit* ccTarget;
 

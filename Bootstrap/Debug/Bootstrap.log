@@ -1,6 +1,6 @@
 ﻿  Bootstrap.cpp
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Bootstrap\Bootstrap.cpp(66,25): warning C4838: conversion from 'int' to 'int8_t' requires a narrowing conversion
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Bootstrap\Bootstrap.cpp(66,25): warning C4309: 'initializing': truncation of constant value
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Bootstrap\Bootstrap.cpp(66,55): warning C4838: conversion from 'int' to 'int8_t' requires a narrowing conversion
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Bootstrap\Bootstrap.cpp(66,55): warning C4309: 'initializing': truncation of constant value
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Bootstrap\Bootstrap.cpp(63,25): warning C4838: conversion from 'int' to 'int8_t' requires a narrowing conversion
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Bootstrap\Bootstrap.cpp(63,25): warning C4309: 'initializing': truncation of constant value
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Bootstrap\Bootstrap.cpp(63,55): warning C4838: conversion from 'int' to 'int8_t' requires a narrowing conversion
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Bootstrap\Bootstrap.cpp(63,55): warning C4309: 'initializing': truncation of constant value
   Bootstrap.vcxproj -> C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Test\src\Bootstrap.exe

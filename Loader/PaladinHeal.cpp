@@ -5,21 +5,19 @@
 static int LastTarget = 0;
 
 static void PaladinAttack() {
-	if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
+	if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat
+		&& (tankName != "null" && (ListUnits[tankIndex].targetGuid != 0))) { //Tank has target
+		localPlayer->SetTarget(ListUnits[tankIndex].targetGuid);
+	}
+	else if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 		for (int i = 0; i <= NumGroupMembers; i++) {
 			if (HasAggro[i].size() > 0) {
 				localPlayer->SetTarget(HasAggro[i][0]);
 				break;
 			}
 		}
-		if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat && (tankName != "null" || meleeName != "null")) {
-			std::string msg = "AssistByName('" + tankName + "')";
-			if (tankName == "null") msg = "AssistByName('" + meleeName + "')";
-			Functions::LuaCall(msg.c_str());
-		}
 	}
-
-	if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
+	else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SoLIDs[4] = { 20165, 20347, 20348, 20349 };
@@ -73,20 +71,12 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		}
 	}
 	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
-	if (Combat && (HpRatio < 20) && Functions::IsSpellReady("Lay on Hands")) {
+	if (Combat && (distAlly < 40.0f) && (HpRatio < 20) && Functions::IsSpellReady("Lay on Hands")) {
 		//Lay on Hands
-		if (isParty && distAlly > 40.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::MoveToAlly(indexP);
-			return 0;
-		}
-		else if (distAlly < 40.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::CastSpellByName("Lay on Hands");
-			LastTarget = indexP;
-			return 0;
-		}
-		else return 1;
+		localPlayer->SetTarget(healGuid);
+		Functions::CastSpellByName("Lay on Hands");
+		LastTarget = indexP;
+		return 0;
 	}
 	else if (Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
 		//Divine Protection / Divine Shield
@@ -103,82 +93,42 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::UseItem("Healing Potion");
 		return 0;
 	}
-	else if (Combat && isParty && (HpRatio < 20) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
+	else if (Combat && (distAlly < 30.0f) && isParty && (HpRatio < 20) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
 		//Blessing of Protection
-		if (distAlly > 30.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::MoveToAlly(indexP);
-			return 0;
-		}
-		else if (distAlly < 30.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::CastSpellByName("Blessing of Protection");
-			LastTarget = indexP;
-			return 0;
-		}
-		else return 1;
+		localPlayer->SetTarget(healGuid);
+		Functions::CastSpellByName("Blessing of Protection");
+		LastTarget = indexP;
+		return 0;
 	}
-	else if (Combat && isParty && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
+	else if (Combat && (distAlly < 30.0f) && isParty && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
 		//Blessing of Sacrifice
-		if (distAlly > 30.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::MoveToAlly(indexP);
-			return 0;
-		}
-		else if (distAlly < 30.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::CastSpellByName("Blessing of Sacrifice");
-			LastTarget = indexP;
-			return 0;
-		}
-		else return 1;
+		localPlayer->SetTarget(healGuid);
+		Functions::CastSpellByName("Blessing of Sacrifice");
+		LastTarget = indexP;
+		return 0;
 	}
-	else if ((HpRatio < 50) && Functions::IsSpellReady("Holy Shock")) {
+	else if ((HpRatio < 50) && (distAlly < 20.0f) && Functions::IsSpellReady("Holy Shock")) {
 		//Holy Shock
-		if (isParty && distAlly > 20.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::MoveToAlly(indexP);
-			return 0;
-		}
-		else if (distAlly < 20.0f) {
-			localPlayer->SetTarget(healGuid);
-			if (Functions::IsSpellReady("Divine Favor")) Functions::CastSpellByName("Divine Favor");
-			Functions::CastSpellByName("Holy Shock");
-			LastTarget = indexP;
-			return 0;
-		}
-		else return 1;
+		localPlayer->SetTarget(healGuid);
+		if (Functions::IsSpellReady("Divine Favor")) Functions::CastSpellByName("Divine Favor");
+		Functions::CastSpellByName("Holy Shock");
+		LastTarget = indexP;
+		return 0;
 	}
-	else if ((HpRatio < 50) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
+	else if ((HpRatio < 50) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
 		//Holy Light
-		if (isParty && distAlly > 40.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::MoveToAlly(indexP);
-			return 0;
-		}
-		else if (distAlly < 40.0f) {
-			localPlayer->SetTarget(healGuid);
-			if (Functions::IsSpellReady("Divine Favor")) Functions::CastSpellByName("Divine Favor");
-			Functions::CastSpellByName("Holy Light");
-			LastTarget = indexP;
-			return 0;
-		}
-		else return 1;
+		localPlayer->SetTarget(healGuid);
+		if (Functions::IsSpellReady("Divine Favor")) Functions::CastSpellByName("Divine Favor");
+		Functions::CastSpellByName("Holy Light");
+		LastTarget = indexP;
+		return 0;
 	}
-	else if ((HpRatio < 85) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
+	else if ((HpRatio < 85) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
 		//Flash of Light
-		if (isParty && distAlly > 40.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::MoveToAlly(indexP);
-			return 0;
-		}
-		else if (distAlly < 40.0f) {
-			localPlayer->SetTarget(healGuid);
-			Functions::CastSpellByName("Flash of Light");
-			LastTarget = indexP;
-			return 0;
-		}
-		else return 1;
+		localPlayer->SetTarget(healGuid);
+		Functions::CastSpellByName("Flash of Light");
+		LastTarget = indexP;
+		return 0;
 	}
 	return 1;
 }

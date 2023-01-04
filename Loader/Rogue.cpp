@@ -23,16 +23,16 @@ void ListAI::RogueDps() {
 			int ComboPoints = Functions::GetComboPoints();
 			int SprintTalent = Functions::GetTalentInfo(2, 9);
 
-			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
+			if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat
+				&& (tankName != "null" && (ListUnits[tankIndex].targetGuid != 0))) { //Tank has target
+				localPlayer->SetTarget(ListUnits[tankIndex].targetGuid);
+			}
+			else if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 				for (int i = 0; i <= NumGroupMembers; i++) {
 					if (HasAggro[i].size() > 0) {
 						localPlayer->SetTarget(HasAggro[i][0]);
 						break;
 					}
-				}
-				if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat && tankName != "null") {
-					std::string msg = "AssistByName('" + tankName + "')";
-					Functions::LuaCall(msg.c_str());
 				}
 			}
 

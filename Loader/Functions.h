@@ -92,7 +92,6 @@ class Functions {
 		static bool UnitIsDeadOrGhost(std::string char1);
 		static bool CheckInteractDistance(std::string char1, int dist);
 		static bool UnitAffectingCombat(std::string target);
-		static int GetPlayerRole();
 		static std::string UnitClass(std::string target);
 		static bool UnitIsRanged(std::string target);
 		static bool UnitIsCaster(std::string target);

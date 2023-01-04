@@ -126,13 +126,13 @@ void Game::MainLoop() {
 
 				if (localPlayer != NULL) {
 					float halfPI = acos(0.0);
-					Position player_pos = Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 3);
-					Position front_pos = Position((cos(localPlayer->facing) * 4) + localPlayer->position.X, (sin(localPlayer->facing) * 4) + localPlayer->position.Y, localPlayer->position.Z + 3);
-					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.X, (sin(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.Y, localPlayer->position.Z + 3);
+					Position player_pos = Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 2.5f);
+					Position front_pos = Position((cos(localPlayer->facing) * 4) + localPlayer->position.X, (sin(localPlayer->facing) * 4) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
+					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.X, (sin(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
 					ThreadSynchronizer::RunOnMainThread([=]() {
 						obstacle_front = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(front_pos) > 13;
 						obstacle_back = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(back_pos) > 13;
-						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 3));
+						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f));
 						hasDrink = Functions::HasDrink();
 					});
 					bool playerIsRanged = Functions::PlayerIsRanged();
@@ -174,15 +174,15 @@ void Game::MainLoop() {
 								}
 								Moving = 1;
 							}
-							else if ((Moving == 0 || Moving == 6) && !los_target) {
+							else if ((Moving == 0 || (Moving == 6 && localPlayer->speed == 0)) && !los_target) {
 								//Find LoS
 								ThreadSynchronizer::RunOnMainThread([=]() {
 									for (int i = 0; i < 8; i++) { //Front, left, right...
 										if (i != 6) { //We don't want backward
 											for (int y = 1; y <= 10; y++) { //Every 3 yards up to 30 check for LoS point
 												Position tmp_pos = Position((cos(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.X
-													, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.Y, localPlayer->position.Z + 3);
-												Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 3;
+													, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
+												Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 2.5f;
 												bool enemy_close = false;
 												for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
 													if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
@@ -192,7 +192,7 @@ void Game::MainLoop() {
 												}
 												if (enemy_close) break; //Change direction
 												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 13)) {
-													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 3))) {
+													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f))) {
 														localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
 														Moving = 6;
 														return;
@@ -225,7 +225,7 @@ void Game::MainLoop() {
 								//Nothing to do: face target
 								ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 							}
-							else if ((Moving == 0) && distTarget < 12.0f && !obstacle_back && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED)
+							else if ((Moving == 0 || (Moving == 3 && localPlayer->speed == 0)) && distTarget < 12.0f && !obstacle_back && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED)
 								&& !hasTargetAggro && playerClass == "Hunter") || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
 								//((hunter)Creature not aggro || Player slowed) && < 12 yard => Walk backward
 								Functions::pressKey(0x28);
@@ -239,15 +239,15 @@ void Game::MainLoop() {
 								Functions::releaseKey(0x28);
 								Moving = 0;
 							}
-							else if ((Moving == 0 || Moving == 6) && !los_target) {
+							else if ((Moving == 0 || (Moving == 6 && localPlayer->speed == 0)) && !los_target) {
 								//Find LoS
 								ThreadSynchronizer::RunOnMainThread([=]() {
 									for (int i = 0; i < 8; i++) { //Front, left, right...
 										if (i != 6) { //We don't want backward
 											for (int y = 1; y <= 10; y++) { //Every 3 yards up to 30 check for LoS point
 												Position tmp_pos = Position((cos(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.X
-													, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.Y, localPlayer->position.Z + 3);
-												Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 3;
+													, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
+												Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 2.5f;
 												bool enemy_close = false;
 												for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
 													if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
@@ -257,7 +257,7 @@ void Game::MainLoop() {
 												}
 												if (enemy_close) break; //Change direction
 												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 13)) {
-													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 3))) {
+													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f))) {
 														localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
 														Moving = 6;
 														return;
@@ -348,7 +348,7 @@ int GroupMembersIndex[40];
 std::vector<unsigned long long> HasAggro[40];
 bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false, tankAutoFocus = false, tankAutoMove = false,
 	keyTarget = false, keyHearthstone = false, keyMount = false, obstacle_front = false, obstacle_back = false, los_target = false;
-int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 0, positionCircle = 0, hasDrink = 0;
+int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 0, positionCircle = 0, hasDrink = 0, tankIndex = 0;
 float distTarget = 0;
 std::string tarType = "party", playerClass = "null", tankName = "null", meleeName = "null";
 std::vector<int> HealTargetArray;

@@ -28,3 +28,29 @@ int ThreadSynchronizer::WndProc(HWND hwnd, UINT Msg, WPARAM wparam, LPARAM lpara
 void ThreadSynchronizer::SendUserMessage() {
     SendMessageW(windowHandle, WM_USER, 0, 0);
 }
+
+/*SignalEventManager::SignalEventManager() {
+    InitializeSignalEventHook();
+    InitializeSignalEventHookNoArgs();
+}
+
+__declspec(naked) void SignalEventManager::asm_InitializeSignalEventHookNoArgs() {
+    __asm {
+        push esi
+        call 0x007040D0
+        pushfd
+        pushad
+        mov edi, [edi]
+        push edi
+        call func_ptr
+        popad
+        popfd
+        jmp signal_fun_ptr_no_params
+    }
+}
+
+void SignalEventManager::InitializeSignalEventHookNoArgs() {
+    typedef void (*SignalEventNoArgsFunc)(std::string eventName);
+    SignalEventNoArgsFunc func = &SignalEventNoArgs;
+    func_ptr = (void*&)func;
+}*/
