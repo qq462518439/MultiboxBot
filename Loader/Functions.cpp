@@ -17,38 +17,35 @@ void Functions::releaseKey(unsigned int key) {
 bool Functions::Intersect(Position start, Position end) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
 	func* function = (func*)INTERSECT_FUN;
-	Position* p1 = new Position(start.X, start.Y, start.Z);
-	Position* p2 = new Position(end.X, end.Y, end.Z);
-	Position* intersection = new Position(0, 0, 0);
-	float* distance = new float(start.DistanceTo(end));
-	bool result = function(p1, p2, 0, intersection, distance, 0x00100111);
-	delete p1, p2, distance, intersection;
+	Position p1 = Position(start.X, start.Y, start.Z);
+	Position p2 = Position(end.X, end.Y, end.Z);
+	Position intersection = Position(0, 0, 0);
+	float distance = float(start.DistanceTo(end));
+	bool result = function(&p1, &p2, 0, &intersection, &distance, 0x00100111);
 	return result;
 }
 
 float Functions::GetDepth(Position pos) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
 	func* function = (func*)INTERSECT_FUN;
-	Position* p1 = new Position(pos.X, pos.Y, pos.Z);
-	Position* p2 = new Position(pos.X, pos.Y, pos.Z - 100);
-	Position* intersection = new Position(0, 0, 0);
-	float* distance = new float(pos.DistanceTo(*p2));
-	function(p1, p2, 0, intersection, distance, 0x00100111);
-	float result = pos.DistanceTo(*intersection);
-	delete p1, p2, distance, intersection;
+	Position p1 = Position(pos.X, pos.Y, pos.Z + 2.5f);
+	Position p2 = Position(pos.X, pos.Y, pos.Z - 100);
+	Position intersection = Position(0, 0, 0);
+	float distance = float(pos.DistanceTo(p2));
+	function(&p1, &p2, 0, &intersection, &distance, 0x00100111);
+	float result = pos.DistanceTo(intersection);
 	return result;
 }
 
 Position Functions::ProjectPos(Position pos) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
 	func* function = (func*)INTERSECT_FUN;
-	Position* p1 = new Position(pos.X, pos.Y, pos.Z);
-	Position* p2 = new Position(pos.X, pos.Y, pos.Z - 100);
-	Position* intersection = new Position(0, 0, 0);
-	float* distance = new float(pos.DistanceTo(*p2));
-	function(p1, p2, 0, intersection, distance, 0x00100111);
-	Position result = Position(pos.X, pos.Y, intersection->Z);
-	delete p1, p2, distance, intersection;
+	Position p1 = Position(pos.X, pos.Y, pos.Z);
+	Position p2 = Position(pos.X, pos.Y, pos.Z - 100);
+	Position intersection = Position(0, 0, 0);
+	float distance = float(pos.DistanceTo(p2));
+	function(&p1, &p2, 0, &intersection, &distance, 0x00100111);
+	Position result = Position(pos.X, pos.Y, intersection.Z);
 	return result;
 }
 
@@ -286,8 +283,8 @@ int Functions::GetBuffKey(int* IDs, int size) {
 	//Retourne le joueur auquel il manque le buff
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction > Neutral) && !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)
-			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 5)
-				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 5))) {
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 2.5f)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 2.5f))) {
 			if (!ListUnits[GroupMembersIndex[i]].hasBuff(IDs, size)) return i;
 		}
 	}
@@ -754,8 +751,8 @@ int Functions::GetDispelKey(std::string dispellType1, std::string dispellType2, 
 	//Retourne le joueur du groupe à dispel
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)
-			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z+5)
-				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z+5))) return i;
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z+2.5f)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z+2.5f))) return i;
 	}
 	return 0;
 }

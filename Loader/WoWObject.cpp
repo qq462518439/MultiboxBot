@@ -214,8 +214,7 @@ WoWUnit* LocalPlayer::getTarget() {
     return NULL;
 }
 
-Position LocalPlayer::getOppositeDirection(Position enemy_pos) {
-    float radius = 10;
+Position LocalPlayer::getOppositeDirection(Position enemy_pos, float radius) {
     float m = (float)(enemy_pos.Y - position.Y) / (float)(enemy_pos.X - position.X);
     float p = position.Y - (m * position.X);
     float a = 1 + (m * m);

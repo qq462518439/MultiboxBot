@@ -205,7 +205,7 @@ class LocalPlayer : public WoWPlayer {
         void ClickToMove(ClickType, unsigned long long, Position);
         void SetTarget(unsigned long long tguid);
         WoWUnit* getTarget();
-        Position getOppositeDirection(Position enemy_pos);
+        Position getOppositeDirection(Position enemy_pos, float radius);
         bool isCasting();
         bool isCasting(int* IDs, int size);
     protected:

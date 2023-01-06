@@ -7,70 +7,56 @@
 #include <iostream>
 #include <chrono>
 
-static bool infoB = false;
+static unsigned long long playerGuid = 0;
+static unsigned long long pastPlayerGuid = 0;
 static std::string playerName = "";
 
 void Game::MainLoop() {
 	while (Client::client_running == true) {
-		if (!infoB && Functions::GetPlayerGuid() > 0) {
+
+		if (Client::bot_running == false) {
 			ThreadSynchronizer::RunOnMainThread(
 				[]() {
-					playerName = Functions::UnitName("player");
-					playerClass = Functions::UnitClass("player");
+					playerGuid = Functions::GetPlayerGuid();
+					if (playerGuid > 0) {
+						if (keyTarget) {
+							std::string msg = "AssistByName('" + tankName + "')";
+							Functions::LuaCall(msg.c_str());
+							keyTarget = false;
+						}
+						else if (keyHearthstone) {
+							Functions::UseItem("Hearthstone");
+							keyHearthstone = false;
+						}
+						else if (keyMount) {
+							Functions::UseItem("Bridle");
+							keyMount = false;
+						}
+
+						if (playerGuid != pastPlayerGuid) {
+							pastPlayerGuid = playerGuid;
+							playerClass = Functions::UnitClass("player");
+							playerName = Functions::UnitName("player");
+							std::string msg = ("Name " + playerName + " Class " + playerClass);
+							Client::sendMessage(msg);
+						}
+					}
 				}
 			);
-			std::string msg = ("Name " + playerName + " Class " + playerClass);
-			Client::sendMessage(msg);
-			infoB = true;
-		}
-		else if (infoB && Functions::GetPlayerGuid() == 0) {
-			infoB = false;
-			Client::sendMessage("Name Null Class Null");
-		}
-
-		if (keyTarget) {
-			ThreadSynchronizer::RunOnMainThread([]() {
-				std::string msg = "AssistByName('" + tankName + "')";
-				Functions::LuaCall(msg.c_str());
-			});
-			keyTarget = false;
-		}
-		else if (keyHearthstone) {
-			ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem("Hearthstone"); });
-			keyHearthstone = false;
-		}
-		else if (keyMount) {
-			ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem("Bridle"); });
-			keyMount = false;
 		}
 
 		while (Client::bot_running == true) {
-			if (Functions::GetPlayerGuid() > 0) { //in-game
 
-				// ========================================== //
-				// ===========   Initialisation   =========== //
-				// ========================================== //
+			// ========================================== //
+			// ===========   Initialisation   =========== //
+			// ========================================== //
 
-				auto start = std::chrono::high_resolution_clock::now();
+			auto start = std::chrono::high_resolution_clock::now();
 
-				if (keyTarget) {
-					ThreadSynchronizer::RunOnMainThread([]() {
-						std::string msg = "AssistByName('" + tankName + "')";
-						Functions::LuaCall(msg.c_str());
-						});
-					keyTarget = false;
-				}
-				else if (keyHearthstone) {
-					ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem("Hearthstone"); });
-					keyHearthstone = false;
-				}
-				else if (keyMount) {
-					ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem("Bridle"); });
-					keyMount = false;
-				}
-
-				ThreadSynchronizer::RunOnMainThread(
-					[]() {
+			ThreadSynchronizer::RunOnMainThread(
+				[]() {
+					playerGuid = Functions::GetPlayerGuid();
+					if (playerGuid > 0) {
 						if (Functions::IsInRaid()) tarType = "raid";
 						else tarType = "party";
 						NumGroupMembers = Functions::GetNumGroupMembers();
@@ -79,14 +65,37 @@ void Game::MainLoop() {
 						Functions::EnumerateVisibleObjects(0);
 						Functions::ClassifyHeal();
 
-						playerClass = Functions::UnitClass("player");
-
 						if (localPlayer != NULL) targetUnit = localPlayer->getTarget();
 
 						if (Functions::GetRepairAllCost() > 0) Functions::LuaCall("RepairAllItems()");
 						if (Functions::GetMerchantNumItems() > 0) Functions::SellUselessItems();
+
+						if (keyTarget) {
+							std::string msg = "AssistByName('" + tankName + "')";
+							Functions::LuaCall(msg.c_str());
+							keyTarget = false;
+						}
+						else if (keyHearthstone) {
+							Functions::UseItem("Hearthstone");
+							keyHearthstone = false;
+						}
+						else if (keyMount) {
+							Functions::UseItem("Bridle");
+							keyMount = false;
+						}
+
+						if (playerGuid != pastPlayerGuid) {
+							pastPlayerGuid = playerGuid;
+							playerClass = Functions::UnitClass("player");
+							playerName = Functions::UnitName("player");
+							std::string msg = ("Name " + playerName + " Class " + playerClass);
+							Client::sendMessage(msg);
+						}
 					}
-				);
+				}
+			);
+
+			if (playerGuid > 0) { //in-game
 				if (localPlayer != NULL) {
 
 					std::tie(nbrEnemy, nbrCloseEnemy, nbrCloseEnemyFacing, nbrEnemyPlayer) = Functions::countEnemies();
@@ -106,13 +115,12 @@ void Game::MainLoop() {
 						}
 					}
 
-					if (!infoB) {
-						std::string msg = "Name " + playerName + " Class " + playerClass;
-						Client::sendMessage(msg.c_str());
-						infoB = true;
+					if (playerGuid > 0 && playerGuid != pastPlayerGuid) {
+						pastPlayerGuid = playerGuid;
+						std::string msg = ("Name " + playerName + " Class " + playerClass);
+						Client::sendMessage(msg);
 					}
-				}
-				else std::cout << "localPlayer NULL !\n";
+				} else std::cout << "localPlayer NULL !\n";
 
 				auto end = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<double, std::milli> float_ms = end - start;
@@ -130,9 +138,17 @@ void Game::MainLoop() {
 					Position front_pos = Position((cos(localPlayer->facing) * 4) + localPlayer->position.X, (sin(localPlayer->facing) * 4) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
 					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.X, (sin(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
 					ThreadSynchronizer::RunOnMainThread([=]() {
-						obstacle_front = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(front_pos) > 13;
-						obstacle_back = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(back_pos) > 13;
-						if (targetUnit != NULL) los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f));
+						obstacle_front = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
+							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(front_pos) > 15.0f;
+						obstacle_back = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
+							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(back_pos) > 15.0f;
+						if (targetUnit != NULL) {
+							los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f));
+							/*los_oppositeDir = !Functions::Intersect(player_pos, oppositeDir);
+							std::cout << "los_oppositeDir DONE\n";
+							obstacle_oppositeDir = (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(oppositeDir) > 15.0f);
+							std::cout << "obstacle_oppositeDir DONE\n";*/
+						}
 						hasDrink = Functions::HasDrink();
 					});
 					bool playerIsRanged = Functions::PlayerIsRanged();
@@ -146,7 +162,7 @@ void Game::MainLoop() {
 						Functions::releaseKey(0x28);
 						Moving = 0;
 					}
-					else if (!Combat && (localPlayer->speed == 0) && (localPlayer->movement_flags == MOVEFLAG_NONE) && (localPlayer->prctMana < 33) && (hasDrink > 0)) {
+					else if (!Combat && !IsSitting && (localPlayer->speed == 0) && (localPlayer->movement_flags == MOVEFLAG_NONE) && (localPlayer->prctMana < 33) && (hasDrink > 0)) {
 						//Drink
 						IsSitting = true;
 						ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem(hasDrink); });
@@ -165,11 +181,11 @@ void Game::MainLoop() {
 								Functions::releaseKey(0x28);
 								Moving = 0;
 							}
-							else if (!obstacle_back && (Moving == 0 || Moving == 1 || Moving == 4) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED)
-								&& (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0) && distTarget < 12.0f) {
+							else if (!obstacle_back && distTarget < 12.0f && (Moving == 0 || Moving == 1 || Moving == 4) && (targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED)
+								&& (targetUnit->flags & UNIT_FLAG_CONFUSED || targetUnit->speed == 0)) {
 								//Player stunned or rooted and target < 12 yard => Run away
 								if (localPlayer->speed == 0) {
-									Position oppositeDir = localPlayer->getOppositeDirection(targetUnit->position);
+									Position oppositeDir = localPlayer->getOppositeDirection(targetUnit->position, 12.0f); oppositeDir.Z = player_pos.Z;
 									ThreadSynchronizer::RunOnMainThread([oppositeDir]() { localPlayer->ClickToMove(Move, targetUnit->Guid, oppositeDir); });
 								}
 								Moving = 1;
@@ -186,12 +202,12 @@ void Game::MainLoop() {
 												bool enemy_close = false;
 												for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
 													if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
-														&& !(ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 5)) {
+														&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 10.0f)) {
 														enemy_close = true;
 													}
 												}
 												if (enemy_close) break; //Change direction
-												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 13)) {
+												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 15.0f)) {
 													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f))) {
 														localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
 														Moving = 6;
@@ -251,12 +267,12 @@ void Game::MainLoop() {
 												bool enemy_close = false;
 												for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
 													if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
-														&& !(ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 5)) {
+														&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 10.0f)) {
 														enemy_close = true;
 													}
 												}
 												if (enemy_close) break; //Change direction
-												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 13)) {
+												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 15.0f)) {
 													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f))) {
 														localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
 														Moving = 6;
@@ -295,7 +311,8 @@ void Game::MainLoop() {
 						Functions::releaseKey(0x28);
 						Moving = 0;
 					}
-					else if ((tankName != playerName) && !Combat && !IsSitting && IsInGroup && (localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0) && (targetUnit == NULL || !targetUnit->attackable || targetUnit->isdead)) {
+					else if (tankName != playerName && !Combat && !IsSitting && IsInGroup && (localPlayer->castInfo == 0)
+					&& (localPlayer->channelInfo == 0) && (targetUnit == NULL || !targetUnit->attackable || targetUnit->isdead)) {
 						//Follow
 						if(tankName != "null") {
 							if (Functions::FollowMultibox(playerIsRanged, positionCircle, 0)) Moving = 4; //(Circle radius, Circle position, Tank or Melee)
@@ -329,10 +346,6 @@ void Game::MainLoop() {
 				float_ms = end - start;
 				std::cout << "Actions: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
 			}
-			else if (infoB) {
-				infoB = false;
-				Client::sendMessage("Name Null Class Null");
-			}
 			Sleep(250);
 		}
 		if (Moving > 0) {
@@ -347,7 +360,7 @@ void Game::MainLoop() {
 int GroupMembersIndex[40];
 std::vector<unsigned long long> HasAggro[40];
 bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false, tankAutoFocus = false, tankAutoMove = false,
-	keyTarget = false, keyHearthstone = false, keyMount = false, obstacle_front = false, obstacle_back = false, los_target = false;
+	keyTarget = false, keyHearthstone = false, keyMount = false, obstacle_front = false, obstacle_back = false, los_target = false, los_oppositeDir = false, obstacle_oppositeDir = false;
 int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 0, positionCircle = 0, hasDrink = 0, tankIndex = 0;
 float distTarget = 0;
 std::string tarType = "party", playerClass = "null", tankName = "null", meleeName = "null";

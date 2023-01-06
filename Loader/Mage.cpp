@@ -59,16 +59,17 @@ void ListAI::MageDps() {
 			int RemoveCurseKey = Functions::GetDispelKey("Curse");
 			std::string RankConjureMana = GetSpellRank("Conjure Mana");
 
-			if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && IsInGroup && !Combat
-				&& (tankName != "null" && (ListUnits[tankIndex].targetGuid != 0))) { //Tank has target
-				localPlayer->SetTarget(ListUnits[tankIndex].targetGuid);
-			}
-			else if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
+			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
+				bool tmp_cond = false;
 				for (int i = 0; i <= NumGroupMembers; i++) {
 					if (HasAggro[i].size() > 0) {
 						localPlayer->SetTarget(HasAggro[i][0]);
+						tmp_cond = true;
 						break;
 					}
+				}
+				if (!tmp_cond && tankName != "null" && (ListUnits[tankIndex].targetGuid != 0)) { //Tank has target
+					localPlayer->SetTarget(ListUnits[tankIndex].targetGuid);
 				}
 			}
 
