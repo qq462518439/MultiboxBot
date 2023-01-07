@@ -75,7 +75,7 @@ static void PaladinAttack() {
 static int HealGroup(int indexP) { //Heal Players and Npcs
 	float HpRatio = ListUnits[indexP].prctHP;
 	unsigned long long healGuid = ListUnits[indexP].Guid;
-	bool isPlayer = (healGuid == Functions::GetPlayerGuid());
+	bool isPlayer = (healGuid == localPlayer->Guid);
 	int ForbearanceID[1] = { 25771 };
 	bool ForbearanceDebuff = ListUnits[indexP].hasDebuff(ForbearanceID, 1);
 	int BoSIDs[2] = { 6940, 20729 };
@@ -92,6 +92,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Lay on Hands");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if (Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
@@ -114,6 +115,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Protection");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if (Combat && (distAlly < 30.0f) && isParty && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
@@ -121,6 +123,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Sacrifice");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 50) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
@@ -129,6 +132,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Holy Light");
 		LastTarget = indexP;
 		if (localPlayer->isCasting()) current_time = time(0);
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 85) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
@@ -137,13 +141,14 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Flash of Light");
 		LastTarget = indexP;
 		if (localPlayer->isCasting()) current_time = time(0);
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	return 1;
 }
 
 void ListAI::PaladinDps() {
-	HealInnerTimer = 5.0f - (time(0) - current_time);
+	HealInnerTimer = 10.0f - (time(0) - current_time);
 	if (HealInnerTimer < 0) HealInnerTimer = 0;
 	int FoLIDs[6] = { 19750, 19939, 19940, 19941, 19942, 19943 };
 	int holyLightIDs[9] = { 635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292 };

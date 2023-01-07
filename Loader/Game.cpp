@@ -63,7 +63,6 @@ void Game::MainLoop() {
 						IsInGroup = Functions::IsInGroup();
 
 						Functions::EnumerateVisibleObjects(0);
-						Functions::ClassifyHeal();
 
 						if (localPlayer != NULL) targetUnit = localPlayer->getTarget();
 
@@ -98,6 +97,7 @@ void Game::MainLoop() {
 			if (playerGuid > 0) { //in-game
 				if (localPlayer != NULL) {
 
+					Functions::ClassifyHeal();
 					std::tie(nbrEnemy, nbrCloseEnemy, nbrCloseEnemyFacing, nbrEnemyPlayer) = Functions::countEnemies();
 
 					IsFacing = false;
@@ -134,20 +134,24 @@ void Game::MainLoop() {
 
 				if (localPlayer != NULL) {
 					float halfPI = acos(0.0);
-					Position player_pos = Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 2.5f);
-					Position front_pos = Position((cos(localPlayer->facing) * 4) + localPlayer->position.X, (sin(localPlayer->facing) * 4) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
-					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.X, (sin(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
+					Position player_pos = localPlayer->position; player_pos.Z = player_pos.Z + 2.25f;
+					Position front_pos = Position((cos(localPlayer->facing) * 4) + localPlayer->position.X, (sin(localPlayer->facing) * 4) + localPlayer->position.Y
+						, localPlayer->position.Z + 2.25f);
+					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.X, (sin(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.Y
+						, localPlayer->position.Z + 2.25f);
 					ThreadSynchronizer::RunOnMainThread([=]() {
 						obstacle_front = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
 							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(front_pos) > 15.0f;
 						obstacle_back = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
 							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(back_pos) > 15.0f;
 						if (targetUnit != NULL) {
-							los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f));
+							los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.25f));
 							/*los_oppositeDir = !Functions::Intersect(player_pos, oppositeDir);
 							std::cout << "los_oppositeDir DONE\n";
 							obstacle_oppositeDir = (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(oppositeDir) > 15.0f);
 							std::cout << "obstacle_oppositeDir DONE\n";*/
+							if (IsInGroup && (tankName != "null") && (tankName != playerName) && targetUnit->attackable && !targetUnit->isdead && ((targetUnit->flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT)
+								&& (targetUnit->Guid != ListUnits[tankIndex].targetGuid)) Functions::LuaCall("ClearTarget()");
 						}
 						hasDrink = Functions::HasDrink();
 					});
@@ -155,7 +159,7 @@ void Game::MainLoop() {
 					int drinkingIDs[15] = { 430, 431, 432, 1133, 1135, 1137, 24355, 25696, 26261, 26402, 26473, 26475, 29007, 10250, 22734 };
 					int RaptorStrikeIDs[8] = { 2973, 14260, 14261, 14262, 14263, 14264, 14265, 14266 };
 
-					if (IsSitting && ((localPlayer->prctMana > 80) || Combat || !localPlayer->hasBuff(drinkingIDs, 15))) {
+					if (IsSitting && ((localPlayer->prctMana > 80) || Combat || !localPlayer->hasBuff(drinkingIDs, 15) || (localPlayer->speed > 0))) {
 						//Stop sitting
 						IsSitting = false;
 						Functions::pressKey(0x28);
@@ -192,33 +196,7 @@ void Game::MainLoop() {
 							}
 							else if ((Moving == 0 || (Moving == 6 && localPlayer->speed == 0)) && !los_target) {
 								//Find LoS
-								ThreadSynchronizer::RunOnMainThread([=]() {
-									for (int i = 0; i < 8; i++) { //Front, left, right...
-										if (i != 6) { //We don't want backward
-											for (int y = 1; y <= 10; y++) { //Every 3 yards up to 30 check for LoS point
-												Position tmp_pos = Position((cos(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.X
-													, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
-												Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 2.5f;
-												bool enemy_close = false;
-												for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
-													if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
-														&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 10.0f)) {
-														enemy_close = true;
-													}
-												}
-												if (enemy_close) break; //Change direction
-												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 15.0f)) {
-													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f))) {
-														localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
-														Moving = 6;
-														return;
-													}
-												}
-												else break; //There is an obstacle on this path, we need to change
-											}
-										}
-									}
-								});
+								ThreadSynchronizer::RunOnMainThread([]() { if (Functions::MoveLoSTarget()) Moving = 6; });
 							}
 							else if (distTarget > 30.0f && !obstacle_front && !IsSitting && (Moving == 0 || Moving == 2 || Moving == 4)) {
 								//Target > 30 yard and no obstacle => Run to it
@@ -257,35 +235,9 @@ void Game::MainLoop() {
 							}
 							else if ((Moving == 0 || (Moving == 6 && localPlayer->speed == 0)) && !los_target) {
 								//Find LoS
-								ThreadSynchronizer::RunOnMainThread([=]() {
-									for (int i = 0; i < 8; i++) { //Front, left, right...
-										if (i != 6) { //We don't want backward
-											for (int y = 1; y <= 10; y++) { //Every 3 yards up to 30 check for LoS point
-												Position tmp_pos = Position((cos(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.X
-													, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 3)) + localPlayer->position.Y, localPlayer->position.Z + 2.5f);
-												Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 2.5f;
-												bool enemy_close = false;
-												for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
-													if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
-														&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 10.0f)) {
-														enemy_close = true;
-													}
-												}
-												if (enemy_close) break; //Change direction
-												else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 15.0f)) {
-													if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.5f))) {
-														localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
-														Moving = 6;
-														return;
-													}
-												}
-												else break; //There is an obstacle on this path, we need to change
-											}
-										}
-									}
-								});
+								ThreadSynchronizer::RunOnMainThread([]() { if (Functions::MoveLoSTarget()) Moving = 6; });
 							}
-							else if (distTarget > 5.0f && !IsSitting && !obstacle_front) {
+							else if (distTarget > 5.0f && !targetUnit->enemyClose && !IsSitting && !obstacle_front) {
 								ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 								Moving = 2;
 							}
@@ -297,6 +249,10 @@ void Game::MainLoop() {
 							else if (!IsFacing) ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 						}
 					}
+					else if ((Moving == 5 && localPlayer->speed == 0) && !los_target && (targetUnit->unitReaction > Neutral)) {
+						//Find LoS (ally)
+						ThreadSynchronizer::RunOnMainThread([]() { if(Functions::MoveLoSTarget()) Moving = 5; });
+					}
 					else if (Moving == 1 || Moving == 2 || Moving == 6 || (Moving == 4 && obstacle_front)) {
 						Functions::pressKey(0x28);
 						Functions::releaseKey(0x28);
@@ -306,9 +262,11 @@ void Game::MainLoop() {
 						Functions::releaseKey(0x28);
 						Moving = 0;
 					}
-					else if (Moving == 5 && (obstacle_front || targetUnit == NULL || ((targetUnit->unitReaction > Neutral) && (distTarget < 30.0f)))) {
-						Functions::pressKey(0x28);
-						Functions::releaseKey(0x28);
+					else if (Moving == 5 && (obstacle_front || targetUnit == NULL || (targetUnit->unitReaction <= Neutral) || ((targetUnit->unitReaction > Neutral) && los_target) || (targetUnit->Guid == playerGuid))) {
+						if((localPlayer->speed > 0)) {
+							Functions::pressKey(0x28);
+							Functions::releaseKey(0x28);
+						}
 						Moving = 0;
 					}
 					else if (tankName != playerName && !Combat && !IsSitting && IsInGroup && (localPlayer->castInfo == 0)

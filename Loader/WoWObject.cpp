@@ -108,6 +108,7 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
 
     unitReaction = Neutral;
     attackable = false;
+    enemyClose = false;
 }
 
 int WoWUnit::getHealth() {
@@ -192,13 +193,11 @@ LocalPlayer::LocalPlayer(uintptr_t pointer, unsigned long long guid, ObjectType 
 }
 
 void LocalPlayer::ClickToMove(ClickType clickType, unsigned long long interactGuid, Position pos) {
-    float* xyz = new float[3];
-    xyz[0] = pos.X; xyz[1] = pos.Y; xyz[2] = pos.Z;
+    float xyz[3] = { pos.X, pos.Y, pos.Z };
     unsigned long long* interactGuidPtr = &interactGuid;
     typedef void (__thiscall* func)(uintptr_t, ClickType, unsigned long long*, float*, float);
     func function = (func)CLICK_TO_MOVE_FUN_PTR;
     function(Pointer, clickType, interactGuidPtr, xyz, 2);
-    delete[] xyz;
 }
 
 void LocalPlayer::SetTarget(unsigned long long tguid) {

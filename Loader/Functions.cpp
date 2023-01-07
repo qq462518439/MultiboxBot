@@ -28,7 +28,7 @@ bool Functions::Intersect(Position start, Position end) {
 float Functions::GetDepth(Position pos) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
 	func* function = (func*)INTERSECT_FUN;
-	Position p1 = Position(pos.X, pos.Y, pos.Z + 2.5f);
+	Position p1 = Position(pos.X, pos.Y, pos.Z + 2.75f);
 	Position p2 = Position(pos.X, pos.Y, pos.Z - 100);
 	Position intersection = Position(0, 0, 0);
 	float distance = float(pos.DistanceTo(p2));
@@ -73,6 +73,12 @@ void Functions::EnumerateVisibleObjects(int filter) {
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
 		ListUnits[i].unitReaction = localPlayer->getUnitReaction(ListUnits[i].Pointer);
 		ListUnits[i].attackable = localPlayer->canAttack(ListUnits[i].Pointer);
+	}
+	for (unsigned int i = 0; i < ListUnits.size(); i++) { //Check if one enemy (not aggro) is close
+		for (unsigned int y = 0; y < ListUnits.size(); y++) {
+			if ((ListUnits[i].Guid != ListUnits[y].Guid) && ListUnits[y].attackable && (ListUnits[y].unitReaction <= Hostile) && !ListUnits[y].isdead
+				&& ((ListUnits[y].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[i].position.DistanceTo(ListUnits[y].position) < 12.0f)) ListUnits[i].enemyClose = true;
+		}
 	}
 }
 
@@ -122,12 +128,10 @@ uintptr_t Functions::GetText(const char* varName) {
 }
 
 void Functions::ClickAOE(Position position) {
-	float* xyz = new float[3];
-	xyz[0] = position.X; xyz[1] = position.Y; xyz[2] = position.Z;
+	float xyz[3] = { position.X, position.Y, position.Z };
 	typedef void __fastcall func(float*);
 	func* function = (func*)SPELL_C_HANDLETERRAINCLICK_FUN_PTR;
 	function(xyz);
-	delete[] xyz;
 }
 
 void Functions::ClassifyHeal() {
@@ -136,10 +140,9 @@ void Functions::ClassifyHeal() {
 	HealTargetArray.clear();
 	AoEHeal = 0;
 	for (unsigned int i = 0; i < ListUnits.size(); i++) {
-		if (ListUnits[i].unitReaction > Neutral && !ListUnits[i].isdead) {
+		if ((ListUnits[i].unitReaction > Neutral) && !ListUnits[i].isdead) {
 			float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
-			if (dist < 60 && !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 2.5f)
-				, Position(ListUnits[i].position.X, ListUnits[i].position.Y, ListUnits[i].position.Z + 2.5f))) {
+			if (dist < 60) {
 				PrctHp.push_back(ListUnits[i].prctHP);
 				if (ListUnits[i].objectType == Player && ListUnits[i].prctHP < 60) AoEHeal = AoEHeal + 1;
 				HealTargetArray.push_back(i);
@@ -158,6 +161,36 @@ void Functions::ClassifyHeal() {
 			}
 		}
 	}
+}
+
+bool Functions::MoveLoSTarget() {
+	float halfPI = acos(0.0);
+	Position player_pos = localPlayer->position; player_pos.Z = player_pos.Z + 2.25f;
+	for (int i = 0; i < 8; i++) { //Front, left, right...
+		if (i != 6) { //We don't want backward
+			for (int y = 1; y <= 8; y++) { //Every 4 yards up to 32 check for LoS point
+				Position tmp_pos = Position((cos(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 4)) + localPlayer->position.X
+					, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 4)) + localPlayer->position.Y, localPlayer->position.Z + 2.25f);
+				Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 2.25f;
+				bool enemy_close = false;
+				for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
+					if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
+						&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 12.0f)) {
+						enemy_close = true;
+					}
+				}
+				if (enemy_close) break; //Change direction
+				else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 15.0f)) {
+					if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.25f))) {
+						localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
+						return true;
+					}
+				}
+				else break; //There is an obstacle on this path, we need to change
+			}
+		}
+	}
+	return false;
 }
 
 Position meanPos(std::vector<Position> posArr) {
@@ -283,8 +316,8 @@ int Functions::GetBuffKey(int* IDs, int size) {
 	//Retourne le joueur auquel il manque le buff
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction > Neutral) && !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)
-			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 2.5f)
-				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 2.5f))) {
+			&& !Intersect(Position(localPlayer->position.X, localPlayer->position.Y, localPlayer->position.Z + 2.25f)
+				, Position(ListUnits[GroupMembersIndex[i]].position.X, ListUnits[GroupMembersIndex[i]].position.Y, ListUnits[GroupMembersIndex[i]].position.Z + 2.25f))) {
 			if (!ListUnits[GroupMembersIndex[i]].hasBuff(IDs, size)) return i;
 		}
 	}
@@ -295,13 +328,6 @@ bool Functions::PlayerIsRanged() {
 	if(playerClass == "Mage" || playerClass == "Priest" || playerClass == "Warlock" || playerClass == "Hunter"
 		|| (playerClass == "Druid" && (playerSpec == 0 || playerSpec == 2)) || (playerClass == "Shaman" && (playerSpec == 0 || playerSpec == 2))) return true;
 	else return false;
-}
-
-void Functions::MoveToAlly(int unitIndex) {
-	if (Moving == 0 || Moving == 2 || Moving == 5) {
-		localPlayer->ClickToMove(Move, ListUnits[unitIndex].Guid, ListUnits[unitIndex].position);
-		Moving = 5;
-	}
 }
 
 //======================================================================//
@@ -422,13 +448,34 @@ float Functions::GetItemCooldownDuration(int item_id) {
 			std::string item_link = GetContainerItemLink(i, y);
 			int link_nbr = GetIntFromChar(item_link.c_str());
 			if (link_nbr == item_id) {
-				std::string command = "start, duration = GetContainerItemCooldown(" + std::to_string(i) + + ", " + std::to_string(y) + ")";
+				std::string command = "start, duration = GetContainerItemCooldown(" + std::to_string(i) + +", " + std::to_string(y) + ")";
 				LuaCall(command.c_str());
 				float start = GetFloatFromChar((char*)GetText("start"));
 				float duration = GetFloatFromChar((char*)GetText("duration"));
 				float cdLeft = start + duration - GetTime();
 				if (cdLeft < 0) cdLeft = 0;
 				return cdLeft;
+			}
+		}
+	}
+	return 999;
+}
+
+float Functions::GetItemCooldownDuration(int* items_id, int size) {
+	for (int i = 0; i <= 4; i++) {
+		for (int y = 1; y <= GetContainerNumSlots(i); y++) {
+			std::string item_link = GetContainerItemLink(i, y);
+			int link_nbr = GetIntFromChar(item_link.c_str());
+			for (int z = 0; z < size; z++) {
+				if (link_nbr == items_id[z]) {
+					std::string command = "start, duration = GetContainerItemCooldown(" + std::to_string(i) + +", " + std::to_string(y) + ")";
+					LuaCall(command.c_str());
+					float start = GetFloatFromChar((char*)GetText("start"));
+					float duration = GetFloatFromChar((char*)GetText("duration"));
+					float cdLeft = start + duration - GetTime();
+					if (cdLeft < 0) cdLeft = 0;
+					return cdLeft;
+				}
 			}
 		}
 	}
@@ -647,11 +694,8 @@ bool Functions::HasHPotion() {
 
 float Functions::GetHPotionCD() {
 	int listID[6] = { 118, 858, 929, 1710, 3928, 13446 };
-	for (int i = 0; i < 6; i++) {
-		float CD = GetItemCooldownDuration(listID[i]);
-		if (CD < 999) return CD;
-	}
-	return 999;
+	float CD = GetItemCooldownDuration(listID, 6);
+	return CD;
 }
 
 bool Functions::HasMPotion() {
@@ -662,11 +706,8 @@ bool Functions::HasMPotion() {
 
 float Functions::GetMPotionCD() {
 	int listID[6] = { 2455, 3385, 3827, 6149, 13443, 13444 };
-	for (int i = 0; i < 6; i++) {
-		float CD = GetItemCooldownDuration(listID[i]);
-		if (CD < 999) return CD;
-	}
-	return 999;
+	float CD = GetItemCooldownDuration(listID, 6);
+	return CD;
 }
 
 bool Functions::HasHealthstone() {
@@ -677,11 +718,8 @@ bool Functions::HasHealthstone() {
 
 float Functions::GetHealthstoneCD() {
 	int listID[15] = { 5512, 19004, 19005, 5511, 19006, 19007, 5509, 19008, 19009, 5510, 19010, 19011, 9421, 19012, 19013 };
-	for (int i = 0; i < 15; i++) {
-		float CD = GetItemCooldownDuration(listID[i]);
-		if (CD < 999) return CD;
-	}
-	return 999;
+	float CD = GetItemCooldownDuration(listID, 15);
+	return CD;
 }
 
 //======================================================================//

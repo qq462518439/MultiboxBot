@@ -22,7 +22,7 @@ class Functions {
 		static int getNbrCreatureType(int range, CreatureType type1, CreatureType type2=Null, CreatureType type3=Null);
 		static int GetBuffKey(int* IDs, int size);
 		static bool PlayerIsRanged();
-		static void MoveToAlly(int unitIndex);
+		static bool MoveLoSTarget();
 		static int FollowMultibox(int ranged = 0, int placement = 0, int who = 0);
 			// === Lua Game Functions === //
 		static int GetNumGroupMembers();
@@ -35,6 +35,7 @@ class Functions {
 		// === Timer/CD === //
 		static float GetTime();
 		static float GetItemCooldownDuration(int item_id);
+		static float GetItemCooldownDuration(int* items_id, int size);
 		static float GetActionCooldownDuration(int slot);
 		static float GetSpellCooldownDuration(std::string spell_name);
 		// === Items === //

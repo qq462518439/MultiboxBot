@@ -44,7 +44,7 @@ void ListAI::MageDps() {
 			int IceBarrierIDs[4] = { 11426, 13031, 13032, 13033 };
 			bool IceBarrierBuff = localPlayer->hasBuff(IceBarrierIDs, 4);
 			int ManaShieldIDs[6] = { 1463, 8494, 8495, 10191, 10192, 10193 };
-			bool ManaShieldBuff = localPlayer->hasBuff(IceBarrierIDs, 6);
+			bool ManaShieldBuff = localPlayer->hasBuff(ManaShieldIDs, 6);
 			int ArcaneIntellectIDs[5] = { 1459, 1460, 1461, 10156, 10157 };
 			bool ArcaneIntellectBuff = localPlayer->hasBuff(ArcaneIntellectIDs, 5);
 			int PolymorphIDs[6] = { 118, 12824, 12825, 12826, 28271, 28272 };

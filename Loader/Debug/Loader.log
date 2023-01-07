@@ -3,10 +3,11 @@ C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Client.cpp(90
   dllmain.cpp
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\dllmain.cpp(21,15): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   Functions.cpp
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(322,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(340,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(342,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(1145,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(167,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(348,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(366,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(368,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(1183,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Game.cpp
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Game.cpp(136,19): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Hunter.cpp
@@ -19,7 +20,7 @@ C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Game.cpp(136,
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Rogue.cpp(89,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Warlock.cpp
   WoWObject.cpp
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\WoWObject.cpp(141,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\WoWObject.cpp(151,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\WoWObject.cpp(142,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\WoWObject.cpp(152,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Generating Code...
   Loader.vcxproj -> C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Test\src\Loader.dll

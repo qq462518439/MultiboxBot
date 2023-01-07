@@ -152,7 +152,7 @@ class WoWUnit : public WoWObject {
         UnitFlags flags; MovementFlags movement_flags; int buff[30]; int debuff[16]; bool isdead;
         CreatureType creatureType; float speed; unsigned long long targetGuid;
         float facing; int level; char* name; int channelInfo; UnitReaction unitReaction;
-        bool attackable;
+        bool attackable; bool enemyClose;
 
         WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType);
         bool hasBuff(int* IDs, int size);
