@@ -56,6 +56,7 @@ void Client::recvMessage() {
 			if ((buffTmp[i] >= 'a' && buffTmp[i] <= 'z') || (buffTmp[i] >= 'A' && buffTmp[i] <= 'Z')) y++;
 		}
 		tankName = subchar(buffTmp, 0, y);
+		leaderName = tankName;
 	}
 	else if (buffer[0] == 'M') {
 		char* buffTmp = subchar(buffer, 7, 25);
@@ -64,6 +65,7 @@ void Client::recvMessage() {
 			if ((buffTmp[i] >= 'a' && buffTmp[i] <= 'z') || (buffTmp[i] >= 'A' && buffTmp[i] <= 'Z')) y++;
 		}
 		meleeName = subchar(buffTmp, 0, y);
+		if(tankName == "null") leaderName = meleeName;
 	}
 	else if (buffer[0] == 'K' && buffer[1] == '1') {
 		keyHearthstone = true;

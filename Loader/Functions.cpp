@@ -97,7 +97,7 @@ int Functions::Callback(unsigned long long guid, int filter) {
 			WoWUnit unit = WoWUnit(pointer, guid, objectType);
 			ListUnits.push_back(unit);
 			if (objectType == Player) {
-				if (unit.name == tankName) tankIndex = ListUnits.size() - 1;
+				if (unit.name == leaderName) leaderIndex = ListUnits.size() - 1;
 				if (guid == GetPlayerGuid()) {
 					if (localPlayer != NULL) delete(localPlayer);
 					localPlayer = new LocalPlayer(pointer, guid, objectType);
@@ -163,31 +163,54 @@ void Functions::ClassifyHeal() {
 	}
 }
 
-bool Functions::MoveLoSTarget() {
-	float halfPI = acos(0.0);
+int Functions::FollowMultibox(int ranged, int placement) {
+	int range = 2;
+	float cst = 0.30f * ((int(placement / 2) * 2) + 1);
+	if (placement % 2 != 0) cst = -cst;
+	if (ranged == 1) { range = 4; cst = cst / 2; }
+	float dist = localPlayer->position.DistanceTo(ListUnits[leaderIndex].position);
+	if (dist < 60.0f && dist > range + 1) {
+		float PI = acosf(0.0) * 2;
+		Position target_pos = Position((cos(ListUnits[leaderIndex].facing + PI + cst) * range) + ListUnits[leaderIndex].position.X
+			, (sin(ListUnits[leaderIndex].facing + PI + cst) * range) + ListUnits[leaderIndex].position.Y, ListUnits[leaderIndex].position.Z + 2.25f);
+		Position player_pos = localPlayer->position; player_pos.Z = player_pos.Z + 2.25f;
+		ThreadSynchronizer::RunOnMainThread([=]() {
+			Position target_pos2 = Functions::ProjectPos(target_pos); target_pos2.Z += 2.25f;
+			if (!Functions::Intersect(player_pos, target_pos)) localPlayer->ClickToMove(Move, ListUnits[leaderIndex].Guid, target_pos2);
+			else if(Moving == 0 || (Moving == 4 && localPlayer->speed == 0)) Functions::MoveLoS(target_pos);
+		});
+		return 1;
+	}
+	return 0;
+}
+
+bool Functions::MoveLoS(Position target_pos) {
 	Position player_pos = localPlayer->position; player_pos.Z = player_pos.Z + 2.25f;
-	for (int i = 0; i < 8; i++) { //Front, left, right...
-		if (i != 6) { //We don't want backward
-			for (int y = 1; y <= 8; y++) { //Every 4 yards up to 32 check for LoS point
-				Position tmp_pos = Position((cos(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 4)) + localPlayer->position.X
-					, (sin(localPlayer->facing + (i * halfPI / 2) - halfPI) * (y * 4)) + localPlayer->position.Y, localPlayer->position.Z + 2.25f);
-				Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 2.25f;
-				bool enemy_close = false;
-				for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
-					if ((ListUnits[z].Guid != targetUnit->Guid) && ListUnits[z].attackable && !ListUnits[z].isdead
-						&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 12.0f)) {
-						enemy_close = true;
-					}
+	float angle_targetPos = atan2f(target_pos.Y - player_pos.Y, target_pos.X - player_pos.X);
+	if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
+	else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
+	int j = 0;
+	for (int i = 1; i < 13; i++) { //Front, left, right...
+		if (i % 2 == 0) j = 16 - i; else j = i; //Pendulum direction choice
+		for (int y = 1; y <= 10; y++) { //Every 3 yards up to 30 check for LoS point
+			Position tmp_pos = Position((cos(angle_targetPos + (j * halfPI / 4)) * (y * 3)) + localPlayer->position.X
+				, (sin(angle_targetPos + (j * halfPI / 4)) * (y * 3)) + localPlayer->position.Y, localPlayer->position.Z + 2.25f);
+			Position tmp_pos2 = Functions::ProjectPos(tmp_pos); tmp_pos2.Z = tmp_pos2.Z + 2.25f;
+			bool enemy_close = false;
+			for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
+				if ((targetUnit == NULL || (ListUnits[z].Guid != targetUnit->Guid)) && ListUnits[z].attackable && !ListUnits[z].isdead
+					&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(tmp_pos2) < 12.0f)) {
+					enemy_close = true;
 				}
-				if (enemy_close) break; //Change direction
-				else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 5.0f)) {
-					if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.25f))) {
-						localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
-						return true;
-					}
-				}
-				else break; //There is an obstacle on this path, we need to change
 			}
+			if (enemy_close) break; //Change direction
+			else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 5.0f)) {
+				if (!Functions::Intersect(tmp_pos2, target_pos)) {
+					localPlayer->ClickToMove(Move, localPlayer->Guid, tmp_pos2);
+					return true;
+				}
+			}
+			else break; //There is an obstacle on this path, we need to change
 		}
 	}
 	return false;
@@ -1164,31 +1187,4 @@ float Functions::UnitAttackSpeed(std::string target) {
 void Functions::FollowUnit(std::string target) {
 	std::string command = "FollowUnit(\"" + target + "\")";
 	LuaCall(command.c_str());
-}
-
-int Functions::FollowMultibox(int ranged, int placement, int who) {
-	std::string target_name = "";
-	int range = 2;
-	float cst = 0.30f*((int(placement/2)*2)+1);
-	if (placement%2 != 0) cst = -cst;
-	if (who == 0) target_name = tankName; else target_name = meleeName;
-	if (ranged == 1) {
-		range = 4;
-		cst = cst / 2;
-	}
-	for (unsigned int i = 0; i < ListUnits.size(); i++) {
-		if (ListUnits[i].name == target_name) {
-			float dist = localPlayer->position.DistanceTo(ListUnits[i].position);
-			if (dist < 60.0f && dist > range+1) {
-				float PI = acos(0.0) * 2;
-				Position target_pos = Position((cos(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.X, (sin(ListUnits[i].facing + PI + cst) * range) + ListUnits[i].position.Y, ListUnits[i].position.Z);
-				ThreadSynchronizer::RunOnMainThread([=]() { 
-					if (obstacle_front) localPlayer->ClickToMove(FaceTarget, ListUnits[i].Guid, target_pos);
-					else localPlayer->ClickToMove(Move, ListUnits[i].Guid, target_pos);
-				});
-				return 1;
-			}
-		}
-	}
-	return 0;
 }

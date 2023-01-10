@@ -139,20 +139,18 @@ bool WoWUnit::hasDebuff(int* IDs, int size) {
 
 bool WoWUnit::isFacing(Position pos, float angle) {
     float f = atan2f(pos.Y - position.Y, pos.X - position.X);
-    float PI = 2 * acos(0.0);
+    float PI = 2 * acosf(0.0);
     if (f < 0.0f) f += PI * 2.0f;
-    else {
-        if (f > PI * 2) f -= PI * 2.0f;
-    }
+    else if (f > PI * 2) f -= PI * 2.0f;
     if (abs(f - facing) < angle) return true;
     else return false;
 }
 
 bool WoWUnit::isBehind(WoWUnit target) {
-    float halfPi = acos(0.0);
-    float twoPi = halfPi * 4;
-    float leftThreshold = target.facing - halfPi;
-    float rightThreshold = target.facing + halfPi;
+    float halfPI = acosf(0.0);
+    float twoPi = halfPI * 4;
+    float leftThreshold = target.facing - halfPI;
+    float rightThreshold = target.facing + halfPI;
 
     bool condition;
     if (leftThreshold < 0)

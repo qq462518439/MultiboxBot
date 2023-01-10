@@ -22,8 +22,8 @@ class Functions {
 		static int getNbrCreatureType(int range, CreatureType type1, CreatureType type2=Null, CreatureType type3=Null);
 		static int GetBuffKey(int* IDs, int size);
 		static bool PlayerIsRanged();
-		static bool MoveLoSTarget();
-		static int FollowMultibox(int ranged = 0, int placement = 0, int who = 0);
+		static bool MoveLoS(Position target_pos);
+		static int FollowMultibox(int ranged = 0, int placement = 0);
 			// === Lua Game Functions === //
 		static int GetNumGroupMembers();
 		static bool IsInGroup();

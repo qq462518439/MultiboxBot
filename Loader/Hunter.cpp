@@ -23,8 +23,8 @@ void ListAI::HunterDps() {
 			bool FeedingBuff = Functions::GetUnitBuff("pet", "Interface\\Icons\\Ability_Hunter_BeastTraining");
 
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
-				if (tankName != "null" && (ListUnits[tankIndex].targetGuid != 0)) { //Tank has target
-					localPlayer->SetTarget(ListUnits[tankIndex].targetGuid);
+				if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
+					localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
 				}
 				else {
 					for (int i = 0; i <= NumGroupMembers; i++) {
