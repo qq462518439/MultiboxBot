@@ -18,21 +18,21 @@ void ListAI::HunterDps() {
 
 			//Specific for Volley cast:
 			Position cluster_center = Position(0, 0, 0); int cluster_unit;
-			std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(30, 35);
+			std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(25, 35);
 
 			bool FeedingBuff = Functions::GetUnitBuff("pet", "Interface\\Icons\\Ability_Hunter_BeastTraining");
 
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
-				bool tmp_cond = false;
-				for (int i = 0; i <= NumGroupMembers; i++) {
-					if (HasAggro[i].size() > 0) {
-						localPlayer->SetTarget(HasAggro[i][0]);
-						tmp_cond = true;
-						break;
-					}
-				}
-				if (!tmp_cond && tankName != "null" && (ListUnits[tankIndex].targetGuid != 0)) { //Tank has target
+				if (tankName != "null" && (ListUnits[tankIndex].targetGuid != 0)) { //Tank has target
 					localPlayer->SetTarget(ListUnits[tankIndex].targetGuid);
+				}
+				else {
+					for (int i = 0; i <= NumGroupMembers; i++) {
+						if (HasAggro[i].size() > 0) {
+							localPlayer->SetTarget(HasAggro[i][0]);
+							break;
+						}
+					}
 				}
 			}
 
@@ -160,7 +160,7 @@ void ListAI::HunterDps() {
 					//Aimed Shot
 					Functions::CastSpellByName("Aimed Shot");
 				}
-				else if (IsFacing && autoShotInRange && (localPlayer->speed == 0) && Functions::IsSpellReady("Multi-Shot")) {
+				else if (IsFacing && autoShotInRange && !targetUnit->enemyClose && (localPlayer->speed == 0) && Functions::IsSpellReady("Multi-Shot")) {
 					//Multi-Shot
 					Functions::CastSpellByName("Multi-Shot");
 				}

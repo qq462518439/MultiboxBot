@@ -28,7 +28,7 @@ bool Functions::Intersect(Position start, Position end) {
 float Functions::GetDepth(Position pos) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
 	func* function = (func*)INTERSECT_FUN;
-	Position p1 = Position(pos.X, pos.Y, pos.Z + 2.75f);
+	Position p1 = Position(pos.X, pos.Y, pos.Z);
 	Position p2 = Position(pos.X, pos.Y, pos.Z - 100);
 	Position intersection = Position(0, 0, 0);
 	float distance = float(pos.DistanceTo(p2));
@@ -180,7 +180,7 @@ bool Functions::MoveLoSTarget() {
 					}
 				}
 				if (enemy_close) break; //Change direction
-				else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 15.0f)) {
+				else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 5.0f)) {
 					if (!Functions::Intersect(tmp_pos2, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.25f))) {
 						localPlayer->ClickToMove(Move, targetUnit->Guid, tmp_pos2);
 						return true;
@@ -286,7 +286,7 @@ std::tuple<int, int, int, int> Functions::countEnemies() {
 			}
 			if ((ListUnits[i].flags & UNIT_FLAG_IN_COMBAT) && !(ListUnits[i].flags & UNIT_FLAG_CONFUSED)) { //Combat
 				nbr++;
-				if (localPlayer->position.DistanceTo(ListUnits[i].position) < 8) {
+				if (localPlayer->position.DistanceTo(ListUnits[i].position) < 7.5f) {
 					nbrClose++;
 					if (localPlayer->isFacing(ListUnits[i].position, 0.5f)) {
 						nbrCloseFacing++;

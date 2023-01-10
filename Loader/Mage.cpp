@@ -54,22 +54,22 @@ void ListAI::MageDps() {
 
 			//Specific for Blizzard cast:
 			Position cluster_center = Position(0, 0, 0); int cluster_unit;
-			std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(30, 30);
+			std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(25, 30);
 
 			int RemoveCurseKey = Functions::GetDispelKey("Curse");
 			std::string RankConjureMana = GetSpellRank("Conjure Mana");
 
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
-				bool tmp_cond = false;
-				for (int i = 0; i <= NumGroupMembers; i++) {
-					if (HasAggro[i].size() > 0) {
-						localPlayer->SetTarget(HasAggro[i][0]);
-						tmp_cond = true;
-						break;
-					}
-				}
-				if (!tmp_cond && tankName != "null" && (ListUnits[tankIndex].targetGuid != 0)) { //Tank has target
+				if (tankName != "null" && (ListUnits[tankIndex].targetGuid != 0)) { //Tank has target
 					localPlayer->SetTarget(ListUnits[tankIndex].targetGuid);
+				}
+				else {
+					for (int i = 0; i <= NumGroupMembers; i++) {
+						if (HasAggro[i].size() > 0) {
+							localPlayer->SetTarget(HasAggro[i][0]);
+							break;
+						}
+					}
 				}
 			}
 

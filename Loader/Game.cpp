@@ -135,15 +135,15 @@ void Game::MainLoop() {
 				if (localPlayer != NULL) {
 					float halfPI = acos(0.0);
 					Position player_pos = localPlayer->position; player_pos.Z = player_pos.Z + 2.25f;
-					Position front_pos = Position((cos(localPlayer->facing) * 4) + localPlayer->position.X, (sin(localPlayer->facing) * 4) + localPlayer->position.Y
+					Position front_pos = Position((cos(localPlayer->facing) * 3) + localPlayer->position.X, (sin(localPlayer->facing) * 3) + localPlayer->position.Y
 						, localPlayer->position.Z + 2.25f);
-					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.X, (sin(localPlayer->facing + (2 * halfPI)) * 4) + localPlayer->position.Y
+					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 3) + localPlayer->position.X, (sin(localPlayer->facing + (2 * halfPI)) * 3) + localPlayer->position.Y
 						, localPlayer->position.Z + 2.25f);
 					ThreadSynchronizer::RunOnMainThread([=]() {
 						obstacle_front = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
-							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(front_pos) > 15.0f;
+							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(front_pos) > 5.0f;
 						obstacle_back = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
-							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(back_pos) > 15.0f;
+							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(back_pos) > 5.0f;
 						if (targetUnit != NULL) {
 							los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.25f));
 							/*los_oppositeDir = !Functions::Intersect(player_pos, oppositeDir);
@@ -220,8 +220,8 @@ void Game::MainLoop() {
 								ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(FaceTarget, targetUnit->Guid, targetUnit->position); });
 							}
 							else if ((Moving == 0 || (Moving == 3 && localPlayer->speed == 0)) && distTarget < 12.0f && !obstacle_back && ((!(targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED)
-								&& !hasTargetAggro && playerClass == "Hunter") || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
-								//((hunter)Creature not aggro || Player slowed) && < 12 yard => Walk backward
+								&& !hasTargetAggro) || ((targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED) && targetUnit->speed <= 4.5))) {
+								//(Creature not aggro || Player slowed) && < 12 yard => Walk backward
 								Functions::pressKey(0x28);
 								Moving = 3;
 							}
@@ -237,7 +237,7 @@ void Game::MainLoop() {
 								//Find LoS
 								ThreadSynchronizer::RunOnMainThread([]() { if (Functions::MoveLoSTarget()) Moving = 6; });
 							}
-							else if (distTarget > 5.0f && !targetUnit->enemyClose && !IsSitting && !obstacle_front) {
+							else if (distTarget > 5.0f && (!IsInGroup || (IsInGroup && !targetUnit->enemyClose)) && !IsSitting && !obstacle_front) {
 								ThreadSynchronizer::RunOnMainThread([]() { localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position); });
 								Moving = 2;
 							}
