@@ -81,20 +81,19 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Lay on Hands");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
-		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
-	else if (Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
 		//Divine Protection / Divine Shield
 		Functions::CastSpellByName("Divine Protection"); Functions::CastSpellByName("Divine Shield");
 		return 0;
 	}
-	else if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
 		Functions::UseItem("Healthstone");
 		return 0;
 	}
-	else if (Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
 		//Healing Potion
 		Functions::UseItem("Healing Potion");
 		return 0;
@@ -105,7 +104,6 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Blessing of Protection");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
-		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if (Combat && isParty && (distAlly < 30.0f) && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
@@ -114,7 +112,6 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Blessing of Sacrifice");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
-		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if (!Combat && (distAlly < 40.0f) && (HpRatio < 80) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
@@ -123,7 +120,6 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Flash of Light");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
-		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if (!Combat && (distAlly < 40.0f) && (HpRatio < 50) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
@@ -132,7 +128,6 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Holy Light");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
-		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	return 1;

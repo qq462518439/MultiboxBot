@@ -633,7 +633,6 @@ class client_thread(threading.Thread):
         self.currentSpec = "Null"
         self.Name = ""
         self.Class = ""
-        self.CheckingSpec = True
        
     def run(self):
         interface.after(500, self.checkSpecChange)
@@ -649,7 +648,7 @@ class client_thread(threading.Thread):
                         interface.Name_Label[self.index].config(text=self.Name)
                         interface.Class_Label[self.index].config(text=self.Class)
                         if(self.Class == "Druid"):
-                            interface.OptionList[self.index] = ['Balance', 'Feral', 'Restoration']
+                            interface.OptionList[self.index] = ['Balance', 'Feral (bear)', 'Feral (cat)', 'Restoration']
                             color = "orange"
                         elif(self.Class == "Hunter"):
                             interface.OptionList[self.index] = ['Beast Mastery', 'Marksmanship', 'Survival']
@@ -674,9 +673,9 @@ class client_thread(threading.Thread):
                             color = "purple"
                         elif(self.Class == "Warrior"):
                             interface.OptionList[self.index] = ['Arms', 'Fury', 'Protection']
-                            color = "brown" 
+                            color = "brown"
                         elif(self.Class == "Null"):
-                            interface.OptionList[self.index] = ['Null'] 
+                            interface.OptionList[self.index] = ['Null']
                             color = "grey"
                         interface.Specialisation_Menu[self.index]['menu'].delete(0, tk.END)
                         for option in interface.OptionList[self.index]:
@@ -738,7 +737,6 @@ class client_thread(threading.Thread):
                         time.sleep(0.01)
                         ranged_counter = ranged_counter + 1
             interface.after(500, self.checkSpecChange)
-        else: self.CheckingSpec = False
         
 class server_thread(threading.Thread):
     def __init__(self):

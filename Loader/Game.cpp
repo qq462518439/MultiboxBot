@@ -288,12 +288,16 @@ void Game::MainLoop() {
 				start = std::chrono::high_resolution_clock::now();
 
 				if (localPlayer != NULL && !IsSitting) {
-					if (playerClass == "Hunter") ListAI::HunterDps();
+					if (playerClass == "Druid" && playerSpec == 0) ListAI::DruidBalance();
+					else if (playerClass == "Hunter") ListAI::HunterDps();
 					else if (playerClass == "Mage") ListAI::MageDps();
 					else if (playerClass == "Paladin" && playerSpec == 0) ListAI::PaladinHeal();
 					else if (playerClass == "Paladin" && playerSpec == 1) ListAI::PaladinTank();
 					else if (playerClass == "Paladin") ListAI::PaladinDps();
+					else if (playerClass == "Priest") ListAI::PriestHeal();
 					else if (playerClass == "Rogue") ListAI::RogueDps();
+					else if (playerClass == "Warlock") ListAI::WarlockDps();
+					else if (playerClass == "Warrior" && playerSpec == 2) ListAI::WarriorTank();
 				}
 
 				end = std::chrono::high_resolution_clock::now();
@@ -315,8 +319,9 @@ int GroupMembersIndex[40];
 std::vector<unsigned long long> HasAggro[40];
 bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false, tankAutoFocus = false, tankAutoMove = false,
 	keyTarget = false, keyHearthstone = false, keyMount = false, obstacle_front = false, obstacle_back = false, los_target = false, los_oppositeDir = false, obstacle_oppositeDir = false;
-int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 0, positionCircle = 0, hasDrink = 0, leaderIndex = 0;
+int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 0, positionCircle = 0, hasDrink = 0, leaderIndex = 0, LastTarget = 0;
 float distTarget = 0, halfPI = acosf(0);
 std::string tarType = "party", playerClass = "null", tankName = "null", meleeName = "null", leaderName = "null";
 std::vector<int> HealTargetArray;
 WoWUnit* ccTarget = NULL; WoWUnit* targetUnit = NULL;
+time_t current_time = time(0);

@@ -2,7 +2,9 @@
 
 #include <iostream>
 
-static void PaladinAttack() {
+static int LastTarget = 0;
+
+static void DruidAttack() {
 	if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 		if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
 			localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
@@ -17,40 +19,18 @@ static void PaladinAttack() {
 		}
 	}
 	else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
-		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
-		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
-		int SoLIDs[4] = { 20165, 20347, 20348, 20349 };
-		bool SoLBuff = localPlayer->hasBuff(SoLIDs, 4);
-		int SolDebuffIDs[4] = { 20185, 20344, 20345, 20346 };
-		bool SoLDebuff = targetUnit->hasDebuff(SolDebuffIDs, 4);
+		//Specific for Hurricane
+		Position cluster_center = Position(0, 0, 0); int cluster_unit;
+		std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(25, 30);
 		if (!Functions::IsCurrentAction(Functions::GetSlot("Attack"))) Functions::CastSpellByName("Attack");
-		if (!SoLBuff && !SoLDebuff && Functions::UnitIsElite("target") && Functions::IsSpellReady("Seal of Light")) {
-			//Seal of Light
-			Functions::CastSpellByName("Seal of Light");
+		if ((localPlayer->speed == 0) && (cluster_unit >= 4) && Functions::IsSpellReady("Hurricane")) {
+			//Hurricane
+			Functions::CastSpellByName("Hurricane");
+			Functions::ClickAOE(cluster_center);
 		}
-		else if ((localPlayer->prctMana > 33) && (nbrCloseEnemy >= 4) && Functions::IsSpellReady("Consecration")) {
-			//Consecration
-			Functions::CastSpellByName("Consecration");
-		}
-		else if (SoLBuff && (distTarget < 10) && Functions::UnitIsElite("target") && Functions::IsSpellReady("Judgement")) {
-			//Judgement
-			Functions::CastSpellByName("Judgement");
-		}
-		else if (!targetStunned && !targetConfused && (distTarget < 10) && Functions::IsSpellReady("Hammer of Justice")) {
-			//Hammer of Justice
-			Functions::CastSpellByName("Hammer of Justice");
-		}
-		else if ((Functions::getNbrCreatureType(20, Undead, Demon) >= 4) && Functions::IsSpellReady("Holy Wrath")) {
-			//Holy Wrath
-			Functions::CastSpellByName("Holy Wrath");
-		}
-		else if ((localPlayer->prctMana > 33) && (distTarget < 30) && (targetUnit->creatureType == Undead) || (targetUnit->creatureType == Demon) && Functions::IsSpellReady("Exorcism")) {
-			//Exorcism
-			Functions::CastSpellByName("Exorcism");
-		}
-		else if ((distTarget < 30) && (targetUnit->prctHP < 20) && (localPlayer->prctMana > 33) && Functions::IsSpellReady("Hammer of Wrath")) {
-			//Hammer of Wrath
-			Functions::CastSpellByName("Hammer of Wrath");
+		else if ((localPlayer->speed == 0) && Functions::IsSpellReady("Wrath")) {
+			//Wrath
+			Functions::CastSpellByName("Wrath");
 		}
 	}
 }
@@ -63,6 +43,10 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 	bool ForbearanceDebuff = ListUnits[indexP].hasDebuff(ForbearanceID, 1);
 	int BoSIDs[2] = { 6940, 20729 };
 	bool BoSacrificeBuff = ListUnits[indexP].hasBuff(BoSIDs, 2);
+	int MoWIDs[7] = { 1126, 5232, 6756, 5234, 8907, 9884, 9885 };
+	bool MoWBuff = ListUnits[indexP].hasBuff(MoWIDs, 7);
+	int ThornsIDs[6] = { 467, 782, 1075, 8914, 9756, 9910 };
+	bool ThornsBuff = ListUnits[indexP].hasBuff(ThornsIDs, 6);
 	bool isParty = false;
 	if (!isPlayer) {
 		for (int i = 1; i < NumGroupMembers; i++) {
@@ -75,19 +59,20 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Lay on Hands");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
+	else if (Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
 		//Divine Protection / Divine Shield
 		Functions::CastSpellByName("Divine Protection"); Functions::CastSpellByName("Divine Shield");
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+	else if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
 		Functions::UseItem("Healthstone");
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
+	else if (Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
 		//Healing Potion
 		Functions::UseItem("Healing Potion");
 		return 0;
@@ -97,6 +82,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Protection");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if (Combat && (distAlly < 30.0f) && isParty && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
@@ -104,6 +90,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Sacrifice");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 50) && (distAlly < 20.0f) && Functions::IsSpellReady("Holy Shock")) {
@@ -112,6 +99,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		if (Functions::IsSpellReady("Divine Favor")) Functions::CastSpellByName("Divine Favor");
 		Functions::CastSpellByName("Holy Shock");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 50) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
@@ -120,6 +108,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		if (Functions::IsSpellReady("Divine Favor")) Functions::CastSpellByName("Divine Favor");
 		Functions::CastSpellByName("Holy Light");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 85) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
@@ -127,6 +116,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash of Light");
 		LastTarget = indexP;
+		if (Moving == 0 && !isPlayer) Moving = 5;
 		return 0;
 	}
 	return 1;
@@ -166,7 +156,7 @@ void ListAI::PaladinHeal() {
 				Functions::CastSpellByName("Blessing of Might");
 			}
 			else if ((BoMightKey > 0) && !Functions::IsPlayerSpell("Blessing of Kings") && (GroupMembersIndex[BoMightKey] > -1) && Functions::IsSpellReady("Blessing of Might")) {
-				//Blessing of Might (Group)
+				//Blessing of Might (Groupe)
 				localPlayer->SetTarget(ListUnits[GroupMembersIndex[BoMightKey]].Guid);
 				Functions::CastSpellByName("Blessing of Might");
 			}
@@ -176,7 +166,7 @@ void ListAI::PaladinHeal() {
 				Functions::CastSpellByName("Blessing of Kings");
 			}
 			else if ((BoKingsKey > 0) && (GroupMembersIndex[BoKingsKey] > -1) && Functions::IsSpellReady("Blessing of Kings")) {
-				//Blessing of Kings (Group)
+				//Blessing of Kings (Groupe)
 				localPlayer->SetTarget(ListUnits[GroupMembersIndex[BoKingsKey]].Guid);
 				Functions::CastSpellByName("Blessing of Kings");
 			}
@@ -190,7 +180,7 @@ void ListAI::PaladinHeal() {
 				Functions::CastSpellByName("Purify");
 			}
 			else if ((PurifyDispelKey > 0) && (GroupMembersIndex[PurifyDispelKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Purify")) {
-				//Purify (Group)
+				//Purify (Groupe)
 				localPlayer->SetTarget(ListUnits[GroupMembersIndex[PurifyDispelKey]].Guid);
 				Functions::CastSpellByName("Purify");
 			}

@@ -163,6 +163,7 @@
   <ItemGroup>
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="DruidBalance.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Hunter.cpp" />
@@ -171,8 +172,10 @@
     <ClCompile Include="PaladinDps.cpp" />
     <ClCompile Include="PaladinHeal.cpp" />
     <ClCompile Include="PaladinTank.cpp" />
+    <ClCompile Include="PriestHeal.cpp" />
     <ClCompile Include="Rogue.cpp" />
     <ClCompile Include="Warlock.cpp" />
+    <ClCompile Include="WarriorTank.cpp" />
     <ClCompile Include="WoWObject.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

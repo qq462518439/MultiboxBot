@@ -3,12 +3,10 @@
 #include <iostream>
 #include <ctime>
 
-static time_t current_time = time(0);
-static float SliceDiceTimer = 0;
 static float SliceDiceDuration = 0; //Depends on talent and combo points
 
 void ListAI::RogueDps() {
-	SliceDiceTimer = SliceDiceDuration - (time(0) - current_time);
+	float SliceDiceTimer = SliceDiceDuration - (time(0) - current_time);
 	if (SliceDiceTimer < 0) SliceDiceTimer = 0;
 	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
 		ThreadSynchronizer::RunOnMainThread([=]() {

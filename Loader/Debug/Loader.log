@@ -2,6 +2,7 @@
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Client.cpp(92,25): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
   dllmain.cpp
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\dllmain.cpp(21,15): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  DruidBalance.cpp
   Functions.cpp
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(371,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(389,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
@@ -13,9 +14,11 @@ C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp
   PaladinDps.cpp
   PaladinHeal.cpp
   PaladinTank.cpp
+  PriestHeal.cpp
   Rogue.cpp
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Rogue.cpp(89,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Rogue.cpp(87,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Warlock.cpp
+  WarriorTank.cpp
   WoWObject.cpp
   Generating Code...
   Loader.vcxproj -> C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Test\src\Loader.dll

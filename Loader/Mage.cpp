@@ -2,11 +2,7 @@
 
 #include <iostream>
 
-static time_t current_time_polymorph = time(0);
-static float PolymorphInnerCD = 15;
-static float PolymorphTimer = 0;
-
-std::string GetSpellRank(std::string txt) {
+static std::string GetSpellRank(std::string txt) {
 	std::string list[4] = { "Ruby", "Citrine", "Jade", "Agate" };
 	for (int i = 0; i < 4; i++) {
 		if (Functions::IsPlayerSpell(txt + " " + list[i])) return (txt + " " + list[i]);
@@ -30,11 +26,10 @@ float GetManaStoneCD() {
 }
 
 void ListAI::MageDps() {
-	PolymorphTimer = PolymorphInnerCD - (time(0) - current_time_polymorph);
+	time_t PolymorphTimer = 15 - (time(0) - current_time);
 	if (PolymorphTimer < 0) PolymorphTimer = 0;
 	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
-			int nbrAggro = HasAggro[0].size();
 			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
 			bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
 			int FrostArmorIDs[7] = { 168, 7300, 7301, 7302, 7320, 10219, 10220 };
@@ -176,7 +171,7 @@ void ListAI::MageDps() {
 					WoWUnit* firstTarget = targetUnit;
 					localPlayer->SetTarget(ccTarget->Guid);
 					Functions::CastSpellByName("Polymorph");
-					if(localPlayer->isCasting()) current_time_polymorph = time(0);
+					if(localPlayer->isCasting()) current_time = time(0);
 					localPlayer->SetTarget(firstTarget->Guid);
 				}
 				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && (playerSpec == 1 || localPlayer->level < 20) && Functions::IsSpellReady("Flamestrike")) {

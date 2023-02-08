@@ -105,7 +105,7 @@ int Functions::Callback(unsigned long long guid, int filter) {
 				}
 				else {
 					for (int i = 1; i <= NumGroupMembers; i++) {
-						if (unit.name == Functions::UnitName(tarType + std::to_string(i))) GroupMembersIndex[i] = ListUnits.size() - 1;
+						if (unit.name == Functions::UnitName(tarType + std::to_string(i))) { GroupMembersIndex[i] = ListUnits.size() - 1; break; }
 					}
 				}
 			}
@@ -735,7 +735,7 @@ float Functions::GetMPotionCD() {
 
 bool Functions::HasHealthstone() {
 	int listID[] = { 5512, 19004, 19005, 5511, 19006, 19007, 5509, 19008, 19009, 5510, 19010, 19011, 9421, 19012, 19013 };
-	if (HasItem(listID, 6) > 0) return true;
+	if (HasItem(listID, 15) > 0) return true;
 	else return false;
 }
 
@@ -894,6 +894,13 @@ bool Functions::IsCharmed(std::string target) {
 //=========================   Spells/Actions   =========================//
 //======================================================================//
 
+bool Functions::GetShapeshiftFormInfo(int nbr) {
+	LuaCall(("_,_,Stance = GetShapeshiftFormInfo(" + std::to_string(nbr) + ")").c_str());
+	int stance = GetIntFromChar((char*)GetText("Stance"));
+	if (stance == 1) return true;
+	else return false;
+}
+
 int Functions::GetNumSpellTabs() {
 	LuaCall("res = GetNumSpellTabs()");
 	int result = GetIntFromChar((char*)GetText("res"));
@@ -926,7 +933,7 @@ std::tuple<std::string, std::string, int, int> Functions::GetSpellTabInfo(int in
 
 std::tuple<int, int> Functions::GetSpellID(std::string spell_name) {
 	//Execution = 1ms
-	int id = 0; int rank = 1;
+	int id = 0; int rank = 0;
 	for (int i = 1; i <= GetNumSpellTabs(); i++) {
 		int numSpells;
 		std::tie(std::ignore, std::ignore, std::ignore, numSpells) = GetSpellTabInfo(i);
@@ -1024,8 +1031,8 @@ int Functions::GetSlot(std::string spell_name, std::string slot_type) {
 	if (spellID > 0) {
 		for (int i = 1; i < 120; i++) {
 			if (HasAction(i) && (GetSpellTexture(spellID) == GetActionTexture(i))
-				&& ((!IsConsumableAction(i) && slot_type == "SPELL")
-				|| (IsConsumableAction(i) && slot_type == "ITEM"))) {
+				&& ((slot_type == "SPELL" && !IsConsumableAction(i))
+				|| (slot_type == "ITEM" && IsConsumableAction(i)))) {
 				slot = i;
 			}
 		}
@@ -1036,6 +1043,20 @@ int Functions::GetSlot(std::string spell_name, std::string slot_type) {
 //======================================================================//
 //=============================   Units   ==============================//
 //======================================================================//
+
+int Functions::GetHealer() {
+	for (int i = 1; i <= NumGroupMembers; i++) {
+		std::string grClass = UnitClass(tarType+std::to_string(i));
+		if (grClass == "Priest" || grClass == "Paladin" || grClass == "Shaman") return i;
+	}
+	return 0;
+}
+
+int Functions::UnitStat(std::string target, int nbr) {
+	LuaCall(("stat = UnitStat(\"" + target + "\", " + std::to_string(nbr) + ")").c_str());
+	int stat = GetIntFromChar((char*)GetText("stat"));
+	return stat;
+}
 
 void Functions::TargetUnit(std::string target) {
 	LuaCall(("TargetUnit(\"" + target + "\")").c_str());

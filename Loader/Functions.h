@@ -70,6 +70,7 @@ class Functions {
 		static bool IsFeared(std::string target);
 		static bool IsCharmed(std::string target);
 		// === Spells/Actions === //
+		static bool GetShapeshiftFormInfo(int nbr);
 		static int GetNumSpellTabs();
 		static std::string GetSpellName(int id);
 		static std::string GetSpellTexture(int spellID);
@@ -87,6 +88,8 @@ class Functions {
 		static bool IsActionInRange(int slot);
 		static int GetSlot(std::string spell_name, std::string slot_type="SPELL");
 		// === Unit === //
+		static int GetHealer();
+		static int UnitStat(std::string target, int nbr);
 		static void TargetUnit(std::string target);
 		static std::string UnitName(std::string target);
 		static bool UnitCanAttack(std::string char1, std::string char2);
@@ -94,7 +97,6 @@ class Functions {
 		static bool CheckInteractDistance(std::string char1, int dist);
 		static bool UnitAffectingCombat(std::string target);
 		static std::string UnitClass(std::string target);
-		static bool UnitIsRanged(std::string target);
 		static bool UnitIsCaster(std::string target);
 		static bool UnitIsElite(std::string target);
 		static std::string UnitCreatureType(std::string target);
