@@ -109,7 +109,6 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
 
     unitReaction = Neutral;
     attackable = false;
-    enemyClose = false;
 }
 
 int WoWUnit::getHealth() {
@@ -212,8 +211,8 @@ WoWUnit* LocalPlayer::getTarget() {
     return NULL;
 }
 
-Position LocalPlayer::getOppositeDirection(Position enemy_pos, float radius) {
-    float m = (float)(enemy_pos.Y - position.Y) / (float)(enemy_pos.X - position.X);
+Position LocalPlayer::getOppositeDirection(Position target_pos, float radius) {
+    float m = (float)(target_pos.Y - position.Y) / (float)(target_pos.X - position.X);
     float p = position.Y - (m * position.X);
     float a = 1 + (m * m);
     float b = (-2 * position.X) - (2 * m * m * position.X);
@@ -223,9 +222,9 @@ Position LocalPlayer::getOppositeDirection(Position enemy_pos, float radius) {
     float y1 = (m * x1 + p);
     float x2 = (-b + sqrt(delta)) / (2 * a);
     float y2 = (m * x2 + p);
-    Position x1_pos = Position(x1, y1, position.Z + 5);
-    Position x2_pos = Position(x2, y2, position.Z + 5);
-    if (enemy_pos.DistanceTo(x1_pos) > enemy_pos.DistanceTo(x2_pos)) return x1_pos;
+    Position x1_pos = Position(x1, y1, position.Z + 2.25f);
+    Position x2_pos = Position(x2, y2, position.Z + 2.25f);
+    if (target_pos.DistanceTo(x1_pos) > target_pos.DistanceTo(x2_pos)) return x1_pos;
     else return x2_pos;
 }
 

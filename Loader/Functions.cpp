@@ -74,12 +74,6 @@ void Functions::EnumerateVisibleObjects(int filter) {
 		ListUnits[i].unitReaction = localPlayer->getUnitReaction(ListUnits[i].Pointer);
 		ListUnits[i].attackable = localPlayer->canAttack(ListUnits[i].Pointer);
 	}
-	for (unsigned int i = 0; i < ListUnits.size(); i++) { //Check if one enemy (not aggro) is close
-		for (unsigned int y = 0; y < ListUnits.size(); y++) {
-			if ((ListUnits[i].Guid != ListUnits[y].Guid) && ListUnits[y].attackable && (ListUnits[y].unitReaction <= Hostile) && !ListUnits[y].isdead
-				&& ((ListUnits[y].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[i].position.DistanceTo(ListUnits[y].position) < 12.0f)) ListUnits[i].enemyClose = true;
-		}
-	}
 }
 
 uintptr_t Functions::GetObjectPtr(unsigned long long guid) {
@@ -163,7 +157,7 @@ void Functions::ClassifyHeal() {
 	}
 }
 
-int Functions::FollowMultibox(int ranged, int placement) {
+void Functions::FollowMultibox(int ranged, int placement) {
 	int range = 2;
 	float cst = 0.30f * ((int(placement / 2) * 2) + 1);
 	if (placement % 2 != 0) cst = -cst;
@@ -174,17 +168,31 @@ int Functions::FollowMultibox(int ranged, int placement) {
 		Position target_pos = Position((cos(ListUnits[leaderIndex].facing + PI + cst) * range) + ListUnits[leaderIndex].position.X
 			, (sin(ListUnits[leaderIndex].facing + PI + cst) * range) + ListUnits[leaderIndex].position.Y, ListUnits[leaderIndex].position.Z + 2.25f);
 		Position player_pos = localPlayer->position; player_pos.Z = player_pos.Z + 2.25f;
+		float angle_targetPos = atan2f(target_pos.Y - player_pos.Y, target_pos.X - player_pos.X);
+		if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
+		else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
 		ThreadSynchronizer::RunOnMainThread([=]() {
-			Position target_pos2 = Functions::ProjectPos(target_pos); target_pos2.Z += 2.25f;
-			if (!Functions::Intersect(player_pos, target_pos)) localPlayer->ClickToMove(Move, ListUnits[leaderIndex].Guid, target_pos2);
-			else if(Moving == 0 || (Moving == 4 && localPlayer->speed == 0)) Functions::MoveLoS(target_pos);
+			Position tmp_pos = Position((cos(angle_targetPos) * 3) + localPlayer->position.X
+				, (sin(angle_targetPos) * 3) + localPlayer->position.Y, localPlayer->position.Z + 2.25f);
+			bool obstacle_front = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
+				&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(tmp_pos) > 5.0f;
+			if (!Functions::Intersect(player_pos, target_pos) && !obstacle_front) {
+				localPlayer->ClickToMove(Move, ListUnits[leaderIndex].Guid, target_pos);
+				Moving = 4;
+			}
+			else if (Moving == 0 || (Moving == 4 && localPlayer->speed == 0)) {
+				Functions::MoveLoS(target_pos);
+				Moving = 4;
+			}
 		});
-		return 1;
 	}
-	return 0;
 }
 
-bool Functions::MoveLoS(Position target_pos) {
+void Functions::MoveLoS(Position target_pos) {
+	/*
+		Check every directions for a position where you have line of sight of target_pos,
+		if there is an obstacle on the path check a new direction
+	*/
 	Position player_pos = localPlayer->position; player_pos.Z = player_pos.Z + 2.25f;
 	float angle_targetPos = atan2f(target_pos.Y - player_pos.Y, target_pos.X - player_pos.X);
 	if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
@@ -205,15 +213,11 @@ bool Functions::MoveLoS(Position target_pos) {
 			}
 			if (enemy_close) break; //Change direction
 			else if (!Functions::Intersect(player_pos, tmp_pos2) && (Functions::GetDepth(tmp_pos) < 5.0f)) {
-				if (!Functions::Intersect(tmp_pos2, target_pos)) {
-					localPlayer->ClickToMove(Move, localPlayer->Guid, tmp_pos2);
-					return true;
-				}
+				if (!Functions::Intersect(tmp_pos2, target_pos)) localPlayer->ClickToMove(Move, localPlayer->Guid, tmp_pos2);
 			}
 			else break; //There is an obstacle on this path, we need to change
 		}
 	}
-	return false;
 }
 
 Position meanPos(std::vector<Position> posArr) {

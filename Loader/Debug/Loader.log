@@ -4,9 +4,9 @@ C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Client.cpp(92
 C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\dllmain.cpp(21,15): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   DruidBalance.cpp
   Functions.cpp
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(371,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(389,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(391,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(375,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(393,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Seren\Desktop\Projets_Info\Multibox\GodModeVanilla\Loader\Functions.cpp(395,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Game.cpp
   Hunter.cpp
   Mage.cpp

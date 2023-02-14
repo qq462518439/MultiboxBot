@@ -160,7 +160,7 @@ void ListAI::HunterDps() {
 					//Aimed Shot
 					Functions::CastSpellByName("Aimed Shot");
 				}
-				else if (IsFacing && autoShotInRange && !targetUnit->enemyClose && (localPlayer->speed == 0) && Functions::IsSpellReady("Multi-Shot")) {
+				else if (IsFacing && autoShotInRange && (localPlayer->speed == 0) && Functions::IsSpellReady("Multi-Shot")) {
 					//Multi-Shot
 					Functions::CastSpellByName("Multi-Shot");
 				}

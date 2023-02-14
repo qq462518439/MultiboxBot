@@ -33,9 +33,6 @@ static void GetSpellBonusHealing() {
 	if (HealLevel[HealRank] < 20.0f) SubLevel20PENALTY = 1.0f - (20.0f - HealLevel[HealRank]) * 0.0375f;
 	HealValue[HealRank] = (HealValue[HealRank] + bonusHealing * (3.0f / 3.5f) * SubLevel20PENALTY) * (1.0f + (0.02f * SpiritualHealingRank));
 	GreaterHealValue[GreaterHealRank] = (GreaterHealValue[GreaterHealRank] + bonusHealing * (3.0f / 3.5f)) * (1.0f + (0.02f * SpiritualHealingRank));
-	std::cout << "GreaterHealValue[GreaterHealRank]: " << GreaterHealValue[GreaterHealRank] << "\n";
-	std::cout << "HealValue[HealRank]: " << HealValue[HealRank] << "\n";
-	std::cout << "LesserHealValue[LesserHealRank]: " << LesserHealValue[LesserHealRank] << "\n";
 }
 
 static void PriestAttack() {
