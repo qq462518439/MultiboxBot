@@ -31,7 +31,7 @@ You can set the role and specialisation of every account by clicking on the menu
 Finally you can register every account credentials (password and username) on a .config file to connect to your accounts faster:
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/65224852/235277845-019b2419-6889-4979-ae87-9eb0737ae6d8.png">
+<img src="https://user-images.githubusercontent.com/65224852/235278038-91fcf197-89e7-4a7e-a4b2-69a9d6fb96fe.png">
 </p>
 
 ## Requirements and compilation
