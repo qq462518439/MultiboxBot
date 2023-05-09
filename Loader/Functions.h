@@ -7,9 +7,9 @@ class Functions {
 	public:
 		static void pressKey(unsigned int key);
 		static void releaseKey(unsigned int key);
-		static bool Intersect(Position start, Position end);
-		static float GetDepth(Position pos);
-		static Position ProjectPos(Position pos);
+		static bool Intersect(Position start, Position end, int height);
+		static float GetDepth(Position pos, int height);
+		static Position ProjectPos(Position pos, int height);
 		static unsigned long GetPlayerGuid();
 		static void EnumerateVisibleObjects(int filter);
 		static uintptr_t GetObjectPtr(unsigned long long guid);

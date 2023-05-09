@@ -124,7 +124,7 @@ void Game::MainLoop() {
 
 				auto end = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<double, std::milli> float_ms = end - start;
-				std::cout << "Initialisation: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
+				//std::cout << "Initialisation: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
 				
 				// ========================================== //
 				// ==============   Movements   ============= //
@@ -133,19 +133,19 @@ void Game::MainLoop() {
 				start = std::chrono::high_resolution_clock::now();
 
 				if (localPlayer != NULL) {
-					Position player_pos = localPlayer->position; player_pos.Z = player_pos.Z + 2.25f;
-					Position target_pos; if(targetUnit != NULL) target_pos = targetUnit->position; target_pos.Z += 2.25f;
-					Position front_pos = Position((cos(localPlayer->facing) * 3) + localPlayer->position.X, (sin(localPlayer->facing) * 3) + localPlayer->position.Y
-						, localPlayer->position.Z + 2.25f);
-					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 3) + localPlayer->position.X, (sin(localPlayer->facing + (2 * halfPI)) * 3) + localPlayer->position.Y
-						, localPlayer->position.Z + 2.25f);
+					Position front_pos = Position((cos(localPlayer->facing) * 3) + localPlayer->position.X
+						, (sin(localPlayer->facing) * 3) + localPlayer->position.Y
+						, localPlayer->position.Z);
+					Position back_pos = Position((cos(localPlayer->facing + (2 * halfPI)) * 3) + localPlayer->position.X
+						, (sin(localPlayer->facing + (2 * halfPI)) * 3) + localPlayer->position.Y
+						, localPlayer->position.Z);
 					ThreadSynchronizer::RunOnMainThread([=]() {
-						obstacle_front = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
-							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(front_pos) > 5.0f;
-						obstacle_back = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
-							&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(back_pos) > 5.0f;
+						obstacle_front = Functions::Intersect(localPlayer->position, front_pos, 2.25f)
+							|| (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(front_pos, 2.25f) > 2.25f);
+						obstacle_back = Functions::Intersect(localPlayer->position, back_pos, 2.25f)
+							|| (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(back_pos, 2.25f) > 2.25f);
 						if (targetUnit != NULL) {
-							los_target = !Functions::Intersect(player_pos, Position(targetUnit->position.X, targetUnit->position.Y, targetUnit->position.Z + 2.25f));
+							los_target = !Functions::Intersect(localPlayer->position, targetUnit->position, 2.25f);
 							if (IsInGroup && (leaderName != "null") && (leaderName != playerName) && targetUnit->attackable && !targetUnit->isdead
 								&& ((targetUnit->flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (targetUnit->Guid != ListUnits[leaderIndex].targetGuid))
 								Functions::LuaCall("ClearTarget()");
@@ -181,15 +181,15 @@ void Game::MainLoop() {
 								//Player stunned or rooted and target < 12 yard => Run away
 								if (localPlayer->speed == 0) {
 									Position oppositeDir = localPlayer->getOppositeDirection(targetUnit->position, 12.0f);
-									float angle_oppositeDir = atan2f(oppositeDir.Y - player_pos.Y, oppositeDir.X - player_pos.X);
+									float angle_oppositeDir = atan2f(oppositeDir.Y - localPlayer->position.Y, oppositeDir.X - localPlayer->position.X);
 									if (angle_oppositeDir < 0.0f) angle_oppositeDir += halfPI * 4.0f;
 									else if (angle_oppositeDir > halfPI * 4) angle_oppositeDir -= halfPI * 4.0f;
 									Position tmp_pos = Position((cos(angle_oppositeDir) * 3) + localPlayer->position.X
-										, (sin(angle_oppositeDir) * 3) + localPlayer->position.Y, localPlayer->position.Z + 2.25f);
-									ThreadSynchronizer::RunOnMainThread([oppositeDir, tmp_pos, player_pos]() {
-										bool obstacle_oppositeDir = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
-											&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(tmp_pos) > 5.0f;
-										if (!Functions::Intersect(player_pos, oppositeDir) && !obstacle_oppositeDir) {
+										, (sin(angle_oppositeDir) * 3) + localPlayer->position.Y, localPlayer->position.Z);
+									ThreadSynchronizer::RunOnMainThread([oppositeDir, tmp_pos]() {
+										bool obstacle_oppositeDir = Functions::Intersect(localPlayer->position, oppositeDir, 2.25f)
+											|| (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(tmp_pos, 2.25f) > 2.25f);
+										if (!obstacle_oppositeDir) {
 											localPlayer->ClickToMove(Move, targetUnit->Guid, oppositeDir);
 											Moving = 1;
 										}
@@ -202,21 +202,20 @@ void Game::MainLoop() {
 							}
 							else if ((Moving == 0 || (Moving == 6 && localPlayer->speed == 0)) && !los_target) {
 								//Find LoS
-								ThreadSynchronizer::RunOnMainThread([target_pos]() {
-									Functions::MoveLoS(target_pos);
+								ThreadSynchronizer::RunOnMainThread([]() {
+									Functions::MoveLoS(targetUnit->position);
 									Moving = 6;
 								});
 							}
 							else if (distTarget > 30.0f && !IsSitting && (Moving == 0 || Moving == 2 || Moving == 4 || (Moving == 6 && localPlayer->speed == 0))) {
 								//Target > 30 yard => Run to it
-								float angle_targetPos = atan2f(targetUnit->position.Y - player_pos.Y, targetUnit->position.X - player_pos.X);
+								float angle_targetPos = atan2f(targetUnit->position.Y - localPlayer->position.Y, targetUnit->position.X - localPlayer->position.X);
 								if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
 								else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
 								Position tmp_pos = Position((cos(angle_targetPos) * 3) + localPlayer->position.X
-									, (sin(angle_targetPos) * 3) + localPlayer->position.Y, localPlayer->position.Z + 2.25f);
+									, (sin(angle_targetPos) * 3) + localPlayer->position.Y, localPlayer->position.Z);
 								ThreadSynchronizer::RunOnMainThread([tmp_pos]() {
-									bool obstacle_targetPos = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
-										&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(tmp_pos) > 5.0f;
+									bool obstacle_targetPos = (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(tmp_pos, 2.25f) > 2.25f);
 									if (!obstacle_targetPos && los_target) {
 										localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position);
 										Moving = 2;
@@ -259,21 +258,20 @@ void Game::MainLoop() {
 						else if(leaderName != playerName || tankAutoMove) {
 							if ((Moving == 0 || (Moving == 6 && localPlayer->speed == 0)) && !los_target) {
 								//Find LoS
-								ThreadSynchronizer::RunOnMainThread([target_pos]() {
-									Functions::MoveLoS(target_pos);
+								ThreadSynchronizer::RunOnMainThread([]() {
+									Functions::MoveLoS(targetUnit->position);
 									Moving = 6;
 								});
 							}
 							else if (distTarget > 5.0f && !IsSitting && (Moving == 0 || Moving == 2 || Moving == 4 || (Moving == 6 && localPlayer->speed == 0))) {
 								//Target > 5 yard => Run to it
-								float angle_targetPos = atan2f(targetUnit->position.Y - player_pos.Y, targetUnit->position.X - player_pos.X);
+								float angle_targetPos = atan2f(targetUnit->position.Y - localPlayer->position.Y, targetUnit->position.X - localPlayer->position.X);
 								if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
 								else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
 								Position tmp_pos = Position((cos(angle_targetPos) * 3) + localPlayer->position.X
-									, (sin(angle_targetPos) * 3) + localPlayer->position.Y, localPlayer->position.Z + 2.25f);
+									, (sin(angle_targetPos) * 3) + localPlayer->position.Y, localPlayer->position.Z);
 								ThreadSynchronizer::RunOnMainThread([tmp_pos]() {
-									bool obstacle_targetPos = ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING)
-										&& ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING) && Functions::GetDepth(tmp_pos) > 5.0f;
+									bool obstacle_targetPos = (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(tmp_pos, 2.25f) > 2.25f);
 									if (!obstacle_targetPos && los_target) {
 										localPlayer->ClickToMove(Move, targetUnit->Guid, targetUnit->position);
 										Moving = 2;
@@ -305,8 +303,8 @@ void Game::MainLoop() {
 					}
 					else if ((Moving == 5 && localPlayer->speed == 0) && !los_target && (targetUnit != NULL) && (targetUnit->unitReaction >= Friendly)) {
 						//Find LoS (ally)
-						ThreadSynchronizer::RunOnMainThread([target_pos]() {
-							Functions::MoveLoS(target_pos);
+						ThreadSynchronizer::RunOnMainThread([]() {
+							Functions::MoveLoS(targetUnit->position);
 							Moving = 5;
 						});
 					}
@@ -330,7 +328,7 @@ void Game::MainLoop() {
 
 				end = std::chrono::high_resolution_clock::now();
 				float_ms = end - start;
-				std::cout << "Movement: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
+				//std::cout << "Movement: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
 				
 				// ========================================== //
 				// ===============   Actions   ============== //
@@ -353,7 +351,7 @@ void Game::MainLoop() {
 
 				end = std::chrono::high_resolution_clock::now();
 				float_ms = end - start;
-				std::cout << "Actions: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
+				//std::cout << "Actions: elapsed time is " << float_ms.count() << " milliseconds" << std::endl;
 			}
 			Sleep(250);
 		}

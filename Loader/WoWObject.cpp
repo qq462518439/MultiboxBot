@@ -222,8 +222,8 @@ Position LocalPlayer::getOppositeDirection(Position target_pos, float radius) {
     float y1 = (m * x1 + p);
     float x2 = (-b + sqrt(delta)) / (2 * a);
     float y2 = (m * x2 + p);
-    Position x1_pos = Position(x1, y1, position.Z + 2.25f);
-    Position x2_pos = Position(x2, y2, position.Z + 2.25f);
+    Position x1_pos = Position(x1, y1, position.Z);
+    Position x2_pos = Position(x2, y2, position.Z);
     if (target_pos.DistanceTo(x1_pos) > target_pos.DistanceTo(x2_pos)) return x1_pos;
     else return x2_pos;
 }
