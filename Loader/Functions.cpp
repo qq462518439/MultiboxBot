@@ -201,26 +201,28 @@ void Functions::MoveLoS(Position target_pos) {
 	if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
 	else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
 	int j = 0;
-	for (int i = 1; i < 13; i++) { //Front, left, right...
-		Position last_pos = localPlayer->position; //Take into account the difference in altitude at each point
-		if (i % 2 == 0) j = 16 - i; else j = i; //Pendulum direction choice
-		for (int y = 0; y < 10; y++) { //Every 3 yards up to 30 check for LoS point
-			Position tmp_pos = Position((cos(angle_targetPos + (j * halfPI / 4)) * 3) + last_pos.X
-				, (sin(angle_targetPos + (j * halfPI / 4)) * 3) + last_pos.Y, last_pos.Z);
-			Position next_pos = Functions::ProjectPos(tmp_pos, 2.25f);
-			bool enemy_close = false;
-			for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
-				if ((targetUnit == NULL || (ListUnits[z].Guid != targetUnit->Guid)) && ListUnits[z].attackable && !ListUnits[z].isdead
-					&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(next_pos) < 15.0f)) {
-					enemy_close = true;
+	for (int i = 1; i < 6; i++) { //Front, left, right...
+		for (int z = 0; z < 2; z++) {
+			Position last_pos = localPlayer->position; //Take into account the difference in altitude at each point
+			if (z == 0) j = 16 - i; else j = i; //Pendulum direction choice
+			for (int y = 0; y < 10; y++) { //Every 3 yards up to 30 check for LoS point
+				Position tmp_pos = Position((cos(angle_targetPos + (j * halfPI / 4)) * 3) + last_pos.X
+					, (sin(angle_targetPos + (j * halfPI / 4)) * 3) + last_pos.Y, last_pos.Z);
+				Position next_pos = Functions::ProjectPos(tmp_pos, 2.25f);
+				bool enemy_close = false;
+				for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
+					if ((targetUnit == NULL || (ListUnits[z].Guid != targetUnit->Guid)) && ListUnits[z].attackable && !ListUnits[z].isdead
+						&& ((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(next_pos) < 12.0f)) {
+						enemy_close = true;
+					}
 				}
+				if (enemy_close) break; //Change direction
+				else if (!Functions::Intersect(last_pos, next_pos, 2.25f) && (Functions::GetDepth(tmp_pos, 2.25f) < 2.25f)) {
+					if (!Functions::Intersect(next_pos, target_pos, 2.25f)) localPlayer->ClickToMove(Move, localPlayer->Guid, next_pos);
+					else { last_pos = next_pos; continue; }
+				}
+				else break; //There is an obstacle on this path, we need to change
 			}
-			if (enemy_close) break; //Change direction
-			else if (!Functions::Intersect(last_pos, next_pos, 2.25f) && (Functions::GetDepth(tmp_pos, 2.25f) < 2.25f)) {
-				if (!Functions::Intersect(next_pos, target_pos, 2.25f)) localPlayer->ClickToMove(Move, localPlayer->Guid, next_pos);
-				else { last_pos = next_pos; continue; }
-			}
-			else break; //There is an obstacle on this path, we need to change
 		}
 	}
 }
