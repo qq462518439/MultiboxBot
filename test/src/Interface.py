@@ -194,29 +194,14 @@ class Interface(tk.Tk):
             keybindingsTab.resizable(False,False)
             keybindingsTab.attributes('-topmost', True)
             keybind_Label = []; keybind_Entry = []; keybind_Button = []
-            
-            keybind_Label.append(tk.Label(keybindingsTab, text="Use Hearthstone:"))
-            keybind_Entry.append(tk.Entry(keybindingsTab, state='normal', width = 15))
-            keybind_Entry[0].delete(0,tk.END)
-            keybind_Entry[0].insert(0, self.KEYBIND_Info[0][1])
-            keybind_Entry[0].configure(state='disabled')
-            keybind_Button.append(tk.Button(keybindingsTab, image=self.iconKeybind, command=lambda: self.bindKey(0)))
-            
-            keybind_Label.append(tk.Label(keybindingsTab, text="Use Mount:"))
-            keybind_Entry.append(tk.Entry(keybindingsTab, state='normal', width = 15))
-            keybind_Entry[1].delete(0,tk.END)
-            keybind_Entry[1].insert(0, self.KEYBIND_Info[1][1])
-            keybind_Entry[1].configure(state='disabled')
-            keybind_Button.append(tk.Button(keybindingsTab, image=self.iconKeybind, command=lambda: self.bindKey(1)))
-            
-            keybind_Label.append(tk.Label(keybindingsTab, text="Order to target:"))
-            keybind_Entry.append(tk.Entry(keybindingsTab, state='normal', width = 15))
-            keybind_Entry[2].delete(0,tk.END)
-            keybind_Entry[2].insert(0, self.KEYBIND_Info[2][1])
-            keybind_Entry[2].configure(state='disabled')
-            keybind_Button.append(tk.Button(keybindingsTab, image=self.iconKeybind, command=lambda: self.bindKey(2)))
-            
-            for i in range(len(keybind_Entry)):
+            listLabel = ["Use Hearthstone:", "Use Mount:", "Order to target:", "Group passive/aggressive:"]
+            for i in range(len(listLabel)):
+                keybind_Label.append(tk.Label(keybindingsTab, text=listLabel[i]))
+                keybind_Entry.append(tk.Entry(keybindingsTab, state='normal', width = 15))
+                keybind_Entry[i].delete(0,tk.END)
+                keybind_Entry[i].insert(0, self.KEYBIND_Info[i][1])
+                keybind_Entry[i].configure(state='disabled')
+                keybind_Button.append(tk.Button(keybindingsTab, image=self.iconKeybind, command=lambda i=i: self.bindKey(i)))
                 keybind_Label[i].grid(row=i, column=0)
                 keybind_Entry[i].grid(row=i, column=1)
                 keybind_Button[i].grid(row=i, column=2)
@@ -225,6 +210,7 @@ class Interface(tk.Tk):
         if(index == 0): keybindingsTab.bind("<Key>", self.key_pressed_Hearthstone)
         elif(index == 1): keybindingsTab.bind("<Key>", self.key_pressed_Mount)
         elif(index == 2): keybindingsTab.bind("<Key>", self.key_pressed_Target)
+        elif(index == 3): keybindingsTab.bind("<Key>", self.key_pressed_PA)
         
     def key_pressed_Hearthstone(self, event):
         keybindingsTab.unbind("<Key>")
@@ -253,6 +239,15 @@ class Interface(tk.Tk):
         self.KEYBIND_Info[2] = (str(event.keycode), event.keysym)
         parser.modify_config('config.conf', keybind_info=self.KEYBIND_Info)
         
+    def key_pressed_PA(self, event):
+        keybindingsTab.unbind("<Key>")
+        keybind_Entry[3].configure(state='normal')
+        keybind_Entry[3].delete(0,tk.END)
+        keybind_Entry[3].insert(0, event.keysym)
+        keybind_Entry[3].configure(state='disabled')
+        self.KEYBIND_Info[3] = (str(event.keycode), event.keysym)
+        parser.modify_config('config.conf', keybind_info=self.KEYBIND_Info)
+        
     #==================================================#
         
     def send_client_txt(self, hwnd, txt):
@@ -265,7 +260,7 @@ class Interface(tk.Tk):
             key_code = key.vk
         except AttributeError:
             key_code = key.value.vk
-        for i in range(3):
+        for i in range(len(self.KEYBIND_Info)):
             if(str(key_code) == self.KEYBIND_Info[i][0]):
                 msg = "K"+str(i+1)
                 self.serverthread.sendGroupClients(bytes(msg, 'utf-8'))
@@ -684,7 +679,7 @@ class client_thread(threading.Thread):
                         else: interface.SpecialisationList[self.index].set(interface.OptionList[self.index][0])
                         interface.Name_Label[self.index].config(foreground="black")
                         interface.Class_Label[self.index].config(foreground=color)
-                        self.currentSpec = interface.OptionList[self.index][0]
+                        self.currentSpec = 'Null'
                     #print("Client " + self.addr[0] + ":" + str(self.addr[1]) + " - message: " + data)
             except Exception as e:
                 interface.serverthread.clients[self.index] = 0
