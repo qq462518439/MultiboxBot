@@ -270,7 +270,7 @@ void ListAI::PriestHeal() {
 					tmp = HealGroup(HealTargetArray[index]);
 					index = index + 1;
 				}
-				if (tmp == 1) PriestAttack();
+				if (tmp == 1 && !passiveGroup) PriestAttack();
 			}
 		});
 	}

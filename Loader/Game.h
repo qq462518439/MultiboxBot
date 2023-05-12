@@ -12,7 +12,7 @@ public:
 
 //Global Variables
 extern bool Combat, IsSitting, bossFight, IsInGroup, IsFacing, hasTargetAggro, tankAutoFocus, tankAutoMove,
-	keyTarget, keyHearthstone, keyMount, los_target, obstacle_front, obstacle_back;
+	keyTarget, keyHearthstone, keyMount, los_target, obstacle_front, obstacle_back, passiveGroup;
 extern float distTarget, halfPI;
 extern WoWUnit* targetUnit;
 extern int GroupMembersIndex[40];

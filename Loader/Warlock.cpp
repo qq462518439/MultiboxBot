@@ -23,7 +23,7 @@ float GetSoulstoneCD() {
 }
 
 void ListAI::WarlockDps() {
-	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
+	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead && !passiveGroup) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {

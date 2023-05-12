@@ -76,6 +76,10 @@ void Client::recvMessage() {
 	else if (buffer[0] == 'K' && buffer[1] == '3') {
 		keyTarget = true;
 	}
+	else if (buffer[0] == 'K' && buffer[1] == '4') {
+		if (passiveGroup) passiveGroup = false;
+		else passiveGroup = true;
+	}
 	else if (buffer[0] == 'C' && buffer[1] == '1') {
 		//Tank auto focus
 		tankAutoFocus = ((int)buffer[2] - '0');

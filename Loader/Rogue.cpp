@@ -8,7 +8,7 @@ static float SliceDiceDuration = 0; //Depends on talent and combo points
 void ListAI::RogueDps() {
 	float SliceDiceTimer = SliceDiceDuration - (time(0) - current_time);
 	if (SliceDiceTimer < 0) SliceDiceTimer = 0;
-	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
+	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead && !passiveGroup) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 			int nbrAggro = HasAggro[0].size();
 			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;

@@ -28,7 +28,7 @@ float GetManaStoneCD() {
 void ListAI::MageDps() {
 	time_t PolymorphTimer = 15 - (time(0) - current_time);
 	if (PolymorphTimer < 0) PolymorphTimer = 0;
-	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead) {
+	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead && !passiveGroup) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
 			bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;

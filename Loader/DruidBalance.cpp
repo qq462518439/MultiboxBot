@@ -203,7 +203,7 @@ void ListAI::DruidBalance() {
 					tmp = HealGroup(HealTargetArray[index]);
 					index = index + 1;
 				}
-				if (tmp == 1) DruidAttack();
+				if (tmp == 1 && !passiveGroup) DruidAttack();
 			}
 		});
 	}

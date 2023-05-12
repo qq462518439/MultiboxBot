@@ -162,7 +162,7 @@ void Functions::ClassifyHeal() {
 }
 
 void Functions::FollowMultibox(int ranged, int placement) {
-	int range = 2;
+	int range = 2.0f;
 	float cst = 0.30f * ((int(placement / 2) * 2) + 1);
 	if (placement % 2 != 0) cst = -cst;
 	if (ranged == 1) { range = 4; cst = cst / 2; }
@@ -175,11 +175,13 @@ void Functions::FollowMultibox(int ranged, int placement) {
 		if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
 		else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
 		ThreadSynchronizer::RunOnMainThread([=]() {
-			Position tmp_pos = Position((cos(angle_targetPos) * 3) + localPlayer->position.X
-				, (sin(angle_targetPos) * 3) + localPlayer->position.Y, localPlayer->position.Z);
-			Position next_pos = Functions::ProjectPos(tmp_pos, 2.25f);
-			bool obstacle_front = Functions::Intersect(localPlayer->position, next_pos, 2.25f)
-				|| (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && Functions::GetDepth(tmp_pos, 2.25f) > 2.25f);
+			Position tmp_pos = Position((cos(angle_targetPos) * 2.0f) + localPlayer->position.X
+				, (sin(angle_targetPos) * 2.0f) + localPlayer->position.Y, localPlayer->position.Z);
+			Position next_pos = Functions::ProjectPos(tmp_pos, 2.0f);
+			bool obstacle_front = false;
+			if ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) {
+				obstacle_front = (Functions::Intersect(localPlayer->position, next_pos, 2.0f) && Functions::GetDepth(tmp_pos, 2.0f) > 2.25f);
+			}
 			if (!obstacle_front) {
 				localPlayer->ClickToMove(Move, ListUnits[leaderIndex].Guid, target_pos);
 				Moving = 4;
@@ -205,10 +207,10 @@ void Functions::MoveLoS(Position target_pos) {
 		for (int z = 0; z < 2; z++) {
 			Position last_pos = localPlayer->position; //Take into account the difference in altitude at each point
 			if (z == 0) j = 16 - i; else j = i; //Pendulum direction choice
-			for (int y = 0; y < 10; y++) { //Every 3 yards up to 30 check for LoS point
-				Position tmp_pos = Position((cos(angle_targetPos + (j * halfPI / 4)) * 3) + last_pos.X
-					, (sin(angle_targetPos + (j * halfPI / 4)) * 3) + last_pos.Y, last_pos.Z);
-				Position next_pos = Functions::ProjectPos(tmp_pos, 2.25f);
+			for (int y = 0; y < 10; y++) { //Every 2 yards up to 20 check for LoS point
+				Position tmp_pos = Position((cos(angle_targetPos + (j * halfPI / 4)) * 2.0f) + last_pos.X
+					, (sin(angle_targetPos + (j * halfPI / 4)) * 2.0f) + last_pos.Y, last_pos.Z);
+				Position next_pos = Functions::ProjectPos(tmp_pos, 2.0f);
 				bool enemy_close = false;
 				for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
 					if ((targetUnit == NULL || (ListUnits[z].Guid != targetUnit->Guid)) && ListUnits[z].attackable && !ListUnits[z].isdead
@@ -217,8 +219,8 @@ void Functions::MoveLoS(Position target_pos) {
 					}
 				}
 				if (enemy_close) break; //Change direction
-				else if (!Functions::Intersect(last_pos, next_pos, 2.25f) && (Functions::GetDepth(tmp_pos, 2.25f) < 2.25f)) {
-					if (!Functions::Intersect(next_pos, target_pos, 2.25f)) localPlayer->ClickToMove(Move, localPlayer->Guid, next_pos);
+				else if (!Functions::Intersect(last_pos, next_pos, 2.0f) && (Functions::GetDepth(tmp_pos, 2.0f) < 2.25f)) {
+					if (!Functions::Intersect(next_pos, target_pos, 2.0f)) localPlayer->ClickToMove(Move, localPlayer->Guid, next_pos);
 					else { last_pos = next_pos; continue; }
 				}
 				else break; //There is an obstacle on this path, we need to change
@@ -351,7 +353,7 @@ int Functions::GetBuffKey(int* IDs, int size) {
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction > Neutral)
 			&& !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)
-			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.25f)) {
+			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.0f)) {
 			if (!ListUnits[GroupMembersIndex[i]].hasBuff(IDs, size)) return i;
 		}
 	}
@@ -823,7 +825,7 @@ int Functions::GetDispelKey(std::string dispellType1, std::string dispellType2, 
 	//Retourne le joueur du groupe à dispel
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)
-			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.25f)) return i;
+			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.0f)) return i;
 	}
 	return 0;
 }

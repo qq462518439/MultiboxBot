@@ -4,7 +4,7 @@
 
 void ListAI::HunterDps() {
 	int RaptorStrikeIDs[8] = { 2973, 14260, 14261, 14262, 14263, 14264, 14265, 14266 };
-	if ((localPlayer->castInfo == 0 || localPlayer->isCasting(RaptorStrikeIDs, 8)) && ((localPlayer->channelInfo == 0) || (localPlayer->flags & UNIT_FLAG_UNK_29)) && !localPlayer->isdead) {
+	if ((localPlayer->castInfo == 0 || localPlayer->isCasting(RaptorStrikeIDs, 8)) && ((localPlayer->channelInfo == 0) || (localPlayer->flags & UNIT_FLAG_UNK_29)) && !localPlayer->isdead && !passiveGroup) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 			int nbrAggro = HasAggro[0].size();
 			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;

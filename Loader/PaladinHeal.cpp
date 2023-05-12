@@ -210,7 +210,7 @@ void ListAI::PaladinHeal() {
 					tmp = HealGroup(HealTargetArray[index]);
 					index = index + 1;
 				}
-				if (tmp == 1) PaladinAttack();
+				if (tmp == 1 && !passiveGroup) PaladinAttack();
 			}
 			});
 	}
