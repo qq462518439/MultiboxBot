@@ -28,7 +28,7 @@ static void GetSpellBonusHealing() {
 	if (RenewLevel[RenewRank] < 20.0f) SubLevel20PENALTY = 1.0f - (20.0f - RenewLevel[RenewRank]) * 0.0375f;
 	RenewValue[RenewRank] = (RenewValue[RenewRank] + bonusHealing * SubLevel20PENALTY) * (1.0f + (0.05f * RenewTalentRank)) * (1.0f + (0.02f * SpiritualHealingRank));
 	SubLevel20PENALTY = 1.0f - (20.0f - LesserHealLevel[LesserHealRank]) * 0.0375f;
-	LesserHealValue[LesserHealRank] = (LesserHealValue[LesserHealRank] + bonusHealing * (2.5f / 3.5f) * SubLevel20PENALTY) * (1.0f + (0.02f * SpiritualHealingRank));
+	LesserHealValue[LesserHealRank] = (LesserHealValue[LesserHealRank] + bonusHealing * (2.0f / 3.5f) * SubLevel20PENALTY) * (1.0f + (0.02f * SpiritualHealingRank));
 	SubLevel20PENALTY = 1.0f;
 	if (HealLevel[HealRank] < 20.0f) SubLevel20PENALTY = 1.0f - (20.0f - HealLevel[HealRank]) * 0.0375f;
 	HealValue[HealRank] = (HealValue[HealRank] + bonusHealing * (3.0f / 3.5f) * SubLevel20PENALTY) * (1.0f + (0.02f * SpiritualHealingRank));
@@ -83,7 +83,7 @@ static void PriestAttack() {
 	}
 }
 
-static int HealGroup(int indexP) { //Heal Players and Npcs
+static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	float HpRatio = ListUnits[indexP].prctHP;
 	int HpLost = ListUnits[indexP].hpLost;
 	unsigned long long healGuid = ListUnits[indexP].Guid;
@@ -120,6 +120,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Prayer of Healing");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 30) && !PWShieldBuff && !WeakenedSoulDebuff && (distAlly < 40.0f) && Functions::IsSpellReady("Power Word: Shield")) {
@@ -127,6 +129,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Power Word: Shield");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 30) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash Heal")) {
@@ -134,6 +138,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash Heal");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpLost > GreaterHealValue[GreaterHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Greater Heal")) {
@@ -141,6 +147,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Greater Heal");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpLost > HealValue[HealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Heal")) {
@@ -148,6 +156,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Heal");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((localPlayer->level < 40) && (HpLost > LesserHealValue[LesserHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Lesser Heal")) {
@@ -155,6 +165,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Lesser Heal");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpLost > RenewValue[RenewRank]) && !RenewBuff && (distAlly < 40.0f) && Functions::IsSpellReady("Renew")) {
@@ -162,6 +174,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Renew");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	return 1;
@@ -170,10 +184,10 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 void ListAI::PriestHeal() {
 	int LesserHealIDs[3] = { 2050, 2052, 2053 }; int FlashHealIDs[7] = { 2061, 9472, 9473, 9474, 10915, 10916, 10917 };
 	int GreaterHealIDs[5] = { 2060, 10963, 10964, 10965, 25314 }; int HealIDs[4] = { 2054, 2055, 6093, 6064 };
-	if ((localPlayer->isCasting(LesserHealIDs, 3) && (ListUnits[LastTarget].hpLost < LesserHealValue[LesserHealRank] * 0.9))
+	if ((ListUnits.size() > LastTarget) && ((localPlayer->isCasting(LesserHealIDs, 3) && (ListUnits[LastTarget].hpLost < LesserHealValue[LesserHealRank] * 0.9))
 		|| (localPlayer->isCasting(HealIDs, 4) && (ListUnits[LastTarget].hpLost < HealValue[HealRank] * 0.9))
 		|| (localPlayer->isCasting(GreaterHealIDs, 5) && (ListUnits[LastTarget].hpLost < GreaterHealValue[GreaterHealRank] * 0.9))
-		|| (localPlayer->isCasting(FlashHealIDs, 7) && (ListUnits[LastTarget].prctHP > 80))) {
+		|| (localPlayer->isCasting(FlashHealIDs, 7) && (ListUnits[LastTarget].prctHP > 80)))) {
 		Functions::pressKey(0x28);
 		Functions::releaseKey(0x28);
 	}

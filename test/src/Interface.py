@@ -116,7 +116,7 @@ class Interface(tk.Tk):
         
     def sendCheckbox(self, msg):
         msg = "C"+msg
-        self.serverthread.sendTankClients(bytes(msg, 'utf-8'))
+        self.serverthread.sendAllClients(bytes(msg, 'utf-8'))
         
     def quit_program(self):
         #Disconnect clients
@@ -268,31 +268,32 @@ class Interface(tk.Tk):
         
     def adapt_listCoord(self, nbr_monitor):
         x_gap = 8
+        resize_coef = [0.017, 1.017]
         if(nbr_monitor == 1):
             monitor = win32api.EnumDisplayMonitors()
             monitor_x0 = monitor[0][2][0]; monitor_y0 = monitor[0][2][1]
             monitor_width = monitor[0][2][2] - monitor_x0
             monitor_height = monitor[0][2][3] - monitor_y0
             if(self.NBR_ACCOUNT == 1):
-                self.listCoord.append((monitor_x0, monitor_y0, monitor_width, monitor_height))
+                self.listCoord.append((monitor_x0-x_gap, monitor_y0, monitor_width, monitor_height))
             elif(self.NBR_ACCOUNT == 2):
-                self.listCoord.append((monitor_x0, monitor_y0, monitor_width//2, monitor_height))
-                self.listCoord.append((monitor_x0+(monitor_width//2), monitor_y0, monitor_width//2, monitor_height))
+                self.listCoord.append((monitor_x0-x_gap, monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*1.01)))
+                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*1.01)))
             elif(self.NBR_ACCOUNT == 3):
-                self.listCoord.append((monitor_x0, monitor_y0, monitor_width//2, monitor_height))
-                self.listCoord.append((monitor_x0+(monitor_width//2), monitor_y0, monitor_width//2, monitor_height//2))
-                self.listCoord.append((monitor_x0+(monitor_width//2), monitor_y0+(monitor_height//2), monitor_width//2, monitor_height//2))
+                self.listCoord.append((monitor_x0-x_gap, monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*1.01)))
+                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
+                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
             elif(self.NBR_ACCOUNT == 4):
-                self.listCoord.append((monitor_x0, monitor_y0, monitor_width//2, monitor_height//2))
-                self.listCoord.append((monitor_x0+(monitor_width//2), monitor_y0, monitor_width//2, monitor_height//2))
-                self.listCoord.append((monitor_x0+(monitor_width//2), monitor_y0+(monitor_height//2), monitor_width//2, monitor_height//2))
-                self.listCoord.append((monitor_x0, monitor_y0+(monitor_height//2), monitor_width//2, monitor_height//2))
+                self.listCoord.append((monitor_x0-x_gap, monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
+                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
+                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
+                self.listCoord.append((monitor_x0-x_gap, monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
             elif(self.NBR_ACCOUNT == 5):
-                self.listCoord.append((monitor_x0, monitor_y0, monitor_width//2, monitor_height//2))
-                self.listCoord.append((monitor_x0+(monitor_width//2), monitor_y0, monitor_width//2, monitor_height//2))
-                self.listCoord.append((monitor_x0+((monitor_width*2)//3), monitor_y0+(monitor_height//2), monitor_width//3, monitor_height//2))
-                self.listCoord.append((monitor_x0, monitor_y0+(monitor_height//2), monitor_width//3, monitor_height//2))
-                self.listCoord.append((monitor_x0+(monitor_width//3), monitor_y0+(monitor_height//2), monitor_width//3, monitor_height//2))
+                self.listCoord.append((monitor_x0-x_gap, monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
+                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
+                self.listCoord.append((monitor_x0-x_gap+((monitor_width*2)//3), monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1.5)))//3, int(monitor_height*resize_coef[1])//2))
+                self.listCoord.append((monitor_x0-x_gap, monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1.5)))//3, int(monitor_height*resize_coef[1])//2))
+                self.listCoord.append((monitor_x0-x_gap+(monitor_width//3), monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1.5)))//3, int(monitor_height*resize_coef[1])//2))
         elif(nbr_monitor >= 2):
             monitor = win32api.EnumDisplayMonitors()
             monitor1_x0 = monitor[0][2][0]; monitor1_y0 = monitor[0][2][1]
@@ -303,7 +304,6 @@ class Interface(tk.Tk):
             monitor2_x1 = monitor[1][2][2]; monitor2_y1 = monitor[1][2][3]
             monitor2_width = monitor[1][2][2] - monitor2_x0
             monitor2_height = monitor[1][2][3] - monitor2_y0
-            resize_coef = [0.017, 1.017]
             if(self.NBR_ACCOUNT == 1):
                 self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, monitor1_width, monitor1_height))
             elif(self.NBR_ACCOUNT == 2):
@@ -614,7 +614,7 @@ def isATank(Class, Spec):
     else: return False
     
 def isAMelee(Class, Spec):
-    if(not isATank(Class, Spec) and (Class == "Warrior" or Class == "Rogue" or Class == "Paladin" or (Class == "Shaman" and Spec == "Enhancement"))):
+    if(not isATank(Class, Spec) and (Class == "Warrior" or Class == "Rogue" or (Class == "Paladin" and Spec != "Holy") or (Class == "Shaman" and Spec == "Enhancement"))):
         return True
     else: return False
 
@@ -718,19 +718,27 @@ class client_thread(threading.Thread):
                         msg = ('Spec: '+str(i)+' ')
                         self.conn.send(bytes(msg, 'utf-8'))
                         time.sleep(0.01)
-                #Position follow
-                melee_counter = 0; ranged_counter = 0
+                #=== Position follow ===#
+                #I- check for the leader (Tank -> Melee -> Ranged)
+                leaderIndex = -1
                 for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1):
-                    if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
-                        msg = ('Pos: '+str(melee_counter)+' ')
+                    if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                        leaderIndex = i
+                        break
+                if(leaderIndex == -1):
+                    for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1):
+                        if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                            leaderIndex = i
+                            break
+                    if(leaderIndex == -1): leaderIndex = self.index-(self.index%5)
+                #II- send positions
+                count = 1
+                for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1):
+                    if(i != leaderIndex):
+                        msg = ('Pos: '+str(count)+' ')
                         interface.serverthread.clients_thread[i].conn.send(bytes(msg, 'utf-8'))
                         time.sleep(0.01)
-                        melee_counter = melee_counter + 1
-                    elif(not isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec) and not isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
-                        msg = ('Pos: '+str(ranged_counter)+' ')
-                        interface.serverthread.clients_thread[i].conn.send(bytes(msg, 'utf-8'))
-                        time.sleep(0.01)
-                        ranged_counter = ranged_counter + 1
+                        count = count+1
             interface.after(500, self.checkSpecChange)
         
 class server_thread(threading.Thread):

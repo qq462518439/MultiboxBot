@@ -57,7 +57,7 @@ static void PaladinAttack() {
 			//Holy Wrath
 			Functions::CastSpellByName("Holy Wrath");
 		}
-		else if ((localPlayer->prctMana > 33) && (distTarget < 30) && (targetUnit->creatureType == Undead) || (targetUnit->creatureType == Demon) && Functions::IsSpellReady("Exorcism")) {
+		else if ((localPlayer->prctMana > 33) && (distTarget < 30) && ((targetUnit->creatureType == Undead) || (targetUnit->creatureType == Demon)) && Functions::IsSpellReady("Exorcism")) {
 			//Exorcism
 			Functions::CastSpellByName("Exorcism");
 		}
@@ -68,7 +68,7 @@ static void PaladinAttack() {
 	}
 }
 
-static int HealGroup(int indexP) { //Heal Players and Npcs
+static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	float HealInnerTimer = 10.0f - (time(0) - current_time);
 	if (HealInnerTimer < 0) HealInnerTimer = 0;
 	float HpRatio = ListUnits[indexP].prctHP;
@@ -78,7 +78,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 	bool ForbearanceDebuff = ListUnits[indexP].hasDebuff(ForbearanceID, 1);
 	int BoSIDs[2] = { 6940, 20729 };
 	bool BoSacrificeBuff = ListUnits[indexP].hasBuff(BoSIDs, 2);
-	bool isParty = false;
+	bool isParty = false, isTank = (ListUnits[indexP].name == tankName);
 	if (!isPlayer) {
 		for (int i = 1; i < NumGroupMembers; i++) {
 			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
@@ -90,6 +90,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Lay on Hands");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if (isPlayer && Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
@@ -107,18 +109,22 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::UseItem("Healing Potion");
 		return 0;
 	}
-	else if (Combat && (distAlly < 30.0f) && isParty && (HpRatio < 20) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
+	else if (Combat && (distAlly < 30.0f) && isParty && !isTank && (HpRatio < 33) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
 		//Blessing of Protection
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Protection");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if (Combat && (distAlly < 30.0f) && isParty && (HpRatio < 50) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
+	else if (Combat && (distAlly < 30.0f) && isParty && (HpRatio < 60) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
 		//Blessing of Sacrifice
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Sacrifice");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 50) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
@@ -127,6 +133,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Holy Light");
 		LastTarget = indexP;
 		if (localPlayer->isCasting()) current_time = time(0);
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 85) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
@@ -135,6 +143,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Flash of Light");
 		LastTarget = indexP;
 		if (localPlayer->isCasting()) current_time = time(0);
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	return 1;
@@ -143,7 +153,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 void ListAI::PaladinDps() {
 	int FoLIDs[6] = { 19750, 19939, 19940, 19941, 19942, 19943 };
 	int holyLightIDs[9] = { 635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292 };
-	if ((localPlayer->isCasting(holyLightIDs, 9) && (ListUnits[LastTarget].prctHP > 80)) || (localPlayer->isCasting(FoLIDs, 6) && (ListUnits[LastTarget].prctHP > 95))) {
+	if ((ListUnits.size() > LastTarget) && ((localPlayer->isCasting(holyLightIDs, 9) && (ListUnits[LastTarget].prctHP > 80))
+		|| (localPlayer->isCasting(FoLIDs, 6) && (ListUnits[LastTarget].prctHP > 95)))) {
 		Functions::pressKey(0x28);
 		Functions::releaseKey(0x28);
 	}

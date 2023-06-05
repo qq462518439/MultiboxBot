@@ -25,7 +25,6 @@ float GetSoulstoneCD() {
 void ListAI::WarlockDps() {
 	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead && !passiveGroup) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
-
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 				if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
 					localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);

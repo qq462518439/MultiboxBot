@@ -37,8 +37,8 @@ static void DruidAttack() {
 			Functions::CastSpellByName("Hurricane");
 			Functions::ClickAOE(cluster_center);
 		}
-		else if (IsFacing && targetPlayer && !MoonfireDebuff && Functions::IsSpellReady("Moonfire")) {
-			//Moonfire (PvP)
+		else if (IsFacing && !MoonfireDebuff && Functions::IsSpellReady("Moonfire") && ((localPlayer->prctMana > 50.0f) || (MoonkinFormBuff))) {
+			//Moonfire
 			Functions::CastSpellByName("Moonfire");
 		}
 		else if ((localPlayer->speed == 0) && targetPlayer && (EntanglingRootsTimer == 0) && Functions::IsSpellReady("Entangling Roots")) {
@@ -46,7 +46,7 @@ static void DruidAttack() {
 			Functions::CastSpellByName("Entangling Roots");
 			if (localPlayer->isCasting()) current_time = time(0);
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && Functions::IsSpellReady("Wrath")) {
+		else if (IsFacing && (localPlayer->speed == 0) && Functions::IsSpellReady("Wrath") && ((localPlayer->prctMana > 50.0f) || (MoonkinFormBuff))) {
 			//Wrath
 			Functions::CastSpellByName("Wrath");
 		}
@@ -57,7 +57,7 @@ static void DruidAttack() {
 	}
 }
 
-static int HealGroup(int indexP) { //Heal Players and Npcs
+static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	float HpRatio = ListUnits[indexP].prctHP;
 	unsigned long long healGuid = ListUnits[indexP].Guid;
 	bool isPlayer = (healGuid == localPlayer->Guid);
@@ -88,7 +88,7 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Barkskin");
 		return 0;
 	}
-	else if (MoonkinFormBuff && (HpRatio < 40.0f) && ((localPlayer->prctMana > 33.0f) || (Combat && (Functions::GetSpellCooldownDuration("Innervate") < 1.0f)))) {
+	else if (MoonkinFormBuff && (HpRatio < 40.0f) && (localPlayer->prctMana > 33.0f)) {
 		//Disable Moonkin Form
 		Functions::CastSpellByName("Moonkin Form");
 	}
@@ -102,6 +102,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Regrowth");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 40) && (distAlly < 40.0f) && Functions::IsSpellReady("Healing Touch")) {
@@ -109,6 +111,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Healing Touch");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	else if ((HpRatio < 70) && (distAlly < 40.0f) && !RejuvenationBuff && Functions::IsSpellReady("Rejuvenation")) {
@@ -116,6 +120,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Rejuvenation");
 		LastTarget = indexP;
+		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+		if (!los_heal) Moving = 5;
 		return 0;
 	}
 	return 1;
@@ -124,7 +130,8 @@ static int HealGroup(int indexP) { //Heal Players and Npcs
 void ListAI::DruidBalance() {
 	int HealingTouchIDs[11] = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297 };
 	int RegrowthIDs[9] = { 8936, 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 };
-	if ((localPlayer->isCasting(HealingTouchIDs, 11) && (ListUnits[LastTarget].prctHP > 80)) || (localPlayer->isCasting(RegrowthIDs, 9) && (ListUnits[LastTarget].prctHP > 80))) {
+	if ((ListUnits.size() > LastTarget) && ((localPlayer->isCasting(HealingTouchIDs, 11) && (ListUnits[LastTarget].prctHP > 80))
+		|| (localPlayer->isCasting(RegrowthIDs, 9) && (ListUnits[LastTarget].prctHP > 80)))) {
 		Functions::pressKey(0x28);
 		Functions::releaseKey(0x28);
 	}

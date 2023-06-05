@@ -7,7 +7,7 @@ class Functions {
 	public:
 		static void pressKey(unsigned int key);
 		static void releaseKey(unsigned int key);
-		static bool Intersect(Position start, Position end, float height);
+		static bool Intersect(Position start, Position end, float height, float height2=0.0f);
 		static float GetDepth(Position pos, float height);
 		static Position ProjectPos(Position pos, float height);
 		static unsigned long GetPlayerGuid();
@@ -23,7 +23,7 @@ class Functions {
 		static int GetBuffKey(int* IDs, int size);
 		static bool PlayerIsRanged();
 		static void MoveLoS(Position target_pos);
-		static void FollowMultibox(int ranged = 0, int placement = 0);
+		static void FollowMultibox(int placement = 0);
 			// === Lua Game Functions === //
 		static int GetNumGroupMembers();
 		static bool IsInGroup();

@@ -28,7 +28,12 @@ float GetManaStoneCD() {
 void ListAI::MageDps() {
 	time_t PolymorphTimer = 15 - (time(0) - current_time);
 	if (PolymorphTimer < 0) PolymorphTimer = 0;
-	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead && !passiveGroup) {
+	int EvocationIDs[1] = { 12051 };
+	if (localPlayer->isChanneling(EvocationIDs, 1) && (localPlayer->prctMana > 80)) {
+		Functions::pressKey(0x28);
+		Functions::releaseKey(0x28);
+	}
+	else if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead && !passiveGroup) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 			bool IsStunned = localPlayer->flags & UNIT_FLAG_STUNNED;
 			bool IsConfused = localPlayer->flags & UNIT_FLAG_CONFUSED;
@@ -123,7 +128,7 @@ void ListAI::MageDps() {
 				//Mana Stone
 				Functions::UseItem("Mana ");
 			}
-			else if (Combat && (localPlayer->speed == 0) && (localPlayer->prctMana < 15) && (nbrCloseEnemy == 0) && Functions::IsSpellReady("Evocation")) {
+			else if (Combat && (localPlayer->speed == 0) && (localPlayer->prctMana < 15) && ((nbrCloseEnemy == 0) || (HasAggro[0].size() == 0)) && Functions::IsSpellReady("Evocation")) {
 				//Evocation
 				Functions::CastSpellByName("Evocation");
 			}

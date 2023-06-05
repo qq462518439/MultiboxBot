@@ -1,4 +1,5 @@
 #include "MemoryManager.h"
+#include <iostream>
 
 WNDPROC ThreadSynchronizer::oldCallback;
 WNDPROC ThreadSynchronizer::newCallback;
@@ -8,6 +9,11 @@ std::vector<std::function<void()>> ThreadSynchronizer::actionQueue;
 
 void ThreadSynchronizer::Init() {
     windowHandle = FindWindowW(NULL, L"World of Warcraft");
+    while (windowHandle == 0) {
+        Sleep(250);
+        windowHandle = FindWindowW(NULL, L"World of Warcraft");
+    }
+    std::cout << "windowHandle:" << windowHandle << "\n";
     newCallback = (WNDPROC)&WndProc;
     oldCallback = (WNDPROC)SetWindowLongW(windowHandle, GWL_WNDPROC, (LONG)newCallback);
 }

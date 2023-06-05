@@ -14,12 +14,13 @@ void Functions::releaseKey(unsigned int key) {
 	SendMessageW(ThreadSynchronizer::windowHandle, WM_KEYUP, key, 0);
 }
 
-bool Functions::Intersect(Position start, Position end, float height) {
+bool Functions::Intersect(Position start, Position end, float height, float height2) {
 	//Need height variable because LOS is based on the position of the eyes of the char
+	if (height2 == 0.0f) height2 = height;
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
 	func* function = (func*)INTERSECT_FUN;
 	Position p1 = Position(start.X, start.Y, start.Z+height);
-	Position p2 = Position(end.X, end.Y, end.Z+height);
+	Position p2 = Position(end.X, end.Y, end.Z+height2);
 	Position intersection = Position(0, 0, 0);
 	float distance = float(start.DistanceTo(end));
 	bool result = function(&p1, &p2, 0, &intersection, &distance, 0x00100111);
@@ -97,7 +98,10 @@ int Functions::Callback(unsigned long long guid, int filter) {
 			if (objectType == Player) {
 				if (unit.name == leaderName) leaderIndex = ListUnits.size() - 1;
 				if (guid == GetPlayerGuid()) {
-					if (localPlayer != NULL) delete(localPlayer);
+					if (localPlayer != NULL) {
+						delete(localPlayer);
+						localPlayer = NULL;
+					}
 					localPlayer = new LocalPlayer(pointer, guid, objectType);
 					GroupMembersIndex[0] = ListUnits.size() - 1;
 				}
@@ -161,11 +165,13 @@ void Functions::ClassifyHeal() {
 	}
 }
 
-void Functions::FollowMultibox(int ranged, int placement) {
+void Functions::FollowMultibox(int placement) {
 	int range = 2.0f;
-	float cst = 0.30f * ((int(placement / 2) * 2) + 1);
-	if (placement % 2 != 0) cst = -cst;
-	if (ranged == 1) { range = 4; cst = cst / 2; }
+	float cst = 0.30f;
+	if (placement == 1) cst = 0.30f;
+	else if (placement == 2) cst = -0.30f;
+	else if (placement == 3) { range = 4; cst = 0.15f; }
+	else if (placement == 4) { range = 4; cst = -0.15f; }
 	float dist = localPlayer->position.DistanceTo(ListUnits[leaderIndex].position);
 	if (dist < 60.0f && dist > range + 1) {
 		float PI = acosf(0.0) * 2;
@@ -175,18 +181,18 @@ void Functions::FollowMultibox(int ranged, int placement) {
 		if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
 		else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
 		ThreadSynchronizer::RunOnMainThread([=]() {
-			Position tmp_pos = Position((cos(angle_targetPos) * 2.0f) + localPlayer->position.X
-				, (sin(angle_targetPos) * 2.0f) + localPlayer->position.Y, localPlayer->position.Z);
-			Position next_pos = Functions::ProjectPos(tmp_pos, 2.0f);
-			bool obstacle_front = false;
-			if ((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) {
-				obstacle_front = (Functions::Intersect(localPlayer->position, next_pos, 2.0f) && Functions::GetDepth(tmp_pos, 2.0f) > 2.25f);
+			Position tmp_pos = Position((cos(angle_targetPos) * 2.5f) + localPlayer->position.X
+				, (sin(angle_targetPos) * 2.5f) + localPlayer->position.Y, localPlayer->position.Z);
+			Position next_pos = Functions::ProjectPos(tmp_pos, 2.00f);
+			bool obstacle_target = false;
+			if (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING)) {
+				obstacle_target = (Functions::Intersect(localPlayer->position, next_pos, 2.00f) && Functions::GetDepth(tmp_pos, 2.00f) > 2.00f);
 			}
-			if (!obstacle_front) {
+			if (!obstacle_target) {
 				localPlayer->ClickToMove(Move, ListUnits[leaderIndex].Guid, target_pos);
 				Moving = 4;
 			}
-			else if (Moving == 0 || (Moving == 4 && localPlayer->speed == 0)) {
+			else {
 				Functions::MoveLoS(target_pos);
 				Moving = 4;
 			}
@@ -207,10 +213,10 @@ void Functions::MoveLoS(Position target_pos) {
 		for (int z = 0; z < 2; z++) {
 			Position last_pos = localPlayer->position; //Take into account the difference in altitude at each point
 			if (z == 0) j = 16 - i; else j = i; //Pendulum direction choice
-			for (int y = 0; y < 10; y++) { //Every 2 yards up to 20 check for LoS point
-				Position tmp_pos = Position((cos(angle_targetPos + (j * halfPI / 4)) * 2.0f) + last_pos.X
-					, (sin(angle_targetPos + (j * halfPI / 4)) * 2.0f) + last_pos.Y, last_pos.Z);
-				Position next_pos = Functions::ProjectPos(tmp_pos, 2.0f);
+			for (int y = 0; y < 10; y++) { //Every 2.5 yards up to 25 check for LoS point
+				Position tmp_pos = Position((cos(angle_targetPos + (j * halfPI / 4)) * 2.5f) + last_pos.X
+					, (sin(angle_targetPos + (j * halfPI / 4)) * 2.5f) + last_pos.Y, last_pos.Z);
+				Position next_pos = Functions::ProjectPos(tmp_pos, 2.00f);
 				bool enemy_close = false;
 				for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
 					if ((targetUnit == NULL || (ListUnits[z].Guid != targetUnit->Guid)) && ListUnits[z].attackable && !ListUnits[z].isdead
@@ -219,8 +225,13 @@ void Functions::MoveLoS(Position target_pos) {
 					}
 				}
 				if (enemy_close) break; //Change direction
-				else if (!Functions::Intersect(last_pos, next_pos, 2.0f) && (Functions::GetDepth(tmp_pos, 2.0f) < 2.25f)) {
-					if (!Functions::Intersect(next_pos, target_pos, 2.0f)) localPlayer->ClickToMove(Move, localPlayer->Guid, next_pos);
+				else if (!Functions::Intersect(last_pos, next_pos, 2.00f) && (Functions::GetDepth(tmp_pos, 2.00f) < 2.00f)) {
+					bool los_nextpos = !Functions::Intersect(next_pos, target_pos, 2.00f);
+					if (los_nextpos) {
+						localPlayer->ClickToMove(Move, localPlayer->Guid, next_pos);
+						Moving = 6;
+						return;
+					}
 					else { last_pos = next_pos; continue; }
 				}
 				else break; //There is an obstacle on this path, we need to change
@@ -353,7 +364,7 @@ int Functions::GetBuffKey(int* IDs, int size) {
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction > Neutral)
 			&& !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)
-			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.0f)) {
+			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.00f)) {
 			if (!ListUnits[GroupMembersIndex[i]].hasBuff(IDs, size)) return i;
 		}
 	}
@@ -825,7 +836,7 @@ int Functions::GetDispelKey(std::string dispellType1, std::string dispellType2, 
 	//Retourne le joueur du groupe à dispel
 	for (int i = 1; i <= NumGroupMembers; i++) {
 		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)
-			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.0f)) return i;
+			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.00f)) return i;
 	}
 	return 0;
 }
@@ -971,10 +982,12 @@ bool Functions::IsPlayerSpell(std::string spell_name) {
 
 bool Functions::IsSpellReady(std::string spell_name) {
 	//Execution: ~2.2ms
-	int slot = GetSlot(spell_name);
-	if (slot > 0) {
-		if (IsUsableAction(slot) && (GetActionCooldownDuration(slot) <= 1.25)) {
-			return true;
+	if (((localPlayer->flags & UNIT_FLAG_SILENCED) != UNIT_FLAG_SILENCED)) {
+		int slot = GetSlot(spell_name);
+		if (slot > 0) {
+			if (IsUsableAction(slot) && (GetActionCooldownDuration(slot) < 1.0f)) {
+				return true;
+			}
 		}
 	}
 	return false;

@@ -163,6 +163,13 @@ bool WoWUnit::isBehind(WoWUnit target) {
     return condition && isFacing(target.position, 0.4f);
 }
 
+bool WoWUnit::isChanneling(int* IDs, int size) {
+    for (int i = 0; i < size; i++) {
+        if (IDs[i] == channelInfo) return true;
+    }
+    return false;
+}
+
 UnitReaction WoWUnit::getUnitReaction(uintptr_t unitPtr2) {
     typedef UnitReaction(__thiscall* func)(uintptr_t unitPtr1, uintptr_t unitPtr2);
     func function = (func)GET_UNIT_REACTION_FUN_PTR;
