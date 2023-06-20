@@ -23,6 +23,10 @@ void ListAI::HunterDps() {
 			bool FeedingBuff = Functions::GetUnitBuff("pet", "Interface\\Icons\\Ability_Hunter_BeastTraining");
 
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
+				if (petAttacking && Functions::HasPetUI()) {
+					Functions::LuaCall("PetPassiveMode()");
+					petAttacking = false;
+				}
 				if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
 					localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
 				}
@@ -86,7 +90,10 @@ void ListAI::HunterDps() {
 				if ((FreezingTrapDebuff || targetConfused) && attacking) Functions::CastSpellByName("Attack");
 				else if (!autoShotInRange && !attacking) Functions::CastSpellByName("Attack");
 				if (autoShotInRange && !Functions::IsAutoRepeatAction(Functions::GetSlot("Auto Shot"))) Functions::CastSpellByName("Auto Shot");
-				if (targetUnit->flags & UNIT_FLAG_IN_COMBAT) Functions::LuaCall("PetAttack()");
+				if (!petAttacking && targetUnit->flags & UNIT_FLAG_IN_COMBAT && Functions::HasPetUI()) {
+					Functions::LuaCall("PetAttack()");
+					petAttacking = true;
+				}
 				if ((distTarget < 5.0f) && (localPlayer->prctMana > 10) && targetPlayer && Functions::IsSpellReady("Feign Death")) {
 					//Feign Death
 					Functions::CastSpellByName("Feign Death");

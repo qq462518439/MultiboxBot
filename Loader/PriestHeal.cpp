@@ -28,7 +28,7 @@ static void GetSpellBonusHealing() {
 	if (RenewLevel[RenewRank] < 20.0f) SubLevel20PENALTY = 1.0f - (20.0f - RenewLevel[RenewRank]) * 0.0375f;
 	RenewValue[RenewRank] = (RenewValue[RenewRank] + bonusHealing * SubLevel20PENALTY) * (1.0f + (0.05f * RenewTalentRank)) * (1.0f + (0.02f * SpiritualHealingRank));
 	SubLevel20PENALTY = 1.0f - (20.0f - LesserHealLevel[LesserHealRank]) * 0.0375f;
-	LesserHealValue[LesserHealRank] = (LesserHealValue[LesserHealRank] + bonusHealing * (2.0f / 3.5f) * SubLevel20PENALTY) * (1.0f + (0.02f * SpiritualHealingRank));
+	LesserHealValue[LesserHealRank] = (LesserHealValue[LesserHealRank] + bonusHealing * (2.5f / 3.5f) * SubLevel20PENALTY) * (1.0f + (0.02f * SpiritualHealingRank));
 	SubLevel20PENALTY = 1.0f;
 	if (HealLevel[HealRank] < 20.0f) SubLevel20PENALTY = 1.0f - (20.0f - HealLevel[HealRank]) * 0.0375f;
 	HealValue[HealRank] = (HealValue[HealRank] + bonusHealing * (3.0f / 3.5f) * SubLevel20PENALTY) * (1.0f + (0.02f * SpiritualHealingRank));

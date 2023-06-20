@@ -139,7 +139,7 @@ void Game::MainLoop() {
 						, (sin(localPlayer->facing + (2 * halfPI)) * 2.0f) + localPlayer->position.Y
 						, localPlayer->position.Z);
 					for (unsigned int z = 0; z < ListUnits.size(); z++) { //If one enemy (not aggro) is too close, abort
-						if (((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].position.DistanceTo(localPlayer->position) < 12.0f)) {
+						if (((ListUnits[z].flags & UNIT_FLAG_IN_COMBAT) != UNIT_FLAG_IN_COMBAT) && (ListUnits[z].unitReaction <= Hostile) && (ListUnits[z].position.DistanceTo(localPlayer->position) < 12.0f)) {
 							enemy_close = true;
 						}
 					}
@@ -176,7 +176,7 @@ void Game::MainLoop() {
 						IsSitting = true;
 						ThreadSynchronizer::RunOnMainThread([]() { Functions::UseItem(hasDrink); });
 					}
-					else if (!passiveGroup && targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead && ((localPlayer->castInfo == 0) || (playerClass == "Hunter" && localPlayer->isCasting(RaptorStrikeIDs, 8))) && (localPlayer->channelInfo == 0)) {
+					else if (!passiveGroup && (targetUnit != NULL) && targetUnit->attackable && !targetUnit->isdead && (((localPlayer->castInfo == 0) && (localPlayer->channelInfo == 0)) || playerClass == "Hunter")) {
 						if (playerIsRanged) {
 							if ((Moving == 4 || Moving == 2 || Moving == 5) && distTarget < 30.0f) {
 								//Running and (target < 30 yard) => stop
@@ -381,7 +381,7 @@ void Game::MainLoop() {
 int GroupMembersIndex[40];
 std::vector<unsigned long long> HasAggro[40];
 bool Combat = false, IsSitting = false, bossFight = false, IsInGroup = false, IsFacing = false, hasTargetAggro = false, tankAutoFocus = false, tankAutoMove = false,
-	keyTarget = false, keyHearthstone = false, keyMount = false, los_target = false, obstacle_back = false, obstacle_front = false, passiveGroup = false;
+	keyTarget = false, keyHearthstone = false, keyMount = false, los_target = false, obstacle_back = false, obstacle_front = false, passiveGroup = false, petAttacking = false;
 int AoEHeal = 0, nbrEnemy = 0, nbrCloseEnemy = 0, nbrCloseEnemyFacing = 0, nbrEnemyPlayer = 0, Moving = 0, NumGroupMembers = 0, playerSpec = 0, positionCircle = 0, hasDrink = 0, leaderIndex = 0;
 unsigned int LastTarget = 0;
 float distTarget = 0, halfPI = acosf(0);

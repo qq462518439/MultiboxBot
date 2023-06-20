@@ -167,11 +167,11 @@ class WoWUnit : public WoWObject {
     protected:
         const uintptr_t TARGET_GUID_OFFSET = 0x40;
         const uintptr_t HEALTH_OFFSET = 0x58;
-        const uintptr_t POWER1_OFFSET = 0x5C;
-        const uintptr_t POWER2_OFFSET = 0x60;
-        const uintptr_t POWER4_OFFSET = 0x68;
+        const uintptr_t MANA_OFFSET = 0x5C;
+        const uintptr_t RAGE_OFFSET = 0x60;
+        const uintptr_t ENERGY_OFFSET = 0x68;
         const uintptr_t MAX_HEALTH_OFFSET = 0x70;
-        const uintptr_t MAXPOWER1_OFFSET = 0x74;
+        const uintptr_t MAXMANA_OFFSET = 0x74;
         const uintptr_t LEVEL_OFFSET = 0x88;
         const uintptr_t UNIT_FLAG_OFFSET = 0xB8;
         const uintptr_t MOVEMENT_FLAG_OFFSET = 0x9E8;

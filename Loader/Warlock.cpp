@@ -26,6 +26,10 @@ void ListAI::WarlockDps() {
 	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead && !passiveGroup) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
+				if (petAttacking && Functions::HasPetUI()) {
+					Functions::LuaCall("PetPassiveMode()");
+					petAttacking = false;
+				}
 				if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
 					localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
 				}
@@ -96,6 +100,10 @@ void ListAI::WarlockDps() {
 				//Specific for Rain of Fire cast:
 				Position cluster_center = Position(0, 0, 0); int cluster_unit;
 				std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(25, 30);
+				if (!petAttacking && targetUnit->flags & UNIT_FLAG_IN_COMBAT && Functions::HasPetUI()) {
+					Functions::LuaCall("PetAttack()");
+					petAttacking = true;
+				}
 				if ((localPlayer->prctHP < 40.0f) && targetPlayer && !targetFear && Functions::IsSpellReady("Death Coil")) {
 					//Death Coil (PvP)
 					Functions::CastSpellByName("Death Coil");

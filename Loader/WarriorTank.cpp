@@ -93,6 +93,10 @@ void ListAI::WarriorTank() {
 						//Defensive Stance
 						Functions::CastSpellByName("Defensive Stance");
 					}
+					else if ((localPlayer->rage >= 25) && Functions::IsSpellReady("Heroic Strike")) {
+						//Heroic Strike (dump excessive rage)
+						Functions::CastSpellByName("Heroic Strike");
+					}
 				}
 				else if (DefensiveStance) {
 					int ShieldBlockIDs[1] = { 2565 }; bool ShieldBlockBuff = localPlayer->hasBuff(ShieldBlockIDs, 1);

@@ -59,14 +59,14 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
     int max_health = *(int*)(descriptor + MAX_HEALTH_OFFSET);
     prctHP = ((float)health / (float)max_health) * 100;
     hpLost = max_health - health;
-    int max_mana = *(int*)(descriptor + MAXPOWER1_OFFSET);
+    int max_mana = *(int*)(descriptor + MAXMANA_OFFSET);
     if (max_mana > 0) {
-        int mana = *(int*)(descriptor + POWER1_OFFSET);
+        int mana = *(int*)(descriptor + MANA_OFFSET);
         prctMana = ((float)mana / (float)max_mana) * 100;
     }
     else prctMana = 100;
-    rage = *(int*)(descriptor + POWER2_OFFSET);
-    energy = *(int*)(descriptor + POWER4_OFFSET);
+    rage = (*(int*)(descriptor + RAGE_OFFSET)/10);
+    energy = *(int*)(descriptor + ENERGY_OFFSET);
 
     flags = *(UnitFlags*)(descriptor + UNIT_FLAG_OFFSET);
     movement_flags = *(MovementFlags*)(Pointer + MOVEMENT_FLAG_OFFSET);
