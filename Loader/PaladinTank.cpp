@@ -68,7 +68,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	bool isParty = false;
 	int nbrAggro = HasAggro[0].size();
 	if (!isPlayer) {
-		for (int i = 1; i < NumGroupMembers; i++) {
+		for (int i = 1; i <= NumGroupMembers; i++) {
 			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
 		}
 	}

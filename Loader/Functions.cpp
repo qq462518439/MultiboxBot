@@ -18,7 +18,7 @@ bool Functions::Intersect(Position start, Position end, float height, float heig
 	//Need height variable because LOS is based on the position of the eyes of the char
 	if (height2 == 0.0f) height2 = height;
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
-	func* function = (func*)INTERSECT_FUN;
+	func* function = (func*)INTERSECT_FUN_PTR;
 	Position p1 = Position(start.X, start.Y, start.Z+height);
 	Position p2 = Position(end.X, end.Y, end.Z+height2);
 	Position intersection = Position(0, 0, 0);
@@ -29,7 +29,7 @@ bool Functions::Intersect(Position start, Position end, float height, float heig
 
 float Functions::GetDepth(Position pos, float height) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
-	func* function = (func*)INTERSECT_FUN;
+	func* function = (func*)INTERSECT_FUN_PTR;
 	Position p1 = Position(pos.X, pos.Y, pos.Z+height);
 	Position p2 = Position(pos.X, pos.Y, pos.Z - 100);
 	Position intersection = Position(0, 0, 0);
@@ -41,7 +41,7 @@ float Functions::GetDepth(Position pos, float height) {
 
 Position Functions::ProjectPos(Position pos, float height) {
 	typedef bool __fastcall func(Position* p1, Position* p2, int ignore, Position* intersection, float* distance, unsigned int flags);
-	func* function = (func*)INTERSECT_FUN;
+	func* function = (func*)INTERSECT_FUN_PTR;
 	Position p1 = Position(pos.X, pos.Y, pos.Z+height);
 	Position p2 = Position(pos.X, pos.Y, pos.Z - 100);
 	Position intersection = Position(0, 0, 0);
@@ -166,37 +166,65 @@ void Functions::ClassifyHeal() {
 }
 
 void Functions::FollowMultibox(int placement) {
-	int range = 2.0f;
-	float cst = 0.30f;
+	int range = 2.0f; float cst = 0.30f;
 	if (placement == 1) cst = 0.30f;
 	else if (placement == 2) cst = -0.30f;
 	else if (placement == 3) { range = 4; cst = 0.15f; }
 	else if (placement == 4) { range = 4; cst = -0.15f; }
 	float dist = localPlayer->position.DistanceTo(ListUnits[leaderIndex].position);
 	if (dist < 60.0f && dist > range + 1) {
-		float PI = acosf(0.0) * 2;
-		Position target_pos = Position((cos(ListUnits[leaderIndex].facing + PI + cst) * range) + ListUnits[leaderIndex].position.X
-			, (sin(ListUnits[leaderIndex].facing + PI + cst) * range) + ListUnits[leaderIndex].position.Y, ListUnits[leaderIndex].position.Z);
-		float angle_targetPos = atan2f(target_pos.Y - localPlayer->position.Y, target_pos.X - localPlayer->position.X);
-		if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
-		else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
 		ThreadSynchronizer::RunOnMainThread([=]() {
-			Position tmp_pos = Position((cos(angle_targetPos) * 2.5f) + localPlayer->position.X
-				, (sin(angle_targetPos) * 2.5f) + localPlayer->position.Y, localPlayer->position.Z);
-			Position next_pos = Functions::ProjectPos(tmp_pos, 2.00f);
-			bool obstacle_target = false;
-			if (((localPlayer->movement_flags & MOVEFLAG_SWIMMING) != MOVEFLAG_SWIMMING) && ((localPlayer->movement_flags & MOVEFLAG_WATERWALKING) != MOVEFLAG_WATERWALKING)) {
-				obstacle_target = (Functions::Intersect(localPlayer->position, next_pos, 2.00f) && Functions::GetDepth(tmp_pos, 2.00f) > 2.00f);
-			}
-			if (!obstacle_target) {
-				localPlayer->ClickToMove(Move, ListUnits[leaderIndex].Guid, target_pos);
-				Moving = 4;
-			}
-			else {
-				Functions::MoveLoS(target_pos);
-				Moving = 4;
-			}
+			Position target_pos = Position((cos(ListUnits[leaderIndex].facing + (halfPI * 2) + cst) * range) + ListUnits[leaderIndex].position.X
+				, (sin(ListUnits[leaderIndex].facing + (halfPI * 2) + cst) * range) + ListUnits[leaderIndex].position.Y, ListUnits[leaderIndex].position.Z);
+			target_pos = Functions::ProjectPos(target_pos, 2.00f);
+			Functions::MoveObstacle(target_pos);
 		});
+	}
+}
+
+bool MoveObstacle_tmp(Position target_pos, Position last_pos) {
+	float angle_targetPos = atan2f(target_pos.Y - last_pos.Y, target_pos.X - last_pos.X);
+	if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
+	else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
+	Position tmp_pos, next_pos = last_pos;
+	while (next_pos.DistanceTo(target_pos) > 2.5f) {
+		tmp_pos = Position((cos(angle_targetPos) * 2.5f) + last_pos.X
+			, (sin(angle_targetPos) * 2.5f) + last_pos.Y, last_pos.Z);
+		next_pos = Functions::ProjectPos(tmp_pos, 2.00f);
+		if (Functions::Intersect(last_pos, next_pos, 2.00f) || (Functions::GetDepth(tmp_pos, 2.00f) > 2.00f)) return false;
+		last_pos = next_pos;
+	}
+	return true;
+}
+
+void Functions::MoveObstacle(Position target_pos) {
+	float angle_targetPos = atan2f(target_pos.Y - localPlayer->position.Y, target_pos.X - localPlayer->position.X);
+	if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
+	else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
+	int j = 0;
+	for (int i = 0; i < 6; i++) { //Front, left, right...
+		for (int z = 0; z < 2; z++) {
+			if (z == 0) j = 16 - i;
+			else {
+				if (i == 0) break;
+				j = i;
+			}
+			Position last_pos = localPlayer->position; //Take into account the difference in altitude at each point
+			for (int y = 0; y < 10; y++) { //Every 2.5 yards up to 25 check for LoS point
+				Position tmp_pos = Position((cos(angle_targetPos + (j * halfPI / 4)) * 2.5f) + last_pos.X
+					, (sin(angle_targetPos + (j * halfPI / 4)) * 2.5f) + last_pos.Y, last_pos.Z);
+				Position next_pos = Functions::ProjectPos(tmp_pos, 2.00f);
+				if (!Functions::Intersect(last_pos, next_pos, 2.00f) && (Functions::GetDepth(tmp_pos, 2.00f) < 2.00f)) {
+					if (MoveObstacle_tmp(target_pos, next_pos)) {
+						if(i > 0) localPlayer->ClickToMove(Move, localPlayer->Guid, next_pos);
+						else localPlayer->ClickToMove(Move, localPlayer->Guid, target_pos);
+						return;
+					}
+					else { last_pos = next_pos; continue; }
+				}
+				else break; //There is an obstacle on this path, we need to change
+			}
+		}
 	}
 }
 
@@ -209,7 +237,7 @@ void Functions::MoveLoS(Position target_pos) {
 	if (angle_targetPos < 0.0f) angle_targetPos += halfPI * 4.0f;
 	else if (angle_targetPos > halfPI * 4) angle_targetPos -= halfPI * 4.0f;
 	int j = 0;
-	for (int i = 1; i < 6; i++) { //Front, left, right...
+	for (int i = 1; i < 6; i++) { //Left, right...
 		for (int z = 0; z < 2; z++) {
 			Position last_pos = localPlayer->position; //Take into account the difference in altitude at each point
 			if (z == 0) j = 16 - i; else j = i; //Pendulum direction choice
@@ -226,8 +254,7 @@ void Functions::MoveLoS(Position target_pos) {
 				}
 				if (enemy_close) break; //Change direction
 				else if (!Functions::Intersect(last_pos, next_pos, 2.00f) && (Functions::GetDepth(tmp_pos, 2.00f) < 2.00f)) {
-					bool los_nextpos = !Functions::Intersect(next_pos, target_pos, 2.00f);
-					if (los_nextpos) {
+					if (!Functions::Intersect(next_pos, target_pos, 2.00f)) {
 						localPlayer->ClickToMove(Move, localPlayer->Guid, next_pos);
 						Moving = 6;
 						return;
@@ -369,6 +396,12 @@ int Functions::GetBuffKey(int* IDs, int size) {
 		}
 	}
 	return 0;
+}
+
+unsigned int Functions::GetMapID() {
+	typedef int __fastcall func();
+	func* function = (func*)GETMAPID_FUN_PTR;
+	return function();
 }
 
 bool Functions::PlayerIsRanged() {
@@ -835,8 +868,11 @@ bool Functions::GetUnitDispel(std::string target, std::string dispellType1, std:
 int Functions::GetDispelKey(std::string dispellType1, std::string dispellType2, std::string dispellType3) {
 	//Retourne le joueur du groupe à dispel
 	for (int i = 1; i <= NumGroupMembers; i++) {
-		if (GetUnitDispel(tarType+std::to_string(i), dispellType1, dispellType2, dispellType3) && CheckInteractDistance(tarType+std::to_string(i), 4)
-			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.00f)) return i;
+		if ((GroupMembersIndex[i] > -1) && (ListUnits[GroupMembersIndex[i]].unitReaction > Neutral)
+			&& !ListUnits[GroupMembersIndex[i]].isdead && (localPlayer->position.DistanceTo(ListUnits[GroupMembersIndex[i]].position) < 40.0f)
+			&& !Intersect(localPlayer->position, ListUnits[GroupMembersIndex[i]].position, 2.00f)) {
+			if(GetUnitDispel(tarType + std::to_string(i), dispellType1, dispellType2, dispellType3)) return i;
+		}
 	}
 	return 0;
 }

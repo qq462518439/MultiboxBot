@@ -124,6 +124,8 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,8 +157,8 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="ListAI.h" />
     <ClInclude Include="MemoryManager.h" />
-    <ClInclude Include="targetver.h" />
     <ClInclude Include="Functions.h" />
+    <ClInclude Include="targetver.h" />
     <ClInclude Include="WoWObject.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

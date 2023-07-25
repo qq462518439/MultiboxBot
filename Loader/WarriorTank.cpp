@@ -57,6 +57,10 @@ void ListAI::WarriorTank() {
 				if (BattleStance) {
 					int HamstringIDs[3] = { 1715, 7372, 7373 };
 					bool HamstringDebuff = targetUnit->hasDebuff(HamstringIDs, 3);
+					int ThunderClapIDs[5] = { 6343, 8198, 8205, 11580, 11581 };
+					bool ThunderClapDebuff = targetUnit->hasDebuff(ThunderClapIDs, 5);
+					int RendIDs[7] = { 772, 6546, 6547, 6548, 11572, 11573, 11574 };
+					bool RendDebuff = targetUnit->hasDebuff(RendIDs, 7);
 					if ((distTarget < 25.0f) && Functions::IsSpellReady("Charge")) {
 						//Charge
 						Functions::CastSpellByName("Charge");
@@ -65,9 +69,9 @@ void ListAI::WarriorTank() {
 						//Mocking Blow
 						Functions::CastSpellByName("Mocking Blow");
 					}
-					else if ((localPlayer->rage < 25) && Functions::IsSpellReady("Charge")) {
+					else if ((localPlayer->rage < 25) && Combat && Functions::IsSpellReady("Bloodrage")) {
 						//Bloodrage
-						Functions::CastSpellByName("Charge");
+						Functions::CastSpellByName("Bloodrage");
 					}
 					else if (IsFacing && !targetStunned && Functions::UnitIsCaster("target") && Functions::IsSpellReady("Shield Bash")) {
 						//Shield Bash (Caster)
@@ -77,7 +81,7 @@ void ListAI::WarriorTank() {
 						//Hamstring (PvP)
 						Functions::CastSpellByName("Hamstring");
 					}
-					else if ((nbrCloseEnemy >= 3) && Functions::IsSpellReady("Thunder Clap")) {
+					else if ((nbrCloseEnemy >= 3) && !ThunderClapDebuff && Functions::IsSpellReady("Thunder Clap")) {
 						//Thunder Clap
 						Functions::CastSpellByName("Thunder Clap");
 					}
@@ -89,19 +93,29 @@ void ListAI::WarriorTank() {
 						//Overpower
 						Functions::CastSpellByName("Overpower");
 					}
-					else if (Functions::IsSpellReady("Defensive Stance")) {
-						//Defensive Stance
-						Functions::CastSpellByName("Defensive Stance");
+					else if (!RendDebuff && (targetUnit->creatureType != Undead) && (targetUnit->creatureType != Mechanical) && Functions::IsSpellReady("Rend")) {
+						//Rend
+						Functions::CastSpellByName("Rend");
 					}
 					else if ((localPlayer->rage >= 25) && Functions::IsSpellReady("Heroic Strike")) {
 						//Heroic Strike (dump excessive rage)
 						Functions::CastSpellByName("Heroic Strike");
 					}
+					else if (Functions::IsSpellReady("Sunder Armor")) {
+						//Sunder Armor (threat generator)
+						Functions::CastSpellByName("Sunder Armor");
+					}
+					else if(Combat && localPlayer->rage < 5) {
+						//Defensive Stance
+						Functions::CastSpellByName("Defensive Stance");
+					}
 				}
 				else if (DefensiveStance) {
 					int ShieldBlockIDs[1] = { 2565 }; bool ShieldBlockBuff = localPlayer->hasBuff(ShieldBlockIDs, 1);
-					int nbrAggroParty = 0; for (int i = 1; i < NumGroupMembers; i++) { nbrAggroParty += HasAggro[i].size(); }
-					if (!Combat && (distTarget > 5.0f) && (Functions::GetSpellCooldownDuration("Charge") < 1.0f) && Functions::IsSpellReady("Battle Stance")) {
+					int nbrAggroParty = 0; for (int i = 1; i <= NumGroupMembers; i++) { nbrAggroParty += HasAggro[i].size(); }
+					int RendIDs[7] = { 772, 6546, 6547, 6548, 11572, 11573, 11574 };
+					bool RendDebuff = targetUnit->hasDebuff(RendIDs, 7);
+					if (!Combat && (distTarget > 8.0f) && (Functions::GetSpellCooldownDuration("Charge") < 1.0f)) {
 						//Battle Stance
 						Functions::CastSpellByName("Battle Stance");
 					}
@@ -113,9 +127,9 @@ void ListAI::WarriorTank() {
 						//Taunt
 						Functions::CastSpellByName("Taunt");
 					}
-					else if ((localPlayer->rage < 25) && Functions::IsSpellReady("Charge")) {
+					else if ((localPlayer->rage < 25) && Combat && Functions::IsSpellReady("Bloodrage")) {
 						//Bloodrage
-						Functions::CastSpellByName("Charge");
+						Functions::CastSpellByName("Bloodrage");
 					}
 					else if (IsFacing && !targetStunned && Functions::UnitIsCaster("target") && Functions::IsSpellReady("Shield Bash")) {
 						//Shield Bash (Caster)
@@ -141,13 +155,17 @@ void ListAI::WarriorTank() {
 						//Cleave (dump excessive rage)
 						Functions::CastSpellByName("Cleave");
 					}
-					else if (Functions::IsSpellReady("Sunder Armor")) {
-						//Sunder Armor (threat generator)
-						Functions::CastSpellByName("Sunder Armor");
+					else if (!RendDebuff && (targetUnit->creatureType != Undead) && (targetUnit->creatureType != Mechanical) && Functions::IsSpellReady("Rend")) {
+						//Rend
+						Functions::CastSpellByName("Rend");
 					}
 					else if ((localPlayer->rage >= 25) && Functions::IsSpellReady("Heroic Strike")) {
 						//Heroic Strike (dump excessive rage)
 						Functions::CastSpellByName("Heroic Strike");
+					}
+					else if (Functions::IsSpellReady("Sunder Armor")) {
+						//Sunder Armor (threat generator)
+						Functions::CastSpellByName("Sunder Armor");
 					}
 				}
 				else if (BerserkerStance) {
@@ -157,9 +175,9 @@ void ListAI::WarriorTank() {
 						//Intercept
 						Functions::CastSpellByName("Intercept");
 					}
-					else if ((localPlayer->rage < 25) && Functions::IsSpellReady("Charge")) {
+					else if ((localPlayer->rage < 25) && Combat && Functions::IsSpellReady("Bloodrage")) {
 						//Bloodrage
-						Functions::CastSpellByName("Charge");
+						Functions::CastSpellByName("Bloodrage");
 					}
 					else if (Functions::IsSpellReady("Berserker Rage")) {
 						//Berserker Rage
@@ -181,7 +199,7 @@ void ListAI::WarriorTank() {
 						//Execute
 						Functions::CastSpellByName("Execute");
 					}
-					else if(Functions::IsSpellReady("Defensive Stance")) {
+					else if(Combat && localPlayer->rage < 5) {
 						//Defensive Stance
 						Functions::CastSpellByName("Defensive Stance");
 					}

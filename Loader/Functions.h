@@ -24,6 +24,8 @@ class Functions {
 		static bool PlayerIsRanged();
 		static void MoveLoS(Position target_pos);
 		static void FollowMultibox(int placement = 0);
+		static void MoveObstacle(Position target_pos);
+		static unsigned int GetMapID();
 			// === Lua Game Functions === //
 		static int GetNumGroupMembers();
 		static bool IsInGroup();
@@ -118,7 +120,8 @@ class Functions {
 		const static uintptr_t LUA_CALL_FUN_PTR = 0x00704CD0;
 		const static uintptr_t LUA_GET_TEXT_FUN_PTR = 0x00703bf0;
 		const static uintptr_t SPELL_C_HANDLETERRAINCLICK_FUN_PTR = 0x006E60F0;
-		const static uintptr_t INTERSECT_FUN = 0x00672170;
+		const static uintptr_t INTERSECT_FUN_PTR = 0x00672170;
+		const static uintptr_t GETMAPID_FUN_PTR = 0x00468580;
 
 		static int Callback(unsigned long long guid, int filter);
 };

@@ -23,5 +23,5 @@ extern unsigned int LastTarget;
 extern std::string tarType, playerClass, tankName, meleeName, leaderName;
 extern WoWUnit* ccTarget;
 extern time_t current_time;
-
+extern std::vector<Position> path;
 #endif

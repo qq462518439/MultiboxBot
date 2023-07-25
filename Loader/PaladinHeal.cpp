@@ -56,30 +56,32 @@ static void PaladinAttack() {
 }
 
 static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
-	float HpRatio = ListUnits[indexP].prctHP;
 	unsigned long long healGuid = ListUnits[indexP].Guid;
 	bool isPlayer = (healGuid == localPlayer->Guid);
+	bool isParty = false;
+	if (!isPlayer) {
+		for (int i = 1; i <= NumGroupMembers; i++) {
+			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
+		}
+		if (!isParty) return 1;
+	}
+	bool los_heal = true; if (isParty) los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+	float HpRatio = ListUnits[indexP].prctHP;
+	bool isTank = (ListUnits[indexP].name == tankName);
+	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
 	int ForbearanceID[1] = { 25771 };
 	bool ForbearanceDebuff = ListUnits[indexP].hasDebuff(ForbearanceID, 1);
 	int BoSIDs[2] = { 6940, 20729 };
 	bool BoSacrificeBuff = ListUnits[indexP].hasBuff(BoSIDs, 2);
-	bool isParty = false, isTank = (ListUnits[indexP].name == tankName);
-	if (!isPlayer) {
-		for (int i = 1; i < NumGroupMembers; i++) {
-			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
-		}
-	}
-	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
 	if (Combat && (distAlly < 40.0f) && (HpRatio < 20) && Functions::IsSpellReady("Lay on Hands")) {
 		//Lay on Hands
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Lay on Hands");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 40) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
 		//Divine Protection / Divine Shield
 		Functions::CastSpellByName("Divine Protection"); Functions::CastSpellByName("Divine Shield");
 		return 0;
@@ -99,7 +101,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Protection");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -108,7 +109,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Blessing of Sacrifice");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -118,7 +118,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (Functions::IsSpellReady("Divine Favor")) Functions::CastSpellByName("Divine Favor");
 		Functions::CastSpellByName("Holy Shock");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -128,7 +127,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (Functions::IsSpellReady("Divine Favor")) Functions::CastSpellByName("Divine Favor");
 		Functions::CastSpellByName("Holy Light");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -137,7 +135,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash of Light");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}

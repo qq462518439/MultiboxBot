@@ -58,20 +58,22 @@ static void DruidAttack() {
 }
 
 static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
-	float HpRatio = ListUnits[indexP].prctHP;
 	unsigned long long healGuid = ListUnits[indexP].Guid;
 	bool isPlayer = (healGuid == localPlayer->Guid);
+	bool isParty = false;
+	if (!isPlayer) {
+		for (int i = 1; i <= NumGroupMembers; i++) {
+			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
+		}
+		if (!isParty) return 1;
+	}
+	bool los_heal = true; if (isParty) los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+	float HpRatio = ListUnits[indexP].prctHP;
+	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
 	int RejuvenationIDs[11] = { 774, 1058, 1430, 2090, 2091, 3627, 8910, 9839, 9840, 9841, 25299 };
 	bool RejuvenationBuff = ListUnits[indexP].hasBuff(RejuvenationIDs, 11);
 	int RegrowthIDs[9] = { 8936, 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 };
 	bool RegrowthBuff = ListUnits[indexP].hasBuff(RegrowthIDs, 9);
-	bool isParty = false;
-	if (!isPlayer) {
-		for (int i = 1; i < NumGroupMembers; i++) {
-			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
-		}
-	}
-	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
 	int MoonkinFormIDs[1] = { 24858 }; bool MoonkinFormBuff = localPlayer->hasBuff(MoonkinFormIDs, 1);
 	if (isPlayer && Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
@@ -102,7 +104,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Regrowth");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -111,7 +112,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Healing Touch");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -120,7 +120,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Rejuvenation");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}

@@ -33,6 +33,13 @@ float Position::DistanceTo(Position position) {
     return (float)sqrt((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
 }
 
+float Position::DistanceTo2D(Position position) {
+    float deltaX = X - position.X;
+    float deltaY = Y - position.Y;
+
+    return (float)sqrt((deltaX * deltaX) + (deltaY * deltaY));
+}
+
 /* === Object === */
 
 WoWObject::WoWObject(uintptr_t pointer, unsigned long long guid, ObjectType objType) {
@@ -202,7 +209,7 @@ void LocalPlayer::ClickToMove(ClickType clickType, unsigned long long interactGu
     unsigned long long* interactGuidPtr = &interactGuid;
     typedef void (__thiscall* func)(uintptr_t, ClickType, unsigned long long*, float*, float);
     func function = (func)CLICK_TO_MOVE_FUN_PTR;
-    function(Pointer, clickType, interactGuidPtr, xyz, 2);
+    function(Pointer, clickType, interactGuidPtr, xyz, 0.5f);
 }
 
 void LocalPlayer::SetTarget(unsigned long long tguid) {

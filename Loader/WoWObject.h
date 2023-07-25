@@ -129,6 +129,7 @@ public:
     Position(float x, float y, float z);
     std::string ToString();
     float DistanceTo(Position position);
+    float DistanceTo2D(Position position);
 };
 
 // === Objects === //

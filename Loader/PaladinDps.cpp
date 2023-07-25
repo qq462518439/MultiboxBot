@@ -79,10 +79,15 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	int BoSIDs[2] = { 6940, 20729 };
 	bool BoSacrificeBuff = ListUnits[indexP].hasBuff(BoSIDs, 2);
 	bool isParty = false, isTank = (ListUnits[indexP].name == tankName);
+	bool DivineProtectionBuff = false;
 	if (!isPlayer) {
-		for (int i = 1; i < NumGroupMembers; i++) {
+		for (int i = 1; i <= NumGroupMembers; i++) {
 			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
 		}
+	}
+	else {
+		int DivineProtectionIDs[4] = { 498, 5573, 642, 1020 };
+		DivineProtectionBuff = ListUnits[indexP].hasBuff(DivineProtectionIDs, 4);
 	}
 	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
 	if (Combat && (distAlly < 40.0f) && (HpRatio < 20) && Functions::IsSpellReady("Lay on Hands")) {
@@ -94,7 +99,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 40) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
 		//Divine Protection / Divine Shield
 		Functions::CastSpellByName("Divine Protection"); Functions::CastSpellByName("Divine Shield");
 		return 0;
@@ -127,7 +132,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpRatio < 50) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
+	else if ((HpRatio < 50) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0 || DivineProtectionBuff) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
 		//Holy Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Holy Light");
@@ -137,7 +142,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpRatio < 85) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
+	else if ((HpRatio < 85) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0 || DivineProtectionBuff) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
 		//Flash of Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash of Light");

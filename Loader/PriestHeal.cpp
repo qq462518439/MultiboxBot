@@ -84,21 +84,23 @@ static void PriestAttack() {
 }
 
 static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
-	float HpRatio = ListUnits[indexP].prctHP;
-	int HpLost = ListUnits[indexP].hpLost;
 	unsigned long long healGuid = ListUnits[indexP].Guid;
 	bool isPlayer = (healGuid == localPlayer->Guid);
+	bool isParty = false;
+	if (!isPlayer) {
+		for (int i = 1; i <= NumGroupMembers; i++) {
+			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
+		}
+		if (!isParty) return 1;
+	}
+	bool los_heal = true; if(isParty) los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
+	float HpRatio = ListUnits[indexP].prctHP;
+	int HpLost = ListUnits[indexP].hpLost;
 	int RenewIDs[10] = { 139, 6074, 6075, 6076, 6077, 6078, 10927, 10928, 10929, 25315 };
 	bool RenewBuff = ListUnits[indexP].hasBuff(RenewIDs, 10);
 	int PWShieldIDs[10] = { 17, 592, 600, 3747, 6065, 6066, 10898, 10899, 10900, 10901 };
 	bool PWShieldBuff = ListUnits[indexP].hasBuff(PWShieldIDs, 10);
 	int WeakenedSoulID[1] = { 6788 }; bool WeakenedSoulDebuff = ListUnits[indexP].hasDebuff(WeakenedSoulID, 1);
-	bool isParty = false;
-	if (!isPlayer) {
-		for (int i = 1; i < NumGroupMembers; i++) {
-			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
-		}
-	}
 	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
 	if (isPlayer && Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
@@ -120,7 +122,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Prayer of Healing");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -129,7 +130,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Power Word: Shield");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -138,7 +138,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash Heal");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -147,7 +146,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Greater Heal");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -156,7 +154,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Heal");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -165,7 +162,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Lesser Heal");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
@@ -174,7 +170,6 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Renew");
 		LastTarget = indexP;
-		bool los_heal = !Functions::Intersect(localPlayer->position, ListUnits[indexP].position, 2.00f);
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
