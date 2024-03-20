@@ -692,53 +692,26 @@ class client_thread(threading.Thread):
     def checkSpecChange(self):
         if(self.running):
             SpecTMP = interface.SpecialisationList[self.index].get()
-            if(self.currentSpec != SpecTMP):
+            if(self.currentSpec != SpecTMP and len(self.Name) > 0):
                 self.currentSpec = SpecTMP
-                if(not isATank(self.Class, self.currentSpec)): #Not a tank => look for tank
-                    msg = 'Tank: null'
-                    for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1): #Who is a Tank in group
-                        if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
-                            msg = ('Tank: '+interface.serverthread.clients_thread[i].Name)
-                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
-                else: #Is now a Tank
-                    msg = ('Tank: '+self.Name)
-                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
-                if(not isAMelee(self.Class, self.currentSpec)): #Not a melee => look for melee
-                    msg = 'Melee: null'
-                    for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1): #Who is a Melee in group
-                        if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
-                            msg = ('Melee: '+interface.serverthread.clients_thread[i].Name)
-                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
-                else: #Is now a Melee
-                    msg = ('Melee: '+self.Name)
-                    interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
+                #Roles
+                for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1):
+                    if(len(interface.serverthread.clients_thread[i].Name) <= 0): continue
+                    if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                        msg = ('Role0_'+str(i).zfill(2)+'_'+str(len(interface.serverthread.clients_thread[i].Name)-1).zfill(2)+'_'+interface.serverthread.clients_thread[i].Name)
+                        interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
+                    elif(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                        msg = ('Role1_'+str(i).zfill(2)+'_'+str(len(interface.serverthread.clients_thread[i].Name)-1).zfill(2)+'_'+interface.serverthread.clients_thread[i].Name)
+                        interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
+                    else:
+                        msg = ('Role2_'+str(i).zfill(2)+'_'+str(len(interface.serverthread.clients_thread[i].Name)-1).zfill(2)+'_'+interface.serverthread.clients_thread[i].Name)
+                        interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
                 #Specialisation
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):
                         msg = ('Spec: '+str(i)+' ')
                         self.conn.send(bytes(msg, 'utf-8'))
                         time.sleep(0.01)
-                #=== Position follow ===#
-                #I- check for the leader (Tank -> Melee -> Ranged)
-                leaderIndex = -1
-                for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1):
-                    if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
-                        leaderIndex = i
-                        break
-                if(leaderIndex == -1):
-                    for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1):
-                        if(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
-                            leaderIndex = i
-                            break
-                    if(leaderIndex == -1): leaderIndex = self.index-(self.index%5)
-                #II- send positions
-                count = 1
-                for i in range((self.index-(self.index%5)), (self.index-(self.index%5))+((interface.NBR_ACCOUNT-1)%5)+1):
-                    if(i != leaderIndex):
-                        msg = ('Pos: '+str(count)+' ')
-                        interface.serverthread.clients_thread[i].conn.send(bytes(msg, 'utf-8'))
-                        time.sleep(0.01)
-                        count = count+1
             interface.after(500, self.checkSpecChange)
         
 class server_thread(threading.Thread):
@@ -800,6 +773,7 @@ class server_thread(threading.Thread):
                         time.sleep(0.01)
                 return
                 
+    #A REFAIRE POUR NE CIBLER QUE LES LEADER
     def sendTankClients(self, msg):
         if(len(self.clients) > 0):
             if(interface.NBR_ACCOUNT == 1):
