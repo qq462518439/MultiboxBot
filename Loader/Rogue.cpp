@@ -22,13 +22,13 @@ void ListAI::RogueDps() {
 			int SprintTalent = Functions::GetTalentInfo(2, 9);
 
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
-				if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
-					localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
+				if ((Leader != NULL) && (Leader->targetGuid != 0)) { //Leader has target
+					localPlayer->SetTarget(Leader->targetGuid);
 				}
 				else {
 					for (int i = 0; i <= NumGroupMembers; i++) {
 						if (HasAggro[i].size() > 0) {
-							localPlayer->SetTarget(HasAggro[i][0]);
+							localPlayer->SetTarget(HasAggro[i][0]->Guid);
 							break;
 						}
 					}

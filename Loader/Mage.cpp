@@ -50,23 +50,23 @@ void ListAI::MageDps() {
 			int PolymorphIDs[6] = { 118, 12824, 12825, 12826, 28271, 28272 };
 			bool PolymorphDebuff = false;
 			if (targetUnit != NULL) PolymorphDebuff = targetUnit->hasDebuff(PolymorphIDs, 6);
-			int ArcaneIntellectKey = Functions::GetBuffKey(ArcaneIntellectIDs, 5);
+			WoWUnit* ArcaneIntellectTarget = Functions::GetMissingBuff(ArcaneIntellectIDs, 5);
 
 			//Specific for Blizzard cast:
 			Position cluster_center = Position(0, 0, 0); int cluster_unit;
 			std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(25, 30);
 
-			int RemoveCurseKey = Functions::GetDispelKey("Curse");
+			WoWUnit* RemoveCurseTarget = Functions::GetGroupDispel("Curse");
 			std::string RankConjureMana = GetSpellRank("Conjure Mana");
 
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
-				if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
-					localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
+				if ((Leader != NULL) && (Leader->targetGuid != 0)) { //Leader has target
+					localPlayer->SetTarget(Leader->targetGuid);
 				}
 				else {
 					for (int i = 0; i <= NumGroupMembers; i++) {
 						if (HasAggro[i].size() > 0) {
-							localPlayer->SetTarget(HasAggro[i][0]);
+							localPlayer->SetTarget(HasAggro[i][0]->Guid);
 							break;
 						}
 					}
@@ -95,16 +95,16 @@ void ListAI::MageDps() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Arcane Intellect");
 			}
-			else if (!Combat && (ArcaneIntellectKey > 0) && (GroupMembersIndex[ArcaneIntellectKey] > -1) && Functions::IsSpellReady("Arcane Intellect")) {
+			else if (!Combat && (ArcaneIntellectTarget != NULL) && Functions::IsSpellReady("Arcane Intellect")) {
 				//Arcane Intellect (group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[ArcaneIntellectKey]].Guid);
+				localPlayer->SetTarget(ArcaneIntellectTarget->Guid);
 				Functions::CastSpellByName("Arcane Intellect");
 			}
-			else if (!Combat && (localPlayer->speed == 0) && !HasManaStone() && Functions::IsSpellReady(RankConjureMana)) {
+			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && !HasManaStone() && Functions::IsSpellReady(RankConjureMana)) {
 				//Conjure Mana (stone)
 				Functions::CastSpellByName(RankConjureMana);
 			}
-			else if (!Combat && (localPlayer->speed == 0) && (hasDrink == 0) && Functions::IsSpellReady("Conjure Water")) {
+			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (hasDrink == 0) && Functions::IsSpellReady("Conjure Water")) {
 				//Conjure Water
 				Functions::CastSpellByName("Conjure Water");
 			}
@@ -128,7 +128,7 @@ void ListAI::MageDps() {
 				//Mana Stone
 				Functions::UseItem("Mana ");
 			}
-			else if (Combat && (localPlayer->speed == 0) && (localPlayer->prctMana < 15) && ((nbrCloseEnemy == 0) || (HasAggro[0].size() == 0)) && Functions::IsSpellReady("Evocation")) {
+			else if (Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana < 15) && ((nbrCloseEnemy == 0) || (HasAggro[0].size() == 0)) && Functions::IsSpellReady("Evocation")) {
 				//Evocation
 				Functions::CastSpellByName("Evocation");
 			}
@@ -142,9 +142,9 @@ void ListAI::MageDps() {
 				Functions::CastSpellByName("Remove Lesser Curse");
 				if(Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if ((RemoveCurseKey > 0) && (GroupMembersIndex[RemoveCurseKey] > -1) && Functions::IsSpellReady("Remove Lesser Curse")) {
+			else if ((RemoveCurseTarget != NULL) && Functions::IsSpellReady("Remove Lesser Curse")) {
 				//Remove Lesser Curse (group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[RemoveCurseKey]].Guid);
+				localPlayer->SetTarget(RemoveCurseTarget->Guid);
 				Functions::CastSpellByName("Remove Lesser Curse");
 				if(Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
@@ -179,12 +179,12 @@ void ListAI::MageDps() {
 					if(localPlayer->isCasting()) current_time = time(0);
 					localPlayer->SetTarget(firstTarget->Guid);
 				}
-				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && (playerSpec == 1 || localPlayer->level < 20) && Functions::IsSpellReady("Flamestrike")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (cluster_unit >= 4) && (playerSpec == 1 || localPlayer->level < 20) && Functions::IsSpellReady("Flamestrike")) {
 					//Flamestrike
 					Functions::CastSpellByName("Flamestrike");
 					Functions::ClickAOE(cluster_center);
 				}
-				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && Functions::IsSpellReady("Blizzard")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (cluster_unit >= 4) && Functions::IsSpellReady("Blizzard")) {
 					//Blizzard
 					Functions::CastSpellByName("Blizzard");
 					Functions::ClickAOE(cluster_center);
@@ -197,7 +197,7 @@ void ListAI::MageDps() {
 					//Fire Blast (Movement)
 					Functions::CastSpellByName("Fire Blast");
 				}
-				else if (IsFacing && (localPlayer->speed == 0) && (playerSpec == 1) && (Functions::GetStackDebuff("target", "Interface\\Icons\\Spell_Fire_Soulburn") < 5) && Functions::IsSpellReady("Scorch")) {
+				else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (playerSpec == 1) && (Functions::GetStackDebuff("target", "Interface\\Icons\\Spell_Fire_Soulburn") < 5) && Functions::IsSpellReady("Scorch")) {
 					//Scorch
 					Functions::CastSpellByName("Scorch");
 				}
@@ -209,15 +209,15 @@ void ListAI::MageDps() {
 					//Pyroblast
 					Functions::CastSpellByName("Pyroblast");
 				}
-				else if (IsFacing && (localPlayer->speed == 0) && (playerSpec == 1) && Functions::IsSpellReady("Fireball")) {
+				else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (playerSpec == 1) && Functions::IsSpellReady("Fireball")) {
 					//Fireball
 					Functions::CastSpellByName("Fireball");
 				}
-				else if (IsFacing && (localPlayer->speed == 0) && Functions::IsSpellReady("Frostbolt")) {
+				else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Frostbolt")) {
 					//Frostbolt
 					Functions::CastSpellByName("Frostbolt");
 				}
-				else if (IsFacing && (localPlayer->speed == 0) && Functions::HasWandEquipped() && !Functions::IsAutoRepeatAction(Functions::GetSlot("Shoot"))) {
+				else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::HasWandEquipped() && !Functions::IsAutoRepeatAction(Functions::GetSlot("Shoot"))) {
 					//Wand
 					Functions::CastSpellByName("Shoot");
 				}

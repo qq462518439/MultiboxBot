@@ -10,7 +10,7 @@ void ListAI::WarriorTank() {
 			if (tankAutoFocus && (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable)) {
 				for (int i = NumGroupMembers; i >= 0; i--) {
 					if (HasAggro[i].size() > 0) {
-						localPlayer->SetTarget(HasAggro[i][0]);
+						localPlayer->SetTarget(HasAggro[i][0]->Guid);
 						break;
 					}
 				}

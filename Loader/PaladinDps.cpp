@@ -4,13 +4,13 @@
 
 static void PaladinAttack() {
 	if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
-		if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
-			localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
+		if ((Leader != NULL) && (Leader->targetGuid != 0)) { //Leader has target
+			localPlayer->SetTarget(Leader->targetGuid);
 		}
 		else {
 			for (int i = 0; i <= NumGroupMembers; i++) {
 				if (HasAggro[i].size() > 0) {
-					localPlayer->SetTarget(HasAggro[i][0]);
+					localPlayer->SetTarget(HasAggro[i][0]->Guid);
 					break;
 				}
 			}
@@ -78,11 +78,12 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	bool ForbearanceDebuff = ListUnits[indexP].hasDebuff(ForbearanceID, 1);
 	int BoSIDs[2] = { 6940, 20729 };
 	bool BoSacrificeBuff = ListUnits[indexP].hasBuff(BoSIDs, 2);
-	bool isParty = false, isTank = (ListUnits[indexP].name == tankName);
+	bool isParty = false;
+	bool isTank = (Leader != NULL && ListUnits[indexP].name == (std::string)Leader->name);
 	bool DivineProtectionBuff = false;
 	if (!isPlayer) {
 		for (int i = 1; i <= NumGroupMembers; i++) {
-			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
+			if ((GroupMember[i] != NULL) && GroupMember[i]->Guid == ListUnits[indexP].Guid) isParty = true;
 		}
 	}
 	else {
@@ -132,7 +133,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpRatio < 50) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0 || DivineProtectionBuff) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
+	else if ((HpRatio < 50) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0 || DivineProtectionBuff) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Holy Light")) {
 		//Holy Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Holy Light");
@@ -142,7 +143,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpRatio < 85) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0 || DivineProtectionBuff) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
+	else if ((HpRatio < 85) && (distAlly < 40.0f) && (localPlayer->prctMana > 33) && (HealInnerTimer == 0 || DivineProtectionBuff) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Flash of Light")) {
 		//Flash of Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash of Light");
@@ -169,16 +170,17 @@ void ListAI::PaladinDps() {
 			bool BoWisdomBuff = localPlayer->hasBuff(BoWisdomIDs, 6);
 			int SanctityAuraIDs[1] = { 20218 };
 			bool SanctityAuraBuff = localPlayer->hasBuff(SanctityAuraIDs, 1);
-			int BoWisdomKey = Functions::GetBuffKey(BoWisdomIDs, 6);
-			int PurifyDispelKey = Functions::GetDispelKey("Disease", "Poison");
-			int CleanseDispelKey = Functions::GetDispelKey("Disease", "Poison", "Magic");
+			WoWUnit* BoWisdomTarget = Functions::GetMissingBuff(BoWisdomIDs, 6);
+			WoWUnit* PurifyTarget = Functions::GetGroupDispel("Disease", "Poison");
+			WoWUnit* CleanseTarget = Functions::GetGroupDispel("Disease", "Poison", "Magic");
+			WoWUnit* deadPlayer = Functions::GetGroupDead(1);
 			if (!SanctityAuraBuff && Functions::IsPlayerSpell("Sanctity Aura")) {
 				//Sanctity Aura
 				Functions::CastSpellByName("Sanctity Aura");
 			}
-			else if (!Combat && (localPlayer->speed == 0) && Functions::IsSpellReady("Redemption") && (Functions::GetGroupDead(1) > 0)) {
+			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (deadPlayer != NULL) && Functions::IsSpellReady("Redemption")) {
 				//Redemption
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[Functions::GetGroupDead()]].Guid);
+				localPlayer->SetTarget(deadPlayer->Guid);
 				Functions::CastSpellByName("Redemption");
 			}
 			else if (!BoWisdomBuff && Functions::IsSpellReady("Blessing of Wisdom")) {
@@ -186,9 +188,9 @@ void ListAI::PaladinDps() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Blessing of Wisdom");
 			}
-			else if ((BoWisdomKey > 0) && (GroupMembersIndex[BoWisdomKey] > -1) && Functions::IsSpellReady("Blessing of Wisdom")) {
+			else if ((BoWisdomTarget != NULL) && Functions::IsSpellReady("Blessing of Wisdom")) {
 				//Blessing of Wisdom (Groupe)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[BoWisdomKey]].Guid);
+				localPlayer->SetTarget(BoWisdomTarget->Guid);
 				Functions::CastSpellByName("Blessing of Wisdom");
 			}
 			else if (Combat && (localPlayer->prctMana < 10) && (Functions::GetMPotionCD() < 1.25)) {
@@ -200,9 +202,9 @@ void ListAI::PaladinDps() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Purify");
 			}
-			else if ((PurifyDispelKey > 0) && (GroupMembersIndex[PurifyDispelKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Purify")) {
+			else if ((PurifyTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Purify")) {
 				//Purify (Groupe)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[PurifyDispelKey]].Guid);
+				localPlayer->SetTarget(PurifyTarget->Guid);
 				Functions::CastSpellByName("Purify");
 			}
 			else if ((localPlayer->prctMana > 25) && Functions::GetUnitDispel("player", "Disease", "Poison", "Magic") && Functions::IsSpellReady("Cleanse")) {
@@ -210,9 +212,9 @@ void ListAI::PaladinDps() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Cleanse");
 			}
-			else if ((CleanseDispelKey > 0) && (GroupMembersIndex[CleanseDispelKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cleanse")) {
+			else if ((CleanseTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cleanse")) {
 				//Cleanse (Groupe)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[CleanseDispelKey]].Guid);
+				localPlayer->SetTarget(CleanseTarget->Guid);
 				Functions::CastSpellByName("Cleanse");
 			}
 			else {

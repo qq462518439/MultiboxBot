@@ -6,7 +6,7 @@ static void PaladinAttack() {
 	if (tankAutoFocus && (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable)) {
 		for (int i = NumGroupMembers; i >= 0; i--) {
 			if (HasAggro[i].size() > 0) {
-				localPlayer->SetTarget(HasAggro[i][0]);
+				localPlayer->SetTarget(HasAggro[i][0]->Guid);
 				break;
 			}
 		}
@@ -69,7 +69,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	int nbrAggro = HasAggro[0].size();
 	if (!isPlayer) {
 		for (int i = 1; i <= NumGroupMembers; i++) {
-			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
+			if ((GroupMember[i] != NULL) && GroupMember[i]->Guid == ListUnits[indexP].Guid) isParty = true;
 		}
 	}
 	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
@@ -112,7 +112,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if ((!Combat || nbrAggro == 0) && (distAlly < 40.0f) && (HpRatio < 50) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash of Light")) {
+	else if ((!Combat || nbrAggro == 0) && (distAlly < 40.0f) && (HpRatio < 50) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Flash of Light")) {
 		//Flash of Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash of Light");
@@ -120,7 +120,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if ((!Combat || nbrAggro == 0) && (distAlly < 40.0f) && (HpRatio < 33) && (localPlayer->speed == 0) && Functions::IsSpellReady("Holy Light")) {
+	else if ((!Combat || nbrAggro == 0) && (distAlly < 40.0f) && (HpRatio < 33) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Holy Light")) {
 		//Holy Light
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Holy Light");
@@ -148,9 +148,10 @@ void ListAI::PaladinTank() {
 			int RighteousFuryIDs[1] = { 25780 };
 			bool RighteousFuryBuff = localPlayer->hasBuff(RighteousFuryIDs, 1);
 			int BoSalvationIDs[1] = { 1038 };
-			int BoSalvationKey = Functions::GetBuffKey(BoSalvationIDs, 1);
-			int PurifyDispelKey = Functions::GetDispelKey("Disease", "Poison");
-			int CleanseDispelKey = Functions::GetDispelKey("Disease", "Poison", "Magic");
+			WoWUnit* BoSalvationTarget = Functions::GetMissingBuff(BoSalvationIDs, 1);
+			WoWUnit* PurifyTarget = Functions::GetGroupDispel("Disease", "Poison");
+			WoWUnit* CleanseTarget = Functions::GetGroupDispel("Disease", "Poison", "Magic");
+			WoWUnit* deadPlayer = Functions::GetGroupDead(1);
 			if (!RetributionAuraBuff && Functions::IsPlayerSpell("Retribution Aura")) {
 				//Retribution Aura
 				Functions::CastSpellByName("Retribution Aura");
@@ -159,9 +160,9 @@ void ListAI::PaladinTank() {
 				//Righteous Fury
 				Functions::CastSpellByName("Righteous Fury");
 			}
-			else if (!Combat && (localPlayer->speed == 0) && Functions::IsSpellReady("Redemption") && (Functions::GetGroupDead(1) > 0)) {
+			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (deadPlayer != NULL) && Functions::IsSpellReady("Redemption")) {
 				//Redemption
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[Functions::GetGroupDead(1)]].Guid);
+				localPlayer->SetTarget(deadPlayer->Guid);
 				Functions::CastSpellByName("Redemption");
 			}
 			else if (!BoSanctuaryBuff && Functions::IsSpellReady("Blessing of Sanctuary")) {
@@ -170,9 +171,9 @@ void ListAI::PaladinTank() {
 				Functions::CastSpellByName("Blessing of Sanctuary");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if ((BoSalvationKey > 0) && (GroupMembersIndex[BoSalvationKey] > -1) && Functions::IsSpellReady("Blessing of Salvation")) {
+			else if ((BoSalvationTarget != NULL) && Functions::IsSpellReady("Blessing of Salvation")) {
 				//Blessing of Salvation (Groupe)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[BoSalvationKey]].Guid);
+				localPlayer->SetTarget(BoSalvationTarget->Guid);
 				Functions::CastSpellByName("Blessing of Salvation");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
@@ -186,9 +187,9 @@ void ListAI::PaladinTank() {
 				Functions::CastSpellByName("Purify");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if ((PurifyDispelKey > 0) && (GroupMembersIndex[PurifyDispelKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Purify")) {
+			else if ((PurifyTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Purify")) {
 				//Purify (Groupe)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[PurifyDispelKey]].Guid);
+				localPlayer->SetTarget(PurifyTarget->Guid);
 				Functions::CastSpellByName("Purify");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
@@ -198,9 +199,9 @@ void ListAI::PaladinTank() {
 				Functions::CastSpellByName("Cleanse");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if ((CleanseDispelKey > 0) && (GroupMembersIndex[CleanseDispelKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cleanse")) {
+			else if ((CleanseTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cleanse")) {
 				//Cleanse (Groupe)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[CleanseDispelKey]].Guid);
+				localPlayer->SetTarget(CleanseTarget->Guid);
 				Functions::CastSpellByName("Cleanse");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}

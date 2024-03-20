@@ -196,6 +196,8 @@ class WoWUnit : public WoWObject {
 
 class WoWPlayer : public WoWUnit {
     public:
+        char* className;
+
         WoWPlayer(uintptr_t pointer, unsigned long long guid, ObjectType objectType);
 };
 

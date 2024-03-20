@@ -19,18 +19,19 @@ class Functions {
 		static std::tuple<Position, int> getAOETargetPos(float range, float range2);
 		static void ClassifyHeal();
 		static std::tuple<int, int, int, int> countEnemies();
+		static bool EnemyClose(Position pos);
 		static int getNbrCreatureType(int range, CreatureType type1, CreatureType type2=Null, CreatureType type3=Null);
-		static int GetBuffKey(int* IDs, int size);
+		static WoWUnit* GetMissingBuff(int* IDs, int size);
 		static bool PlayerIsRanged();
 		static void MoveLoS(Position target_pos);
-		static void FollowMultibox(int placement = 0);
 		static void MoveObstacle(Position target_pos);
+		static void MoveAway();
+		static void FollowMultibox(int placement = 0);
 		static unsigned int GetMapID();
 			// === Lua Game Functions === //
 		static int GetNumGroupMembers();
 		static bool IsInGroup();
 		static bool IsInRaid();
-		static std::string GetTank();
 		static int GetMerchantNumItems();
 		static int GetRepairAllCost();
 		static bool HasPetUI(); static int GetPetHappiness();
@@ -65,7 +66,7 @@ class Functions {
 		static bool GetUnitDebuff(std::string target, std::string texture);
 		static int GetStackDebuff(std::string target, std::string texture);
 		static bool GetUnitDispel(std::string target, std::string dispellType1, std::string dispellType2="Null", std::string dispellType3="Null");
-		static int GetDispelKey(std::string dispellType1, std::string dispellType2="Null", std::string dispellType3="Null");
+		static WoWUnit* GetGroupDispel(std::string dispellType1, std::string dispellType2="Null", std::string dispellType3="Null");
 		// === Status === //
 		static bool IsSlowed(std::string target);
 		static bool IsRooted(std::string target);
@@ -90,7 +91,8 @@ class Functions {
 		static bool IsActionInRange(int slot);
 		static int GetSlot(std::string spell_name, std::string slot_type="SPELL");
 		// === Unit === //
-		static int GetHealer();
+		static WoWUnit* GetHealer();
+		static WoWUnit* GetGroupDead(int mode = 0);
 		static int UnitStat(std::string target, int nbr);
 		static void TargetUnit(std::string target);
 		static std::string UnitName(std::string target);
@@ -103,7 +105,6 @@ class Functions {
 		static bool UnitIsElite(std::string target);
 		static std::string UnitCreatureType(std::string target);
 		static bool IsGroupInCombat();
-		static int GetGroupDead(int mode = 0);
 		static bool IsShieldEquipped();
 		static bool HasWandEquipped();
 		static int GetComboPoints();

@@ -5,13 +5,13 @@
 static void DruidAttack() {
 	int MoonkinFormIDs[1] = { 24858 }; bool MoonkinFormBuff = localPlayer->hasBuff(MoonkinFormIDs, 1);
 	if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
-		if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
-			localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
+		if ((Leader != NULL) && (Leader->targetGuid != 0)) { //Leader has target
+			localPlayer->SetTarget(Leader->targetGuid);
 		}
 		else {
 			for (int i = 0; i <= NumGroupMembers; i++) {
 				if (HasAggro[i].size() > 0) {
-					localPlayer->SetTarget(HasAggro[i][0]);
+					localPlayer->SetTarget(HasAggro[i][0]->Guid);
 					break;
 				}
 			}
@@ -32,7 +32,7 @@ static void DruidAttack() {
 			//Moonkin Form
 			Functions::CastSpellByName("Moonkin Form");
 		}
-		else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && Functions::IsSpellReady("Hurricane")) {
+		else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (cluster_unit >= 4) && Functions::IsSpellReady("Hurricane")) {
 			//Hurricane
 			Functions::CastSpellByName("Hurricane");
 			Functions::ClickAOE(cluster_center);
@@ -41,12 +41,12 @@ static void DruidAttack() {
 			//Moonfire
 			Functions::CastSpellByName("Moonfire");
 		}
-		else if ((localPlayer->speed == 0) && targetPlayer && (EntanglingRootsTimer == 0) && Functions::IsSpellReady("Entangling Roots")) {
+		else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && targetPlayer && (EntanglingRootsTimer == 0) && Functions::IsSpellReady("Entangling Roots")) {
 			//Entangling Roots (PvP)
 			Functions::CastSpellByName("Entangling Roots");
 			if (localPlayer->isCasting()) current_time = time(0);
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && Functions::IsSpellReady("Wrath") && ((localPlayer->prctMana > 50.0f) || (MoonkinFormBuff))) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Wrath") && ((localPlayer->prctMana > 50.0f) || (MoonkinFormBuff))) {
 			//Wrath
 			Functions::CastSpellByName("Wrath");
 		}
@@ -63,7 +63,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	bool isParty = false;
 	if (!isPlayer) {
 		for (int i = 1; i <= NumGroupMembers; i++) {
-			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
+			if ((GroupMember[i] != NULL) && GroupMember[i]->Guid == ListUnits[indexP].Guid) isParty = true;
 		}
 		if (!isParty) return 1;
 	}
@@ -138,20 +138,21 @@ void ListAI::DruidBalance() {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 			int MotWIDs[9] = { 1126, 5232, 6756, 5234, 8907, 9884, 9885, 21849, 21850 }; //GotW included
 			bool MotWBuff = localPlayer->hasBuff(MotWIDs, 9);
-			int MotWKey = Functions::GetBuffKey(MotWIDs, 9);
+			WoWUnit* MotWPlayer = Functions::GetMissingBuff(MotWIDs, 9);
 			int ThornsIDs[6] = { 467, 782, 1075, 8914, 9756, 9910 };
 			bool ThornsBuff = localPlayer->hasBuff(ThornsIDs, 6);
-			int ThornsKey = Functions::GetBuffKey(ThornsIDs, 6);
-			int RemoveCurseKey = Functions::GetDispelKey("Curse");
-			int CurePoisonKey = Functions::GetDispelKey("Poison");
-			if ((localPlayer->speed == 0) && Functions::IsSpellReady("Rebirth") && (Functions::GetGroupDead(1) > 0)) {
+			WoWUnit* ThornsTarget = Functions::GetMissingBuff(ThornsIDs, 6);
+			WoWUnit* RemoveCurseTarget = Functions::GetGroupDispel("Curse");
+			WoWUnit* CurePoisonTarget = Functions::GetGroupDispel("Poison");
+			WoWUnit* deadPlayer = Functions::GetGroupDead(1);
+			if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Rebirth") && (deadPlayer != NULL)) {
 				//Rebirth
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[Functions::GetGroupDead()]].Guid);
+				localPlayer->SetTarget(deadPlayer->Guid);
 				Functions::CastSpellByName("Rebirth");
 			}
-			else if ((MotWKey > 0) && (GroupMembersIndex[MotWKey] > -1) && Functions::IsSpellReady("Gift of the Wild")) {
+			else if ((MotWPlayer != NULL) && Functions::IsSpellReady("Gift of the Wild")) {
 				//Gift of the Wild (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[MotWKey]].Guid);
+				localPlayer->SetTarget(MotWPlayer->Guid);
 				Functions::CastSpellByName("Gift of the Wild");
 			}
 			else if (!MotWBuff && Functions::IsSpellReady("Mark of the Wild")) {
@@ -159,9 +160,9 @@ void ListAI::DruidBalance() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Mark of the Wild");
 			}
-			else if ((MotWKey > 0) && (GroupMembersIndex[MotWKey] > -1) && Functions::IsSpellReady("Mark of the Wild")) {
+			else if ((MotWPlayer != NULL) && Functions::IsSpellReady("Mark of the Wild")) {
 				//Mark of the Wild (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[MotWKey]].Guid);
+				localPlayer->SetTarget(MotWPlayer->Guid);
 				Functions::CastSpellByName("Mark of the Wild");
 			}
 			else if (!ThornsBuff && Functions::IsSpellReady("Thorns")) {
@@ -169,9 +170,9 @@ void ListAI::DruidBalance() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Thorns");
 			}
-			else if ((ThornsKey > 0) && (GroupMembersIndex[ThornsKey] > -1) && Functions::IsSpellReady("Thorns")) {
+			else if ((ThornsTarget != NULL) && Functions::IsSpellReady("Thorns")) {
 				//Thorns (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[ThornsKey]].Guid);
+				localPlayer->SetTarget(ThornsTarget->Guid);
 				Functions::CastSpellByName("Thorns");
 			}
 			else if (Combat && (localPlayer->prctMana < 10) && Functions::IsSpellReady("Innervate")) {
@@ -188,9 +189,9 @@ void ListAI::DruidBalance() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Remove Curse");
 			}
-			else if ((RemoveCurseKey > 0) && (GroupMembersIndex[RemoveCurseKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Remove Curse")) {
+			else if ((RemoveCurseTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Remove Curse")) {
 				//Remove Curse (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[RemoveCurseKey]].Guid);
+				localPlayer->SetTarget(RemoveCurseTarget->Guid);
 				Functions::CastSpellByName("Remove Curse");
 			}
 			else if ((localPlayer->prctMana > 25) && Functions::GetUnitDispel("player", "Poison") && Functions::IsSpellReady("Cure Poison")) {
@@ -198,9 +199,9 @@ void ListAI::DruidBalance() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Cure Poison");
 			}
-			else if ((CurePoisonKey > 0) && (GroupMembersIndex[CurePoisonKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cure Poison")) {
+			else if ((CurePoisonTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cure Poison")) {
 				//Cure Poison (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[CurePoisonKey]].Guid);
+				localPlayer->SetTarget(CurePoisonTarget->Guid);
 				Functions::CastSpellByName("Cure Poison");
 			}
 			else {

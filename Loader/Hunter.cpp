@@ -27,13 +27,13 @@ void ListAI::HunterDps() {
 					Functions::LuaCall("PetPassiveMode()");
 					petAttacking = false;
 				}
-				if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
-					localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
+				if ((Leader != NULL) && (Leader->targetGuid != 0)) { //Leader has target
+					localPlayer->SetTarget(Leader->targetGuid);
 				}
 				else {
 					for (int i = 0; i <= NumGroupMembers; i++) {
 						if (HasAggro[i].size() > 0) {
-							localPlayer->SetTarget(HasAggro[i][0]);
+							localPlayer->SetTarget(HasAggro[i][0]->Guid);
 							break;
 						}
 					}
@@ -142,7 +142,7 @@ void ListAI::HunterDps() {
 					//Raptor Strike
 					Functions::CastSpellByName("Raptor Strike");
 				}
-				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && Functions::IsSpellReady("Volley")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (cluster_unit >= 4) && Functions::IsSpellReady("Volley")) {
 					//Volley
 					Functions::CastSpellByName("Volley");
 					Functions::ClickAOE(cluster_center);
@@ -151,7 +151,7 @@ void ListAI::HunterDps() {
 					//Hunter's Mark
 					Functions::CastSpellByName("Hunter's Mark");
 				}
-				else if ((localPlayer->speed == 0) && ((autoShotInRange && !targetPlayer) || ((distTarget > 20.0f) && targetPlayer)) && Functions::UnitIsElite("target") && Functions::IsSpellReady("Rapid Fire")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && ((autoShotInRange && !targetPlayer) || ((distTarget > 20.0f) && targetPlayer)) && Functions::UnitIsElite("target") && Functions::IsSpellReady("Rapid Fire")) {
 					//Rapid Fire
 					Functions::CastSpellByName("Rapid Fire");
 				}
@@ -163,11 +163,11 @@ void ListAI::HunterDps() {
 					//Arcane Shot (Movement)
 					Functions::CastSpellByName("Arcane Shot");
 				}
-				else if (IsFacing && ((autoShotInRange && !targetPlayer) || ((distTarget > 20.0f) && targetPlayer)) && (localPlayer->speed == 0) && Functions::IsSpellReady("Aimed Shot")) {
+				else if (IsFacing && ((autoShotInRange && !targetPlayer) || ((distTarget > 20.0f) && targetPlayer)) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Aimed Shot")) {
 					//Aimed Shot
 					Functions::CastSpellByName("Aimed Shot");
 				}
-				else if (IsFacing && autoShotInRange && (localPlayer->speed == 0) && Functions::IsSpellReady("Multi-Shot")) {
+				else if (IsFacing && autoShotInRange && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Multi-Shot")) {
 					//Multi-Shot
 					Functions::CastSpellByName("Multi-Shot");
 				}

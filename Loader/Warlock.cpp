@@ -30,13 +30,13 @@ void ListAI::WarlockDps() {
 					Functions::LuaCall("PetPassiveMode()");
 					petAttacking = false;
 				}
-				if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
-					localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
+				if ((Leader != NULL) && (Leader->targetGuid != 0)) { //Leader has target
+					localPlayer->SetTarget(Leader->targetGuid);
 				}
 				else {
 					for (int i = 0; i <= NumGroupMembers; i++) {
 						if (HasAggro[i].size() > 0) {
-							localPlayer->SetTarget(HasAggro[i][0]);
+							localPlayer->SetTarget(HasAggro[i][0]->Guid);
 							break;
 						}
 					}
@@ -71,17 +71,19 @@ void ListAI::WarlockDps() {
 				//Summon Imp
 				Functions::CastSpellByName("Summon Imp");
 			}
-			else if (!Combat && (localPlayer->speed == 0) && !Functions::HasHealthstone() && Functions::IsSpellReady(RankCreateHealthstone)) {
+			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && !Functions::HasHealthstone() && Functions::IsSpellReady(RankCreateHealthstone)) {
 				//Create Healthstone
 				Functions::CastSpellByName(RankCreateHealthstone);
 			}
-			else if (!Combat && (localPlayer->speed == 0) && !HasSoulstone() && Functions::IsSpellReady(RankCreateSoulstone)) {
+			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && !HasSoulstone() && Functions::IsSpellReady(RankCreateSoulstone)) {
 				//Create Soulstone
 				Functions::CastSpellByName(RankCreateSoulstone);
 			}
-			else if (!Combat && (localPlayer->speed == 0) && HasSoulstone() && (GetSoulstoneCD() < 1.0f)) {
+			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && HasSoulstone() && (GetSoulstoneCD() < 1.0f)) {
 				//Use Soulstone
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[Functions::GetHealer()]].Guid);
+				WoWUnit* healer = Functions::GetHealer();
+				if(healer != NULL) localPlayer->SetTarget(healer->Guid);
+				else localPlayer->SetTarget(localPlayer->Guid);
 				Functions::UseItem("Soulstone");
 			}
 			else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
@@ -108,7 +110,7 @@ void ListAI::WarlockDps() {
 					//Death Coil (PvP)
 					Functions::CastSpellByName("Death Coil");
 				}
-				else if ((localPlayer->speed == 0) && (nbrAggro >= 2) && (nbrCloseEnemy >= 2) && Functions::IsSpellReady("Howl of Terror")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (nbrAggro >= 2) && (nbrCloseEnemy >= 2) && Functions::IsSpellReady("Howl of Terror")) {
 					//Howl of Terror
 					Functions::CastSpellByName("Howl of Terror");
 				}
@@ -116,37 +118,37 @@ void ListAI::WarlockDps() {
 					//Curse of Tongues (PvP -> Caster)
 					Functions::CastSpellByName("Curse of Tongues");
 				}
-				else if ((localPlayer->speed == 0) && targetPlayer && !targetFear && (FearTimer == 0) && Functions::IsSpellReady("Fear")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && targetPlayer && !targetFear && (FearTimer == 0) && Functions::IsSpellReady("Fear")) {
 					//Fear (PvP)
 					Functions::CastSpellByName("Fear");
 					if (localPlayer->isCasting()) current_time = time(0);
 				}
-				else if ((localPlayer->speed == 0) && targetPlayer && (targetUnit->level >= localPlayer->level-10) && Functions::IsSpellReady("Inferno")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && targetPlayer && (targetUnit->level >= localPlayer->level-10) && Functions::IsSpellReady("Inferno")) {
 					//Inferno (PvP)
 					if (Functions::HasPetUI()) Functions::LuaCall("PetDismiss()");
 					Functions::CastSpellByName("Inferno");
 					Functions::ClickAOE(targetUnit->position);
 				}
-				else if ((localPlayer->speed == 0) && (cluster_unit >= 6) && Functions::IsSpellReady("Inferno")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (cluster_unit >= 6) && Functions::IsSpellReady("Inferno")) {
 					//Inferno (AoE)
 					if (Functions::HasPetUI()) Functions::LuaCall("PetDismiss()");
 					Functions::CastSpellByName("Inferno");
 					Functions::ClickAOE(cluster_center);
 				}
-				else if ((localPlayer->speed == 0) && (localPlayer->prctHP > 66.0f) && (nbrCloseEnemy >= 4) && Functions::IsSpellReady("Hellfire")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctHP > 66.0f) && (nbrCloseEnemy >= 4) && Functions::IsSpellReady("Hellfire")) {
 					//Hellfire
 					Functions::CastSpellByName("Hellfire");
 				}
-				else if ((localPlayer->speed == 0) && (cluster_unit >= 4) && Functions::IsSpellReady("Rain of Fire")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (cluster_unit >= 4) && Functions::IsSpellReady("Rain of Fire")) {
 					//Rain of Fire
 					Functions::CastSpellByName("Rain of Fire");
 					Functions::ClickAOE(cluster_center);
 				}
-				else if (!CoShadowDebuff && bossFight && Functions::UnitIsElite("target") && Functions::IsSpellReady("Curse of Shadow")) {
+				/*else if (!CoShadowDebuff && Functions::UnitIsElite("target") && Functions::IsSpellReady("Curse of Shadow")) {
 					//Curse of Shadow (Boss)
 					Functions::CastSpellByName("Curse of Shadow");
-				}
-				else if ((localPlayer->speed == 0) && (localPlayer->prctHP < 40.0f) && Functions::IsSpellReady("Drain Life")) {
+				}*/
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctHP < 40.0f) && Functions::IsSpellReady("Drain Life")) {
 					//Drain Life
 					Functions::CastSpellByName("Drain Life");
 				}
@@ -162,27 +164,27 @@ void ListAI::WarlockDps() {
 					//Siphon Life (PvP)
 					Functions::CastSpellByName("Siphon Life");
 				}
-				else if ((localPlayer->speed == 0) && !ImmolateDebuff && targetPlayer && Functions::IsSpellReady("Immolate")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && !ImmolateDebuff && targetPlayer && Functions::IsSpellReady("Immolate")) {
 					//Immolate (PvP)
 					Functions::CastSpellByName("Immolate");
 				}
-				else if ((localPlayer->speed == 0) && (nbrSoulShard < 6) && (targetUnit->prctHP < 15.0f) && Functions::IsSpellReady("Drain Soul")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (nbrSoulShard < 6) && (targetUnit->prctHP < 15.0f) && Functions::IsSpellReady("Drain Soul")) {
 					//Drain Soul
 					Functions::CastSpellByName("Drain Soul");
 				}
-				else if ((localPlayer->speed == 0) && (targetUnit->prctMana > 33.0f) && targetPlayer && Functions::IsSpellReady("Drain Mana")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (targetUnit->prctMana > 33.0f) && targetPlayer && Functions::IsSpellReady("Drain Mana")) {
 					//Drain Mana (PvP)
 					Functions::CastSpellByName("Drain Mana");
 				}
-				else if (IsFacing && (localPlayer->speed == 0) && Functions::IsSpellReady("Shadow Bolt")) {
+				else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Shadow Bolt")) {
 					//Shadow Bolt
 					Functions::CastSpellByName("Shadow Bolt");
 				}
-				else if ((localPlayer->speed == 0) && (localPlayer->prctHP > 40.0f) && (localPlayer->prctMana < 10.0f) && Functions::IsSpellReady("Life Tap")) {
+				else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctHP > 40.0f) && (localPlayer->prctMana < 10.0f) && Functions::IsSpellReady("Life Tap")) {
 					//Life Tap
 					Functions::CastSpellByName("Life Tap");
 				}
-				else if (IsFacing && (localPlayer->speed == 0) && Functions::HasWandEquipped() && !Functions::IsAutoRepeatAction(Functions::GetSlot("Shoot"))) {
+				else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::HasWandEquipped() && !Functions::IsAutoRepeatAction(Functions::GetSlot("Shoot"))) {
 					//Wand
 					Functions::CastSpellByName("Shoot");
 				}

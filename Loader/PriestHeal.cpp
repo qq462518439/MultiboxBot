@@ -37,13 +37,13 @@ static void GetSpellBonusHealing() {
 
 static void PriestAttack() {
 	if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
-		if (leaderName != "null" && (ListUnits[leaderIndex].targetGuid != 0)) { //Leader has target
-			localPlayer->SetTarget(ListUnits[leaderIndex].targetGuid);
+		if ((Leader != NULL) && (Leader->targetGuid != 0)) { //Leader has target
+			localPlayer->SetTarget(Leader->targetGuid);
 		}
 		else {
 			for (int i = 0; i <= NumGroupMembers; i++) {
 				if (HasAggro[i].size() > 0) {
-					localPlayer->SetTarget(HasAggro[i][0]);
+					localPlayer->SetTarget(HasAggro[i][0]->Guid);
 					break;
 				}
 			}
@@ -64,19 +64,19 @@ static void PriestAttack() {
 			//Shadow Word: Pain	(PvP)
 			Functions::CastSpellByName("Shadow Word: Pain");
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && (localPlayer->prctMana > 66) && targetPlayer && !HolyFireDebuff && Functions::IsSpellReady("Holy Fire")) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 66) && targetPlayer && !HolyFireDebuff && Functions::IsSpellReady("Holy Fire")) {
 			//Holy Fire (PvP)
 			Functions::CastSpellByName("Holy Fire");
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && (localPlayer->prctMana > 66) && Functions::IsSpellReady("Mind Blast")) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 66) && Functions::IsSpellReady("Mind Blast")) {
 			//Mind Blast
 			Functions::CastSpellByName("Mind Blast");
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && (localPlayer->prctMana > 66) && Functions::IsSpellReady("Smite")) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 66) && Functions::IsSpellReady("Smite")) {
 			//Smite
 			Functions::CastSpellByName("Smite");
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && Functions::HasWandEquipped() && !Functions::IsAutoRepeatAction(Functions::GetSlot("Shoot"))) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::HasWandEquipped() && !Functions::IsAutoRepeatAction(Functions::GetSlot("Shoot"))) {
 			//Wand
 			Functions::CastSpellByName("Shoot");
 		}
@@ -89,7 +89,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	bool isParty = false;
 	if (!isPlayer) {
 		for (int i = 1; i <= NumGroupMembers; i++) {
-			if ((GroupMembersIndex[i] > -1) && ListUnits[GroupMembersIndex[i]].Guid == ListUnits[indexP].Guid) isParty = true;
+			if ((GroupMember[i] != NULL) && GroupMember[i]->Guid == ListUnits[indexP].Guid) isParty = true;
 		}
 		if (!isParty) return 1;
 	}
@@ -117,7 +117,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		Functions::CastSpellByName("Desperate Prayer");
 		return 0;
 	}
-	else if ((AoEHeal >= 3) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Prayer of Healing")) {
+	else if ((AoEHeal >= 3) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Prayer of Healing")) {
 		//Prayer of Healing
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Prayer of Healing");
@@ -133,7 +133,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpRatio < 30) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Flash Heal")) {
+	else if ((HpRatio < 30) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Flash Heal")) {
 		//Flash Heal
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Flash Heal");
@@ -141,7 +141,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpLost > GreaterHealValue[GreaterHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Greater Heal")) {
+	else if ((HpLost > GreaterHealValue[GreaterHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Greater Heal")) {
 		//Greater Heal
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Greater Heal");
@@ -149,7 +149,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpLost > HealValue[HealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Heal")) {
+	else if ((HpLost > HealValue[HealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Heal")) {
 		//Heal
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Heal");
@@ -157,7 +157,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((localPlayer->level < 40) && (HpLost > LesserHealValue[LesserHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && Functions::IsSpellReady("Lesser Heal")) {
+	else if ((localPlayer->level < 40) && (HpLost > LesserHealValue[LesserHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Lesser Heal")) {
 		//Lesser Heal
 		localPlayer->SetTarget(healGuid);
 		Functions::CastSpellByName("Lesser Heal");
@@ -196,27 +196,28 @@ void ListAI::PriestHeal() {
 			int nbrAggro = HasAggro[0].size();
 			int PWFortitudeIDs[8] = { 1243, 1244, 1245, 2791, 10937, 10938, 21562, 21564 }; //Include PoFortitude
 			bool PWFortitudeBuff = localPlayer->hasBuff(PWFortitudeIDs, 8);
-			int PWFortitudeKey = Functions::GetBuffKey(PWFortitudeIDs, 8);
+			WoWUnit* PWFortitudeTarget = Functions::GetMissingBuff(PWFortitudeIDs, 8);
 			int DivineSpiritIDs[5] = { 14752, 14818, 14819, 27841, 27681 }; //Include PoSpirit
 			bool DivineSpiritBuff = localPlayer->hasBuff(DivineSpiritIDs, 5);
-			int DivineSpiritKey = Functions::GetBuffKey(DivineSpiritIDs, 5);
+			WoWUnit* DivineSpiritTarget = Functions::GetMissingBuff(DivineSpiritIDs, 5);
 			int InnerFireIDs[6] = { 588, 7128, 602, 1006, 10951, 10952 };
 			bool InnerFireBuff = localPlayer->hasBuff(InnerFireIDs, 6);
-			int DispelMagicKey = Functions::GetDispelKey("Magic");
-			int CureDiseaseKey = Functions::GetDispelKey("Disease");
-			if (!Combat && (localPlayer->speed == 0) && Functions::IsSpellReady("Resurrection") && (Functions::GetGroupDead(0) > 0)) {
+			WoWUnit* DispelMagicTarget = Functions::GetGroupDispel("Magic");
+			WoWUnit* CureDiseaseTarget = Functions::GetGroupDispel("Disease");
+			WoWUnit* deadPlayer = Functions::GetGroupDead();
+			if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Resurrection") && (deadPlayer != NULL)) {
 				//Resurrection
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[Functions::GetGroupDead()]].Guid);
+				localPlayer->SetTarget(deadPlayer->Guid);
 				Functions::CastSpellByName("Resurrection");
 			}
-			else if (!Combat && (PWFortitudeKey > 0) && (GroupMembersIndex[PWFortitudeKey] > -1) && Functions::IsSpellReady("Prayer of Fortitude")) {
+			else if (!Combat && (PWFortitudeTarget != NULL) && Functions::IsSpellReady("Prayer of Fortitude")) {
 				//Prayer of Fortitude (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[PWFortitudeKey]].Guid);
+				localPlayer->SetTarget(PWFortitudeTarget->Guid);
 				Functions::CastSpellByName("Prayer of Fortitude");
 			}
-			else if (!Combat && (DivineSpiritKey > 0) && (GroupMembersIndex[DivineSpiritKey] > -1) && Functions::IsSpellReady("Prayer of Spirit")) {
+			else if (!Combat && (DivineSpiritTarget != NULL) && Functions::IsSpellReady("Prayer of Spirit")) {
 				//Prayer of Spirit (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[DivineSpiritKey]].Guid);
+				localPlayer->SetTarget(DivineSpiritTarget->Guid);
 				Functions::CastSpellByName("Prayer of Spirit");
 			}
 			else if (!InnerFireBuff && Functions::IsPlayerSpell("Inner Fire")) {
@@ -225,20 +226,22 @@ void ListAI::PriestHeal() {
 			}
 			else if (!Combat && !PWFortitudeBuff && Functions::IsPlayerSpell("Power Word: Fortitude")) {
 				//Power Word: Fortitude (self)
+				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Power Word: Fortitude");
 			}
-			else if (!Combat && (PWFortitudeKey > 0) && (GroupMembersIndex[PWFortitudeKey] > -1) && Functions::IsSpellReady("Power Word: Fortitude")) {
+			else if (!Combat && (PWFortitudeTarget != NULL) && Functions::IsSpellReady("Power Word: Fortitude")) {
 				//Power Word: Fortitude (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[PWFortitudeKey]].Guid);
+				localPlayer->SetTarget(PWFortitudeTarget->Guid);
 				Functions::CastSpellByName("Power Word: Fortitude");
 			}
 			else if (!Combat && !DivineSpiritBuff && Functions::IsPlayerSpell("Divine Spirit")) {
 				//Divine Spirit (self)
+				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Divine Spirit");
 			}
-			else if (!Combat && (DivineSpiritKey > 0) && (GroupMembersIndex[DivineSpiritKey] > -1) && Functions::IsSpellReady("Divine Spirit")) {
+			else if (!Combat && (DivineSpiritTarget != NULL) && Functions::IsSpellReady("Divine Spirit")) {
 				//Divine Spirit (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[DivineSpiritKey]].Guid);
+				localPlayer->SetTarget(DivineSpiritTarget->Guid);
 				Functions::CastSpellByName("Divine Spirit");
 			}
 			else if (Combat && (localPlayer->prctMana < 10) && (Functions::GetMPotionCD() < 1.25)) {
@@ -258,9 +261,9 @@ void ListAI::PriestHeal() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Cure Disease");
 			}
-			else if ((CureDiseaseKey > 0) && (GroupMembersIndex[CureDiseaseKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cure Disease")) {
+			else if ((CureDiseaseTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cure Disease")) {
 				//Cure Disease (Group)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[CureDiseaseKey]].Guid);
+				localPlayer->SetTarget(CureDiseaseTarget->Guid);
 				Functions::CastSpellByName("Cure Disease");
 			}
 			else if ((localPlayer->prctMana > 25) && Functions::GetUnitDispel("player", "Magic") && Functions::IsSpellReady("Dispel Magic")) {
@@ -268,9 +271,9 @@ void ListAI::PriestHeal() {
 				localPlayer->SetTarget(localPlayer->Guid);
 				Functions::CastSpellByName("Dispel Magic");
 			}
-			else if ((DispelMagicKey > 0) && (GroupMembersIndex[DispelMagicKey] > -1) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Dispel Magic")) {
+			else if ((DispelMagicTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Dispel Magic")) {
 				//Dispel Magic (Groupe)
-				localPlayer->SetTarget(ListUnits[GroupMembersIndex[DispelMagicKey]].Guid);
+				localPlayer->SetTarget(DispelMagicTarget->Guid);
 				Functions::CastSpellByName("Dispel Magic");
 			}
 			else {

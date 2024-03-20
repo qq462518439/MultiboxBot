@@ -45,27 +45,20 @@ void Client::recvMessage() {
 		char* buffTmp = subchar(buffer, 6, 7);
 		playerSpec = ((int)buffTmp[0] - '0');
 	}
-	else if (buffer[0] == 'P') {
-		char* buffTmp = subchar(buffer, 5, 6);
-		positionCircle = ((int)buffTmp[0] - '0');
-	}
-	else if (buffer[0] == 'T') {
-		char* buffTmp = subchar(buffer, 6, 25);
-		int y = 0;
-		for (unsigned int i = 0; i < strlen(buffTmp); i++) {
-			if ((buffTmp[i] >= 'a' && buffTmp[i] <= 'z') || (buffTmp[i] >= 'A' && buffTmp[i] <= 'Z')) y++;
+	else if (buffer[0] == 'R' && buffer[1] == 'o' && buffer[2] == 'l' && buffer[3] == 'e') {
+		int role = buffer[4] - '0';
+		unsigned int id = (buffer[6] - '0')*10 + (buffer[7] - '0');
+		int str_length = (buffer[9] - '0') * 10 + (buffer[10] - '0');
+
+		std::string roleName = subchar(buffer, 12, 12+str_length);
+
+		if (leaderInfos.size() < id+1) {
+			while (leaderInfos.size() < id) {
+				leaderInfos.push_back(std::tuple<std::string, int, int>("tmp", -1, -1));
+			}
+			leaderInfos.push_back(std::tuple<std::string, int, int>(roleName, role, 0));
 		}
-		tankName = subchar(buffTmp, 0, y);
-		leaderName = tankName;
-	}
-	else if (buffer[0] == 'M') {
-		char* buffTmp = subchar(buffer, 7, 25);
-		int y = 0;
-		for (unsigned int i = 0; i < strlen(buffTmp); i++) {
-			if ((buffTmp[i] >= 'a' && buffTmp[i] <= 'z') || (buffTmp[i] >= 'A' && buffTmp[i] <= 'Z')) y++;
-		}
-		meleeName = subchar(buffTmp, 0, y);
-		if(tankName == "null") leaderName = meleeName;
+		else leaderInfos[id] = std::tuple<std::string, int, int>(roleName, role, 0);
 	}
 	else if (buffer[0] == 'K' && buffer[1] == '1') {
 		keyHearthstone = true;
