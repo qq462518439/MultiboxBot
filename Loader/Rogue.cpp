@@ -18,8 +18,8 @@ void ListAI::RogueDps() {
 			int SliceDiceIDs[2] = { 5171, 6774 };
 			bool SliceDiceBuff = localPlayer->hasBuff(SliceDiceIDs, 2);
 
-			int ComboPoints = Functions::GetComboPoints();
-			int SprintTalent = Functions::GetTalentInfo(2, 9);
+			int ComboPoints = FunctionsLua::GetComboPoints();
+			int SprintTalent = FunctionsLua::GetTalentInfo(2, 9);
 
 			if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) {
 				if ((Leader != NULL) && (Leader->targetGuid != 0)) { //Leader has target
@@ -35,13 +35,13 @@ void ListAI::RogueDps() {
 				}
 			}
 
-			if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+			if (Combat && (localPlayer->prctHP < 40) && (FunctionsLua::GetHealthstoneCD() < 1.25)) {
 				//Healthstone
-				Functions::UseItem("Healthstone");
+				FunctionsLua::UseItem("Healthstone");
 			}
-			else if (Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
+			else if (Combat && (localPlayer->prctHP < 35) && (FunctionsLua::GetHPotionCD() < 1.25)) {
 				//Healing Potion
-				Functions::UseItem("Healing Potion");
+				FunctionsLua::UseItem("Healing Potion");
 			}
 			else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
@@ -50,59 +50,59 @@ void ListAI::RogueDps() {
 				int GougeIDs[5] = { 1776, 1777, 8629, 11285, 11286 };
 				bool GougeDebuff = targetUnit->hasDebuff(GougeIDs, 5);
 				bool stopAttack = false;
-				if ((StealthBuff || GougeDebuff || targetConfused) && Functions::IsCurrentAction(Functions::GetSlot("Attack"))) Functions::CastSpellByName("Attack");
+				if ((StealthBuff || GougeDebuff || targetConfused) && FunctionsLua::IsCurrentAction(FunctionsLua::GetSlot("Attack"))) FunctionsLua::CastSpellByName("Attack");
 				if (GougeDebuff || targetConfused) stopAttack = true; else stopAttack = false;
-				if (!Combat && !StealthBuff && Functions::IsSpellReady("Stealth")) {
+				if (!Combat && !StealthBuff && FunctionsLua::IsSpellReady("Stealth")) {
 					//Stealth
-					Functions::CastSpellByName("Stealth");
+					FunctionsLua::CastSpellByName("Stealth");
 				}
-				else if (StealthBuff && Functions::IsSpellReady("Cheap Shot")) {
+				else if (StealthBuff && FunctionsLua::IsSpellReady("Cheap Shot")) {
 					//Cheap Shot
-					Functions::CastSpellByName("Cheap Shot");
+					FunctionsLua::CastSpellByName("Cheap Shot");
 				}
 				else if (stopAttack) { } //Do nothing
-				else if (Combat && (distTarget > 12) && (localPlayer->speed < 7) && (SprintTalent > 0) && Functions::IsSpellReady("Sprint")) {
+				else if (Combat && (distTarget > 12) && (localPlayer->speed < 7) && (SprintTalent > 0) && FunctionsLua::IsSpellReady("Sprint")) {
 					//Sprint
-					Functions::CastSpellByName("Sprint");
+					FunctionsLua::CastSpellByName("Sprint");
 				}
-				else if (Combat && !StealthBuff && (Functions::GetItemCount(5140) > 0) && (localPlayer->speed < 7) && Functions::IsSpellReady("Vanish")) {
+				else if (Combat && !StealthBuff && (FunctionsLua::GetItemCount(5140) > 0) && (localPlayer->speed < 7) && FunctionsLua::IsSpellReady("Vanish")) {
 					//Vanish
-					Functions::CastSpellByName("Vanish");
+					FunctionsLua::CastSpellByName("Vanish");
 				}
-				else if (Combat && !StealthBuff && targetPlayer && (distTarget > 5) && (Functions::GetItemCount(5530) > 0) && (localPlayer->speed < 7) && Functions::IsSpellReady("Blind")) {
+				else if (Combat && !StealthBuff && targetPlayer && (distTarget > 5) && (FunctionsLua::GetItemCount(5530) > 0) && (localPlayer->speed < 7) && FunctionsLua::IsSpellReady("Blind")) {
 					//Blind
-					Functions::CastSpellByName("Blind");
+					FunctionsLua::CastSpellByName("Blind");
 				}
-				else if (Combat && !StealthBuff && SliceDiceBuff && Functions::UnitIsElite("target") && Functions::IsSpellReady("Adrenaline Rush")) {
+				else if (Combat && !StealthBuff && SliceDiceBuff && FunctionsLua::UnitIsElite("target") && FunctionsLua::IsSpellReady("Adrenaline Rush")) {
 					//Adrenaline Rush
-					Functions::CastSpellByName("Adrenaline Rush");
+					FunctionsLua::CastSpellByName("Adrenaline Rush");
 				}
-				else if (Combat && !StealthBuff && ((nbrCloseEnemyFacing >= 2) || targetPlayer) && (SliceDiceTimer >= 15) && Functions::IsSpellReady("Blade Flurry")) {
+				else if (Combat && !StealthBuff && ((nbrCloseEnemyFacing >= 2) || targetPlayer) && (SliceDiceTimer >= 15) && FunctionsLua::IsSpellReady("Blade Flurry")) {
 					//Blade Flurry
-					Functions::CastSpellByName("Blade Flurry");
+					FunctionsLua::CastSpellByName("Blade Flurry");
 				}
-				else if (!StealthBuff && (((ComboPoints >= 3) && !SliceDiceBuff) || (SliceDiceTimer < 8 && (ComboPoints >= 5))) && Functions::IsSpellReady("Slice and Dice")) {
+				else if (!StealthBuff && (((ComboPoints >= 3) && !SliceDiceBuff) || (SliceDiceTimer < 8 && (ComboPoints >= 5))) && FunctionsLua::IsSpellReady("Slice and Dice")) {
 					//Slice and Dice
-					int SliceDiceTalent = Functions::GetTalentInfo(1, 6);
-					SliceDiceDuration = (6 + (3 * ComboPoints)) * (1 + (0.15 * SliceDiceTalent));
+					int SliceDiceTalent = FunctionsLua::GetTalentInfo(1, 6);
+					SliceDiceDuration = (6 + (3 * ComboPoints)) * (1 + (0.15f * SliceDiceTalent));
 					current_time = time(0);
-					Functions::CastSpellByName("Slice and Dice");
+					FunctionsLua::CastSpellByName("Slice and Dice");
 				}
-				else if (IsFacing && !StealthBuff && (ComboPoints >= 3) && targetPlayer && Functions::IsSpellReady("Kidney Shot")) {
+				else if (IsFacing && !StealthBuff && (ComboPoints >= 3) && targetPlayer && FunctionsLua::IsSpellReady("Kidney Shot")) {
 					//Kidney Shot
-					Functions::CastSpellByName("Kidney Shot");
+					FunctionsLua::CastSpellByName("Kidney Shot");
 				}
-				else if (IsFacing && !StealthBuff && (ComboPoints >= 5) && (SliceDiceTimer >= 8) && Functions::IsSpellReady("Eviscerate")) {
+				else if (IsFacing && !StealthBuff && (ComboPoints >= 5) && (SliceDiceTimer >= 8) && FunctionsLua::IsSpellReady("Eviscerate")) {
 					//Eviscerate
-					Functions::CastSpellByName("Eviscerate");
+					FunctionsLua::CastSpellByName("Eviscerate");
 				}
-				else if (IsFacing && !StealthBuff && !targetStunned && Functions::UnitIsCaster("target") && Functions::IsSpellReady("Kick")) {
+				else if (IsFacing && !StealthBuff && !targetStunned && FunctionsLua::UnitIsCaster("target") && FunctionsLua::IsSpellReady("Kick")) {
 					//Kick
-					Functions::CastSpellByName("Kick");
+					FunctionsLua::CastSpellByName("Kick");
 				}
-				else if (IsFacing && !StealthBuff && Functions::IsSpellReady("Sinister Strike")) {
+				else if (IsFacing && !StealthBuff && FunctionsLua::IsSpellReady("Sinister Strike")) {
 					//Sinister Strike
-					Functions::CastSpellByName("Sinister Strike");
+					FunctionsLua::CastSpellByName("Sinister Strike");
 				}
 			}
 		});

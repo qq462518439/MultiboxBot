@@ -1,6 +1,8 @@
 #ifndef Client_H
 #define Client_H
 
+#include <string>
+
 #include <sys/types.h>
 #include <winsock2.h>
 

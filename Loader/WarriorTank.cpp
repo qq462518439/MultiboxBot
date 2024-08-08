@@ -6,54 +6,73 @@
 void ListAI::WarriorTank() {
 	if (localPlayer->castInfo == 0 && localPlayer->channelInfo == 0 && !localPlayer->isdead && !passiveGroup) {
 		ThreadSynchronizer::RunOnMainThread([=]() {
-
-			if (tankAutoFocus && (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable)) {
-				for (int i = NumGroupMembers; i >= 0; i--) {
-					if (HasAggro[i].size() > 0) {
-						localPlayer->SetTarget(HasAggro[i][0]->Guid);
-						break;
+			if ((Leader == NULL) || (Leader->Guid != localPlayer->Guid) || tankAutoFocus) {
+				bool targetFocusingTank = false;
+				if (targetUnit != NULL) {
+					for (int i = 1; i <= NumGroupMembers; i++) {
+						if (GroupMember[i] != NULL && targetUnit->targetGuid == GroupMember[i]->Guid && GroupMember[i]->role == 0) {
+							targetFocusingTank = true;
+							break;
+						}
+					}
+				}
+				if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable || targetFocusingTank) {
+					bool foundTarget = false;
+					for (int i = NumGroupMembers; i >= 0; i--) {
+						if (GroupMember[i] != NULL && GroupMember[i]->role != 0 && HasAggro[i].size() > 0) {
+							localPlayer->SetTarget(HasAggro[i][0]->Guid);
+							foundTarget = true;
+							break;
+						}
+					}
+					if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && !foundTarget) {
+						for (int i = NumGroupMembers; i >= 0; i--) { //Tank also
+							if (HasAggro[i].size() > 0) {
+								localPlayer->SetTarget(HasAggro[i][0]->Guid);
+								break;
+							}
+						}
 					}
 				}
 			}
-
 			int BattleShoutIDs[7] = { 6673, 5242, 6192, 11549, 11550, 11551, 25289 }; bool BattleShoutBuff = localPlayer->hasBuff(BattleShoutIDs, 7);
 			int DemoralizingShoutIDs[5] = { 1160, 6190, 11554, 11555, 11556 }; bool DemoralizingShoutDebuff = localPlayer->hasBuff(DemoralizingShoutIDs, 5);
-			if (Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+			if (Combat && (localPlayer->prctHP < 40) && (FunctionsLua::GetHealthstoneCD() < 1.25)) {
 				//Healthstone
-				Functions::UseItem("Healthstone");
+				FunctionsLua::UseItem("Healthstone");
 			}
-			else if (Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
+			else if (Combat && (localPlayer->prctHP < 35) && (FunctionsLua::GetHPotionCD() < 1.25)) {
 				//Healing Potion
-				Functions::UseItem("Healing Potion");
+				FunctionsLua::UseItem("Healing Potion");
 			}
-			else if (Combat && (localPlayer->prctHP < 40) && Functions::IsSpellReady("Last Stand")) {
+			else if (Combat && (localPlayer->prctHP < 40) && FunctionsLua::IsSpellReady("Last Stand")) {
 				//Last Stand
-				Functions::CastSpellByName("Last Stand");
+				FunctionsLua::CastSpellByName("Last Stand");
 			}
-			else if (Combat && (localPlayer->prctHP < 25) && Functions::IsSpellReady("Shield Wall")) {
+			else if (Combat && (localPlayer->prctHP < 25) && FunctionsLua::IsSpellReady("Shield Wall")) {
 				//Shield Wall
-				Functions::CastSpellByName("Shield Wall");
+				FunctionsLua::CastSpellByName("Shield Wall");
 			}
-			else if ((nbrCloseEnemy >= 4) && Functions::IsSpellReady("Intimidating Shout")) {
+			else if ((nbrCloseEnemy >= 4) && FunctionsLua::IsSpellReady("Intimidating Shout")) {
 				//Intimidating Shout
-				Functions::CastSpellByName("Intimidating Shout");
+				FunctionsLua::CastSpellByName("Intimidating Shout");
 			}
-			else if (!BattleShoutBuff && Functions::IsSpellReady("Battle Shout")) {
+			else if (Combat && !BattleShoutBuff && FunctionsLua::IsSpellReady("Battle Shout")) {
 				//Battle Shout
-				Functions::CastSpellByName("Battle Shout");
+				FunctionsLua::CastSpellByName("Battle Shout");
 			}
-			else if ((nbrCloseEnemy >= 3) && !DemoralizingShoutDebuff && Functions::IsSpellReady("Demoralizing Shout")) {
+			else if ((nbrCloseEnemy >= 3) && !DemoralizingShoutDebuff && FunctionsLua::IsSpellReady("Demoralizing Shout")) {
 				//Demoralizing Shout
-				Functions::CastSpellByName("Demoralizing Shout");
+				FunctionsLua::CastSpellByName("Demoralizing Shout");
 			}
 			else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 				bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
 				bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 				bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
-				bool BattleStance = Functions::GetShapeshiftFormInfo(1);
-				bool DefensiveStance = Functions::GetShapeshiftFormInfo(2);
-				bool BerserkerStance = Functions::GetShapeshiftFormInfo(3);
-				if (!Functions::IsCurrentAction(Functions::GetSlot("Attack"))) Functions::CastSpellByName("Attack");
+				bool BattleStance = FunctionsLua::GetShapeshiftFormInfo(1);
+				bool DefensiveStance = FunctionsLua::GetShapeshiftFormInfo(2);
+				bool BerserkerStance = FunctionsLua::GetShapeshiftFormInfo(3);
+				if (!FunctionsLua::IsCurrentAction(FunctionsLua::GetSlot("Attack"))) FunctionsLua::CastSpellByName("Attack");
 				if (BattleStance) {
 					int HamstringIDs[3] = { 1715, 7372, 7373 };
 					bool HamstringDebuff = targetUnit->hasDebuff(HamstringIDs, 3);
@@ -61,53 +80,53 @@ void ListAI::WarriorTank() {
 					bool ThunderClapDebuff = targetUnit->hasDebuff(ThunderClapIDs, 5);
 					int RendIDs[7] = { 772, 6546, 6547, 6548, 11572, 11573, 11574 };
 					bool RendDebuff = targetUnit->hasDebuff(RendIDs, 7);
-					if ((distTarget < 25.0f) && Functions::IsSpellReady("Charge")) {
+					if ((distTarget < 25.0f) && FunctionsLua::IsSpellReady("Charge")) {
 						//Charge
-						Functions::CastSpellByName("Charge");
+						FunctionsLua::CastSpellByName("Charge");
 					}
-					else if (!hasTargetAggro && !targetPlayer && Functions::IsSpellReady("Mocking Blow")) {
+					else if (!hasTargetAggro && !targetPlayer && FunctionsLua::IsSpellReady("Mocking Blow")) {
 						//Mocking Blow
-						Functions::CastSpellByName("Mocking Blow");
+						FunctionsLua::CastSpellByName("Mocking Blow");
 					}
-					else if ((localPlayer->rage < 25) && Combat && Functions::IsSpellReady("Bloodrage")) {
+					else if ((localPlayer->rage < 25) && Combat && FunctionsLua::IsSpellReady("Bloodrage")) {
 						//Bloodrage
-						Functions::CastSpellByName("Bloodrage");
+						FunctionsLua::CastSpellByName("Bloodrage");
 					}
-					else if (IsFacing && !targetStunned && Functions::UnitIsCaster("target") && Functions::IsSpellReady("Shield Bash")) {
+					else if (IsFacing && !targetStunned && FunctionsLua::UnitIsCaster("target") && FunctionsLua::IsSpellReady("Shield Bash")) {
 						//Shield Bash (Caster)
-						Functions::CastSpellByName("Shield Bash");
+						FunctionsLua::CastSpellByName("Shield Bash");
 					}
-					else if (targetPlayer && !HamstringDebuff && Functions::IsSpellReady("Hamstring")) {
+					else if (targetPlayer && !HamstringDebuff && FunctionsLua::IsSpellReady("Hamstring")) {
 						//Hamstring (PvP)
-						Functions::CastSpellByName("Hamstring");
+						FunctionsLua::CastSpellByName("Hamstring");
 					}
-					else if ((nbrCloseEnemy >= 3) && !ThunderClapDebuff && Functions::IsSpellReady("Thunder Clap")) {
+					else if ((nbrCloseEnemy >= 3) && !ThunderClapDebuff && FunctionsLua::IsSpellReady("Thunder Clap")) {
 						//Thunder Clap
-						Functions::CastSpellByName("Thunder Clap");
+						FunctionsLua::CastSpellByName("Thunder Clap");
 					}
-					else if (Functions::IsSpellReady("Execute")) {
+					else if (FunctionsLua::IsSpellReady("Execute")) {
 						//Execute
-						Functions::CastSpellByName("Execute");
+						FunctionsLua::CastSpellByName("Execute");
 					}
-					else if (Functions::IsSpellReady("Overpower")) {
+					else if (FunctionsLua::IsSpellReady("Overpower")) {
 						//Overpower
-						Functions::CastSpellByName("Overpower");
+						FunctionsLua::CastSpellByName("Overpower");
 					}
-					else if (!RendDebuff && (targetUnit->creatureType != Undead) && (targetUnit->creatureType != Mechanical) && Functions::IsSpellReady("Rend")) {
+					else if (!RendDebuff && (targetUnit->creatureType != Undead) && (targetUnit->creatureType != Mechanical) && FunctionsLua::IsSpellReady("Rend") && FunctionsLua::UnitIsElite("target")) {
 						//Rend
-						Functions::CastSpellByName("Rend");
+						FunctionsLua::CastSpellByName("Rend");
 					}
-					else if ((localPlayer->rage >= 25) && Functions::IsSpellReady("Heroic Strike")) {
-						//Heroic Strike (dump excessive rage)
-						Functions::CastSpellByName("Heroic Strike");
+					else if (FunctionsLua::IsSpellReady("Heroic Strike") && distTarget < 5.0f) {
+						//Heroic Strike
+						FunctionsLua::CastSpellByName("Heroic Strike");
 					}
-					else if (Functions::IsSpellReady("Sunder Armor")) {
-						//Sunder Armor (threat generator)
-						Functions::CastSpellByName("Sunder Armor");
+					else if (FunctionsLua::IsSpellReady("Sunder Armor") && FunctionsLua::UnitIsElite("target")) {
+						//Sunder Armor
+						FunctionsLua::CastSpellByName("Sunder Armor");
 					}
 					else if(Combat && localPlayer->rage < 5) {
 						//Defensive Stance
-						Functions::CastSpellByName("Defensive Stance");
+						FunctionsLua::CastSpellByName("Defensive Stance");
 					}
 				}
 				else if (DefensiveStance) {
@@ -115,93 +134,93 @@ void ListAI::WarriorTank() {
 					int nbrAggroParty = 0; for (int i = 1; i <= NumGroupMembers; i++) { nbrAggroParty += HasAggro[i].size(); }
 					int RendIDs[7] = { 772, 6546, 6547, 6548, 11572, 11573, 11574 };
 					bool RendDebuff = targetUnit->hasDebuff(RendIDs, 7);
-					if (!Combat && (distTarget > 8.0f) && (Functions::GetSpellCooldownDuration("Charge") < 1.0f)) {
+					if (!Combat && (distTarget > 8.0f) && (FunctionsLua::GetSpellCooldownDuration("Charge") < 1.0f)) {
 						//Battle Stance
-						Functions::CastSpellByName("Battle Stance");
+						FunctionsLua::CastSpellByName("Battle Stance");
 					}
-					else if ((nbrAggroParty >= 4) && Functions::IsSpellReady("Challenging Shout")) {
+					else if ((nbrAggroParty >= 4) && FunctionsLua::IsSpellReady("Challenging Shout")) {
 						//Challenging Shout
-						Functions::CastSpellByName("Challenging Shout");
+						FunctionsLua::CastSpellByName("Challenging Shout");
 					}
-					else if (!hasTargetAggro && !targetPlayer && Functions::IsSpellReady("Taunt")) {
+					else if (!hasTargetAggro && !targetPlayer && FunctionsLua::IsSpellReady("Taunt")) {
 						//Taunt
-						Functions::CastSpellByName("Taunt");
+						FunctionsLua::CastSpellByName("Taunt");
 					}
-					else if ((localPlayer->rage < 25) && Combat && Functions::IsSpellReady("Bloodrage")) {
+					else if ((localPlayer->rage < 25) && Combat && FunctionsLua::IsSpellReady("Bloodrage")) {
 						//Bloodrage
-						Functions::CastSpellByName("Bloodrage");
+						FunctionsLua::CastSpellByName("Bloodrage");
 					}
-					else if (IsFacing && !targetStunned && Functions::UnitIsCaster("target") && Functions::IsSpellReady("Shield Bash")) {
+					else if (IsFacing && !targetStunned && FunctionsLua::UnitIsCaster("target") && FunctionsLua::IsSpellReady("Shield Bash")) {
 						//Shield Bash (Caster)
-						Functions::CastSpellByName("Shield Bash");
+						FunctionsLua::CastSpellByName("Shield Bash");
 					}
-					else if ((nbrCloseEnemyFacing >= 1) && !ShieldBlockBuff && Functions::IsSpellReady("Shield Block")) {
+					else if ((nbrCloseEnemyFacing >= 1) && !ShieldBlockBuff && FunctionsLua::IsSpellReady("Shield Block")) {
 						//Shield Block
-						Functions::CastSpellByName("Shield Block");
+						FunctionsLua::CastSpellByName("Shield Block");
 					}
-					else if (Functions::IsSpellReady("Revenge")) {
+					else if (FunctionsLua::IsSpellReady("Revenge")) {
 						//Revenge
-						Functions::CastSpellByName("Revenge");
+						FunctionsLua::CastSpellByName("Revenge");
 					}
-					else if (!targetStunned && !targetConfused && Functions::IsSpellReady("Concussion Blow")) {
+					else if (!targetStunned && !targetConfused && FunctionsLua::IsSpellReady("Concussion Blow")) {
 						//Concussion Blow
-						Functions::CastSpellByName("Concussion Blow");
+						FunctionsLua::CastSpellByName("Concussion Blow");
 					}
-					else if (Functions::IsSpellReady("Shield Slam")) {
+					else if (FunctionsLua::IsSpellReady("Shield Slam")) {
 						//Shield Slam
-						Functions::CastSpellByName("Shield Slam");
+						FunctionsLua::CastSpellByName("Shield Slam");
 					}
-					else if ((localPlayer->rage >= 25) && (nbrCloseEnemyFacing >= 2) && Functions::IsSpellReady("Cleave")) {
+					else if ((localPlayer->rage >= 20) && (nbrCloseEnemyFacing >= 2) && FunctionsLua::IsSpellReady("Cleave")) {
 						//Cleave (dump excessive rage)
-						Functions::CastSpellByName("Cleave");
+						FunctionsLua::CastSpellByName("Cleave");
 					}
-					else if (!RendDebuff && (targetUnit->creatureType != Undead) && (targetUnit->creatureType != Mechanical) && Functions::IsSpellReady("Rend")) {
+					else if (!RendDebuff && (targetUnit->creatureType != Undead) && (targetUnit->creatureType != Mechanical) && FunctionsLua::IsSpellReady("Rend") && FunctionsLua::UnitIsElite("target")) {
 						//Rend
-						Functions::CastSpellByName("Rend");
+						FunctionsLua::CastSpellByName("Rend");
 					}
-					else if ((localPlayer->rage >= 25) && Functions::IsSpellReady("Heroic Strike")) {
-						//Heroic Strike (dump excessive rage)
-						Functions::CastSpellByName("Heroic Strike");
-					}
-					else if (Functions::IsSpellReady("Sunder Armor")) {
+					else if (FunctionsLua::IsSpellReady("Sunder Armor") && FunctionsLua::UnitIsElite("target")) {
 						//Sunder Armor (threat generator)
-						Functions::CastSpellByName("Sunder Armor");
+						FunctionsLua::CastSpellByName("Sunder Armor");
+					}
+					else if ((localPlayer->rage >= 20) && FunctionsLua::IsSpellReady("Heroic Strike")) {
+						//Heroic Strike (dump excessive rage)
+						FunctionsLua::CastSpellByName("Heroic Strike");
 					}
 				}
 				else if (BerserkerStance) {
 					int HamstringIDs[3] = { 1715, 7372, 7373 };
 					bool HamstringDebuff = targetUnit->hasDebuff(HamstringIDs, 3);
-					if ((distTarget < 25.0f) && Functions::IsSpellReady("Intercept")) {
+					if ((distTarget < 25.0f) && FunctionsLua::IsSpellReady("Intercept")) {
 						//Intercept
-						Functions::CastSpellByName("Intercept");
+						FunctionsLua::CastSpellByName("Intercept");
 					}
-					else if ((localPlayer->rage < 25) && Combat && Functions::IsSpellReady("Bloodrage")) {
+					else if ((localPlayer->rage < 25) && Combat && FunctionsLua::IsSpellReady("Bloodrage")) {
 						//Bloodrage
-						Functions::CastSpellByName("Bloodrage");
+						FunctionsLua::CastSpellByName("Bloodrage");
 					}
-					else if (Functions::IsSpellReady("Berserker Rage")) {
+					else if (FunctionsLua::IsSpellReady("Berserker Rage")) {
 						//Berserker Rage
-						Functions::CastSpellByName("Berserker Rage");
+						FunctionsLua::CastSpellByName("Berserker Rage");
 					}
-					else if (IsFacing && !targetStunned && Functions::UnitIsCaster("target") && Functions::IsSpellReady("Pummel")) {
+					else if (IsFacing && !targetStunned && FunctionsLua::UnitIsCaster("target") && FunctionsLua::IsSpellReady("Pummel")) {
 						//Pummel (Caster)
-						Functions::CastSpellByName("Pummel");
+						FunctionsLua::CastSpellByName("Pummel");
 					}
-					else if (targetPlayer && !HamstringDebuff && Functions::IsSpellReady("Hamstring")) {
+					else if (targetPlayer && !HamstringDebuff && FunctionsLua::IsSpellReady("Hamstring")) {
 						//Hamstring (PvP)
-						Functions::CastSpellByName("Hamstring");
+						FunctionsLua::CastSpellByName("Hamstring");
 					}
-					else if ((nbrCloseEnemy >= 3) && Functions::IsSpellReady("Whirlwind")) {
+					else if ((nbrCloseEnemy >= 3) && FunctionsLua::IsSpellReady("Whirlwind")) {
 						//Whirlwind
-						Functions::CastSpellByName("Whirlwind");
+						FunctionsLua::CastSpellByName("Whirlwind");
 					}
-					else if (Functions::IsSpellReady("Execute")) {
+					else if (FunctionsLua::IsSpellReady("Execute")) {
 						//Execute
-						Functions::CastSpellByName("Execute");
+						FunctionsLua::CastSpellByName("Execute");
 					}
 					else if(Combat && localPlayer->rage < 5) {
 						//Defensive Stance
-						Functions::CastSpellByName("Defensive Stance");
+						FunctionsLua::CastSpellByName("Defensive Stance");
 					}
 				}
 			}

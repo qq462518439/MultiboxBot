@@ -265,289 +265,92 @@ class Interface(tk.Tk):
                 msg = "K"+str(i+1)
                 self.serverthread.sendGroupClients(bytes(msg, 'utf-8'))
                 break
-        
-    def adapt_listCoord(self, nbr_monitor):
-        x_gap = 8
-        resize_coef = [0.017, 1.017]
-        if(nbr_monitor == 1):
-            monitor = win32api.EnumDisplayMonitors()
+
+    def adapt_listCoord(self):
+        monitor = win32api.EnumDisplayMonitors()
+        x_gap = 8; width_increase = 18; height_increase = 23
+        if (len(monitor) == 1):
             monitor_x0 = monitor[0][2][0]; monitor_y0 = monitor[0][2][1]
             monitor_width = monitor[0][2][2] - monitor_x0
             monitor_height = monitor[0][2][3] - monitor_y0
-            if(self.NBR_ACCOUNT == 1):
-                self.listCoord.append((monitor_x0-x_gap, monitor_y0, monitor_width, monitor_height))
-            elif(self.NBR_ACCOUNT == 2):
-                self.listCoord.append((monitor_x0-x_gap, monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*1.01)))
-                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*1.01)))
-            elif(self.NBR_ACCOUNT == 3):
-                self.listCoord.append((monitor_x0-x_gap, monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*1.01)))
-                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
-                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 4):
-                self.listCoord.append((monitor_x0-x_gap, monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
-                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
-                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
-                self.listCoord.append((monitor_x0-x_gap, monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 5):
-                self.listCoord.append((monitor_x0-x_gap, monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
-                self.listCoord.append((monitor_x0-x_gap+(monitor_width//2), monitor_y0, int(monitor_width*(1+(resize_coef[0]*1)))//2, int(monitor_height*resize_coef[1])//2))
-                self.listCoord.append((monitor_x0-x_gap+((monitor_width*2)//3), monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1.5)))//3, int(monitor_height*resize_coef[1])//2))
-                self.listCoord.append((monitor_x0-x_gap, monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1.5)))//3, int(monitor_height*resize_coef[1])//2))
-                self.listCoord.append((monitor_x0-x_gap+(monitor_width//3), monitor_y0+(monitor_height//2), int(monitor_width*(1+(resize_coef[0]*1.5)))//3, int(monitor_height*resize_coef[1])//2))
-        elif(nbr_monitor >= 2):
-            monitor = win32api.EnumDisplayMonitors()
-            monitor1_x0 = monitor[0][2][0]; monitor1_y0 = monitor[0][2][1]
-            monitor1_x1 = monitor[0][2][2]; monitor1_y1 = monitor[0][2][3]
+            nbr_top = self.NBR_ACCOUNT // 2
+            nbr_bottom = self.NBR_ACCOUNT - nbr_top
+            top_nbr = 0; bottom_nbr = 0
+            for i in range(self.NBR_ACCOUNT):
+                if (i <= self.NBR_ACCOUNT // 2):
+                    x = ((monitor_width // nbr_top) * top_nbr) - x_gap
+                    y = monitor_height // 2
+                    width = (monitor_width // nbr_top)+width_increase
+                    height = (monitor_height // 2)
+                    self.listCoord.append((x, y-height_increase, width, height+height_increase))
+                    top_nbr += 1
+                else:
+                    x = monitor_x0 + ((monitor_width // nbr_bottom) * bottom_nbr) - x_gap
+                    width = (monitor_width // nbr_bottom)+width_increase
+                    height = monitor_height
+                    if (nbr_top > 0): height = monitor_height // 2
+                    self.listCoord.append((x, -height_increase, width, height+height_increase))
+                    bottom_nbr += 1
+        elif (len(monitor) == 2):
+            main_monitor = 0; second_monitor = 1
+            if (win32api.GetMonitorInfo(monitor[1][0])['Flags'] & win32con.MONITORINFOF_PRIMARY):
+                main_monitor = 1
+                second_monitor = 0
+            monitor1_x0 = monitor[main_monitor][2][0]; monitor1_y0 = monitor[main_monitor][2][1]
+            monitor1_x1 = monitor[main_monitor][2][2]; monitor1_y1 = monitor[main_monitor][2][3]
             monitor1_width = monitor1_x1 - monitor1_x0
             monitor1_height = monitor1_y1 - monitor1_y0
-            monitor2_x0 = monitor[1][2][0]; monitor2_y0 = monitor[1][2][1]
-            monitor2_x1 = monitor[1][2][2]; monitor2_y1 = monitor[1][2][3]
-            monitor2_width = monitor[1][2][2] - monitor2_x0
-            monitor2_height = monitor[1][2][3] - monitor2_y0
-            if(self.NBR_ACCOUNT == 1):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, monitor1_width, monitor1_height))
-            elif(self.NBR_ACCOUNT == 2):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, monitor1_width, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, monitor2_width, monitor2_height))
-            elif(self.NBR_ACCOUNT == 3):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, monitor1_width, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, monitor2_height))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//2), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, monitor2_height))
-            elif(self.NBR_ACCOUNT == 4):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, monitor1_width, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, monitor2_height))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//2), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//2), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 5):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, monitor1_width, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//2), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//2), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 6):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//2), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//2), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-            elif(self.NBR_ACCOUNT == 7):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//2), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1)))//2, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//3), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//3), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 8):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//3), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//3), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//3), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//3), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 9):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//3), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//3), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*1.5)))//3, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 10):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 11):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//4), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 12):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//4), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2)))//4, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//5), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//5), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//5), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//5), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 13):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//5), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//5), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//5), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//5), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//5), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//5), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//5), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//5), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 14):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//5), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//5), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//5), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//5), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*2.5)))//5, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 15):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, monitor1_height))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 16):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//6), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 17):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//6), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3)))//6, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*6//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 18):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*6//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*6//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//7), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 19):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*6//7), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*3.5)))//7, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*7//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*6//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-            elif(self.NBR_ACCOUNT == 20):
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//8), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//8), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//8), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0, int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//8), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//8), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*6//8), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*7//8), monitor2_y0, int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap+(monitor1_width//2), monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*7//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*6//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*5//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*4//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor1_x0-x_gap, monitor1_y0+(monitor1_height//2), int(monitor1_width*(1+resize_coef[0]))//2, int(monitor1_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*3//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width*2//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap+(monitor2_width//8), monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
-                self.listCoord.append((monitor2_x0-x_gap, monitor2_y0+(monitor2_height//2), int(monitor2_width*(1+(resize_coef[0]*4)))//8, int(monitor2_height*resize_coef[1])//2))
+            monitor2_x0 = monitor[second_monitor][2][0]; monitor2_y0 = monitor[second_monitor][2][1]
+            monitor2_x1 = monitor[second_monitor][2][0]; monitor2_y1 = monitor[second_monitor][2][1]
+            monitor2_width = monitor[second_monitor][2][2] - monitor2_x0
+            monitor2_height = monitor[second_monitor][2][3] - monitor2_y0
+            nbr_principal = ((self.NBR_ACCOUNT - 1) // 5) + 1
+            nbr_top = [nbr_principal // 2, (self.NBR_ACCOUNT - nbr_principal) // 2]
+            nbr_bottom = [nbr_principal - nbr_top[0], self.NBR_ACCOUNT - nbr_top[1] - nbr_principal]
+            top_nbr = [0, 0]; bottom_nbr = [0, 0]
+            for i in range(self.NBR_ACCOUNT):
+                if (i % 5 == 0):
+                    if (i < nbr_top[0] * 5):
+                        x = monitor1_x0 + ((monitor1_width // nbr_top[0]) * top_nbr[0]) - x_gap
+                        width = (monitor1_width // nbr_top[0])+width_increase
+                        height = (monitor1_height // 2)
+                        self.listCoord.append((x, 0, width, height+height_increase))
+                        top_nbr[0] += 1
+                    else:
+                        x = monitor1_x0 + ((monitor1_width // nbr_bottom[0]) * bottom_nbr[0]) - x_gap
+                        y = monitor1_height // 2
+                        width = (monitor1_width // nbr_bottom[0])+width_increase
+                        height = monitor1_height
+                        if (nbr_top[0] > 0): height = (monitor1_height // 2)
+                        self.listCoord.append((x, y-15, width, height+height_increase))
+                        bottom_nbr[0] += 1
+                else:
+                    if (i <= nbr_top[1] + round(nbr_principal / 2)):
+                        x = monitor2_x0 + ((monitor2_width // nbr_top[1]) * top_nbr[1]) - x_gap
+                        width = (monitor2_width // nbr_top[1])+width_increase
+                        height = (monitor2_height // 2)
+                        self.listCoord.append((x, -40, width, height+height_increase))
+                        top_nbr[1] += 1
+                    else:
+                        x = monitor2_x0 + ((monitor2_width // nbr_bottom[1]) * bottom_nbr[1]) - x_gap
+                        y = monitor2_height // 2
+                        width = (monitor2_width // nbr_bottom[1])+width_increase
+                        height = monitor2_height
+                        if (nbr_top[1] > 0): height = (monitor2_height // 2)
+                        self.listCoord.append((x, y-32-height_increase, width, height+height_increase))
+                        bottom_nbr[1] += 1
         
     def launch_repair_clients(self):
         #Launch or Repair clients
         nbr_monitor = win32api.GetSystemMetrics(win32con.SM_CMONITORS)
         if self.LaunchRepair_Button.config('text')[-1] == 'Launch':
-            if(self.NbrClient_Entry.get() != ""): self.NBR_ACCOUNT = int(self.NbrClient_Entry.get())
             if(self.NbrClient_Entry.get() == ""): messagebox.showerror('Error', 'You must specify the number of clients !')
-            elif(self.NBR_ACCOUNT <= 0): messagebox.showerror('Error', 'You can\'t have '+str(self.NBR_ACCOUNT)+' clients !')
-            elif((self.NBR_ACCOUNT > 5 and nbr_monitor <= 1) or (self.NBR_ACCOUNT > 20)): #25 soon...
-                messagebox.showerror('Error', 'Not enough monitors (' + str(nbr_monitor) + ' currently) for ' + str(self.NBR_ACCOUNT) + ' accounts')
+            elif (int(self.NbrClient_Entry.get()) <= 0): messagebox.showerror('Error', 'You can\'t have ' + str(self.NBR_ACCOUNT) + ' clients !')
             else:
+                self.NBR_ACCOUNT = int(self.NbrClient_Entry.get())
                 self.NbrClient_Entry.configure(state='disabled')
                 self.LaunchRepair_Button.config(text='Repair')
-                self.adapt_listCoord(nbr_monitor)
+                self.adapt_listCoord()
                 for i in range(self.NBR_ACCOUNT):
                     p1 = subprocess.Popen(["./src/Bootstrap.exe", self.PATH_WoW])
                     p1.wait()
@@ -555,7 +358,7 @@ class Interface(tk.Tk):
                     hwnd = win32gui.FindWindow(None, "World of Warcraft")
                     win32gui.SetWindowText(hwnd, "WoW"+str(i+1))
                     self.hwndACC.append(hwnd)
-                    if(i == 0 and ((self.NBR_ACCOUNT <= 5 and nbr_monitor == 2) or (self.NBR_ACCOUNT == 1))): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+                    if(i == 0 and ((self.NBR_ACCOUNT <= 5 and nbr_monitor >= 2) or (self.NBR_ACCOUNT == 1))): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
                     else:
                         win32gui.MoveWindow(hwnd, self.listCoord[i][0], self.listCoord[i][1], self.listCoord[i][2], self.listCoord[i][3], True)
                         if(i == 1 and self.NBR_ACCOUNT == 2 and nbr_monitor == 2): win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
@@ -636,8 +439,8 @@ class client_thread(threading.Thread):
                 data = self.conn.recv(128)
                 if(data):
                     data = data.decode('utf-8')
-                    ind = data.find("Class")
-                    if(ind > -1):
+                    if(data.find("Class") > -1):
+                        ind = data.find("Class")
                         self.Name = data[5:ind]
                         self.Class = data[ind+6::]
                         interface.Name_Label[self.index].config(text=self.Name)
@@ -699,13 +502,13 @@ class client_thread(threading.Thread):
                     if(len(interface.serverthread.clients_thread[i].Name) <= 0): continue
                     if(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                         msg = ('Role0_'+str(i).zfill(2)+'_'+str(len(interface.serverthread.clients_thread[i].Name)-1).zfill(2)+'_'+interface.serverthread.clients_thread[i].Name)
-                        interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
-                    elif(isATank(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
+                        interface.serverthread.sendAllClients(bytes(msg, 'utf-8'))
+                    elif(isAMelee(interface.serverthread.clients_thread[i].Class, interface.serverthread.clients_thread[i].currentSpec)):
                         msg = ('Role1_'+str(i).zfill(2)+'_'+str(len(interface.serverthread.clients_thread[i].Name)-1).zfill(2)+'_'+interface.serverthread.clients_thread[i].Name)
-                        interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
+                        interface.serverthread.sendAllClients(bytes(msg, 'utf-8'))
                     else:
                         msg = ('Role2_'+str(i).zfill(2)+'_'+str(len(interface.serverthread.clients_thread[i].Name)-1).zfill(2)+'_'+interface.serverthread.clients_thread[i].Name)
-                        interface.serverthread.sendGroupClients(bytes(msg, 'utf-8'), self.index)
+                        interface.serverthread.sendAllClients(bytes(msg, 'utf-8'))
                 #Specialisation
                 for i in range(len(interface.OptionList[self.index])):
                     if(self.currentSpec == interface.OptionList[self.index][i]):

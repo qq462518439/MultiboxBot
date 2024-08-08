@@ -23,21 +23,16 @@ static void DruidAttack() {
 		//Specific for Hurricane cast:
 		Position cluster_center = Position(0, 0, 0); int cluster_unit;
 		std::tie(cluster_center, cluster_unit) = Functions::getAOETargetPos(25, 30);
-		int MoonkinFormIDs[1] = { 24858 }; bool MoonkinFormBuff = localPlayer->hasBuff(MoonkinFormIDs, 1);
 		int MoonfireIDs[10] = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 };
 		bool MoonfireDebuff = targetUnit->hasDebuff(MoonfireIDs, 10);
 		bool targetPlayer = targetUnit->flags & UNIT_FLAG_PLAYER_CONTROLLED;
 		if (!FunctionsLua::IsCurrentAction(FunctionsLua::GetSlot("Attack"))) FunctionsLua::CastSpellByName("Attack");
-		if (!MoonkinFormBuff && FunctionsLua::IsSpellReady("Moonkin Form")) {
-			//Moonkin Form
-			FunctionsLua::CastSpellByName("Moonkin Form");
-		}
-		else if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (cluster_unit >= 4) && FunctionsLua::IsSpellReady("Hurricane")) {
+		if ((localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (cluster_unit >= 4) && FunctionsLua::IsSpellReady("Hurricane")) {
 			//Hurricane
 			FunctionsLua::CastSpellByName("Hurricane");
 			Functions::ClickAOE(cluster_center);
 		}
-		else if (IsFacing && !MoonfireDebuff && FunctionsLua::IsSpellReady("Moonfire") && ((localPlayer->prctMana > 50.0f) || (MoonkinFormBuff))) {
+		else if (IsFacing && !MoonfireDebuff && FunctionsLua::IsSpellReady("Moonfire") && ((localPlayer->prctMana > 75) || !FunctionsLua::IsInGroup())) {
 			//Moonfire
 			FunctionsLua::CastSpellByName("Moonfire");
 		}
@@ -46,14 +41,10 @@ static void DruidAttack() {
 			FunctionsLua::CastSpellByName("Entangling Roots");
 			if (localPlayer->isCasting()) current_time = time(0);
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Wrath") && ((localPlayer->prctMana > 50.0f) || (MoonkinFormBuff))) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Wrath") && ((localPlayer->prctMana > 75) || !FunctionsLua::IsInGroup())) {
 			//Wrath
 			FunctionsLua::CastSpellByName("Wrath");
 		}
-	}
-	else if (!Combat && (localPlayer->prctMana > 33.0f) && MoonkinFormBuff) {
-		//Disable Moonkin Form
-		FunctionsLua::CastSpellByName("Moonkin Form");
 	}
 }
 
@@ -99,7 +90,15 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		FunctionsLua::CastSpellByName("Tranquility");
 		return 0;
 	}
-	else if ((HpRatio < 50) && (distAlly < 40.0f) && !RegrowthBuff && FunctionsLua::IsSpellReady("Regrowth")) {
+	else if ((HpRatio < 40) && (distAlly < 40.0f) && (RegrowthBuff || RejuvenationBuff) && FunctionsLua::IsSpellReady("Swiftmend")) {
+		//Swiftmend
+		localPlayer->SetTarget(healGuid);
+		FunctionsLua::CastSpellByName("Swiftmend");
+		LastTarget = indexP;
+		if (!los_heal) Moving = 5;
+		return 0;
+	}
+	else if ((HpRatio < 60) && (distAlly < 40.0f) && !RegrowthBuff && FunctionsLua::IsSpellReady("Regrowth")) {
 		//Regrowth
 		localPlayer->SetTarget(healGuid);
 		FunctionsLua::CastSpellByName("Regrowth");
@@ -110,12 +109,13 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	else if ((HpRatio < 40) && (distAlly < 40.0f) && FunctionsLua::IsSpellReady("Healing Touch")) {
 		//Healing Touch
 		localPlayer->SetTarget(healGuid);
+		if(FunctionsLua::IsSpellReady("Nature's Swiftness")) FunctionsLua::CastSpellByName("Nature's Swiftness");
 		FunctionsLua::CastSpellByName("Healing Touch");
 		LastTarget = indexP;
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpRatio < 70) && (distAlly < 40.0f) && !RejuvenationBuff && FunctionsLua::IsSpellReady("Rejuvenation")) {
+	else if ((HpRatio < 85) && (distAlly < 40.0f) && !RejuvenationBuff && FunctionsLua::IsSpellReady("Rejuvenation")) {
 		//Rejuvenation
 		localPlayer->SetTarget(healGuid);
 		FunctionsLua::CastSpellByName("Rejuvenation");
@@ -126,7 +126,7 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	return 1;
 }
 
-void ListAI::DruidBalance() {
+void ListAI::DruidHeal() {
 	int HealingTouchIDs[11] = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297 };
 	int RegrowthIDs[9] = { 8936, 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 };
 	if ((ListUnits.size() > LastTarget) && ((localPlayer->isCasting(HealingTouchIDs, 11) && (ListUnits[LastTarget].prctHP > 80))
@@ -205,11 +205,24 @@ void ListAI::DruidBalance() {
 				FunctionsLua::CastSpellByName("Cure Poison");
 			}
 			else {
-				int tmp = 1; unsigned int index = 0;
-				while (tmp == 1 and index < HealTargetArray.size()) {
-					tmp = HealGroup(HealTargetArray[index]);
-					index = index + 1;
+				//Priority in function of the number of heals in current group
+				int tmp = 1; unsigned int index_start = 0;
+				for (unsigned int i = 0; i < leaderInfos.size(); i++) {
+					if (get<1>(leaderInfos[i]) == 3) {
+						if (get<0>(leaderInfos[i]) == localPlayer->name) break;
+						for (int y = 0; y < NumGroupMembers; y++) {
+							if (GroupMember[y] != NULL && get<0>(leaderInfos[i]) == GroupMember[y]->name) {
+								index_start = index_start + 1;
+								break;
+							}
+						}
+					}
 				}
+				unsigned int index = index_start; unsigned int n = HealTargetArray.size();
+				do {
+					tmp = HealGroup(HealTargetArray[index]);
+					index = (index + 1) % n;
+				} while (tmp == 1 && index != (index_start - 1) % n);
 				if (tmp == 1 && !passiveGroup) DruidAttack();
 			}
 		});

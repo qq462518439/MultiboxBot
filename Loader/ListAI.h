@@ -2,12 +2,13 @@
 #define ListAI_H
 #include "MemoryManager.h"
 #include "WoWObject.h"
-#include "Functions.h"
+#include "FunctionsLua.h"
 #include "Game.h"
 
 class ListAI {
 public:
 	static void DruidBalance();
+	static void DruidHeal();
 	static void HunterDps();
 	static void MageDps();
 	static void PaladinHeal();

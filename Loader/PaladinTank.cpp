@@ -3,15 +3,36 @@
 #include <iostream>
 
 static void PaladinAttack() {
-	if (tankAutoFocus && (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable)) {
-		for (int i = NumGroupMembers; i >= 0; i--) {
-			if (HasAggro[i].size() > 0) {
-				localPlayer->SetTarget(HasAggro[i][0]->Guid);
-				break;
+	if ((Leader == NULL) || (Leader->Guid != localPlayer->Guid) || tankAutoFocus) {
+		bool targetFocusingTank = false;
+		if (targetUnit != NULL) {
+			for (int i = 1; i <= NumGroupMembers; i++) {
+				if (GroupMember[i] != NULL && targetUnit->targetGuid == GroupMember[i]->Guid && GroupMember[i]->role == 0) {
+					targetFocusingTank = true;
+					break;
+				}
+			}
+		}
+		if (targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable || targetFocusingTank) {
+			bool foundTarget = false;
+			for (int i = NumGroupMembers; i >= 0; i--) {
+				if (GroupMember[i] != NULL && GroupMember[i]->role != 0 && HasAggro[i].size() > 0) {
+					localPlayer->SetTarget(HasAggro[i][0]->Guid);
+					foundTarget = true;
+					break;
+				}
+			}
+			if ((targetUnit == NULL || targetUnit->isdead || !targetUnit->attackable) && !foundTarget) {
+				for (int i = NumGroupMembers; i >= 0; i--) { //Tank also
+					if (HasAggro[i].size() > 0) {
+						localPlayer->SetTarget(HasAggro[i][0]->Guid);
+						break;
+					}
+				}
 			}
 		}
 	}
-	else if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
+	if (targetUnit != NULL && targetUnit->attackable && !targetUnit->isdead) {
 		bool targetStunned = targetUnit->flags & UNIT_FLAG_STUNNED;
 		bool targetConfused = targetUnit->flags & UNIT_FLAG_CONFUSED;
 		int SoRIDs[9] = { 20154, 21084, 20287, 20288, 20289, 20290, 20291, 20292, 20293 };
@@ -21,38 +42,38 @@ static void PaladinAttack() {
 		bool SealBuff = (SoRBuff || SoWBuff);
 		int SoWDebuffIDs[3] = { 20186, 20354, 20355 };
 		bool SoWDebuff = targetUnit->hasDebuff(SoWDebuffIDs, 3);
-		if (!Functions::IsCurrentAction(Functions::GetSlot("Attack"))) Functions::CastSpellByName("Attack");
-		if ((localPlayer->prctMana < 33) && !SealBuff && Functions::IsSpellReady("Seal of Wisdom")) {
+		if (!FunctionsLua::IsCurrentAction(FunctionsLua::GetSlot("Attack"))) FunctionsLua::CastSpellByName("Attack");
+		if ((localPlayer->prctMana < 33) && !SealBuff && FunctionsLua::IsSpellReady("Seal of Wisdom")) {
 			//Seal of Wisdom
-			Functions::CastSpellByName("Seal of Wisdom");
+			FunctionsLua::CastSpellByName("Seal of Wisdom");
 		}
-		else if (!SealBuff && Functions::IsSpellReady("Seal of Righteousness")) {
+		else if (!SealBuff && FunctionsLua::IsSpellReady("Seal of Righteousness")) {
 			//Seal of Righteousness
-			Functions::CastSpellByName("Seal of Righteousness");
+			FunctionsLua::CastSpellByName("Seal of Righteousness");
 		}
-		else if ((Functions::getNbrCreatureType(20, Undead, Demon) >= 4) && Functions::IsSpellReady("Holy Wrath")) {
+		else if ((Functions::getNbrCreatureType(20, Undead, Demon) >= 4) && FunctionsLua::IsSpellReady("Holy Wrath")) {
 			//Holy Wrath
-			Functions::CastSpellByName("Holy Wrath");
+			FunctionsLua::CastSpellByName("Holy Wrath");
 		}
-		else if ((nbrCloseEnemy >= 2) && Functions::IsSpellReady("Consecration")) {
+		else if ((nbrCloseEnemy >= 2) && FunctionsLua::IsSpellReady("Consecration")) {
 			//Consecration
-			Functions::CastSpellByName("Consecration");
+			FunctionsLua::CastSpellByName("Consecration");
 		}
-		else if (SealBuff && (distTarget < 10) && ((localPlayer->prctMana > 20) || (SoWBuff && !SoWDebuff && Functions::UnitIsElite("target"))) && Functions::IsSpellReady("Judgement")) {
+		else if (SealBuff && (distTarget < 10) && ((localPlayer->prctMana > 20) || (SoWBuff && !SoWDebuff && FunctionsLua::UnitIsElite("target"))) && FunctionsLua::IsSpellReady("Judgement")) {
 			//Judgement
-			Functions::CastSpellByName("Judgement");
+			FunctionsLua::CastSpellByName("Judgement");
 		}
-		else if (!targetStunned && !targetConfused && (distTarget < 10) && Functions::IsSpellReady("Hammer of Justice")) {
+		else if (!targetStunned && !targetConfused && (distTarget < 10) && FunctionsLua::IsSpellReady("Hammer of Justice")) {
 			//Hammer of Justice
-			Functions::CastSpellByName("Hammer of Justice");
+			FunctionsLua::CastSpellByName("Hammer of Justice");
 		}
-		else if (((localPlayer->prctMana > 33) || (nbrCloseEnemy <= 1)) && (distTarget < 30) && ((targetUnit->creatureType == Undead) || (targetUnit->creatureType == Demon)) && Functions::IsSpellReady("Exorcism")) {
+		else if (((localPlayer->prctMana > 33) || (nbrCloseEnemy <= 1)) && (distTarget < 30) && ((targetUnit->creatureType == Undead) || (targetUnit->creatureType == Demon)) && FunctionsLua::IsSpellReady("Exorcism")) {
 			//Exorcism
-			Functions::CastSpellByName("Exorcism");
+			FunctionsLua::CastSpellByName("Exorcism");
 		}
-		else if ((distTarget < 30) && (targetUnit->prctHP < 20) && (localPlayer->prctMana > 33) && Functions::IsSpellReady("Hammer of Wrath")) {
+		else if ((distTarget < 30) && (targetUnit->prctHP < 20) && (localPlayer->prctMana > 33) && FunctionsLua::IsSpellReady("Hammer of Wrath")) {
 			//Hammer of Wrath
-			Functions::CastSpellByName("Hammer of Wrath");
+			FunctionsLua::CastSpellByName("Hammer of Wrath");
 		}
 	}
 }
@@ -73,57 +94,57 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 		}
 	}
 	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
-	if (Combat && (distAlly < 40.0f) && (HpRatio < 20) && Functions::IsSpellReady("Lay on Hands")) {
+	if (Combat && isParty && (distAlly < 40.0f) && (HpRatio < 20) && FunctionsLua::IsSpellReady("Lay on Hands")) {
 		//Lay on Hands
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Lay on Hands");
+		FunctionsLua::CastSpellByName("Lay on Hands");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && Functions::IsSpellReady("Divine Protection")) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 25) && !ForbearanceDebuff && FunctionsLua::IsSpellReady("Divine Protection")) {
 		//Divine Protection / Divine Shield
-		Functions::CastSpellByName("Divine Protection"); Functions::CastSpellByName("Divine Shield");
+		FunctionsLua::CastSpellByName("Divine Protection"); FunctionsLua::CastSpellByName("Divine Shield");
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 40) && (FunctionsLua::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
-		Functions::UseItem("Healthstone");
+		FunctionsLua::UseItem("Healthstone");
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 35) && (FunctionsLua::GetHPotionCD() < 1.25)) {
 		//Healing Potion
-		Functions::UseItem("Healing Potion");
+		FunctionsLua::UseItem("Healing Potion");
 		return 0;
 	}
-	else if (Combat && isParty && (distAlly < 30.0f) && (HpRatio < 33) && !ForbearanceDebuff && Functions::IsSpellReady("Blessing of Protection")) {
+	else if (Combat && isParty && (distAlly < 30.0f) && (HpRatio < 33) && !ForbearanceDebuff && FunctionsLua::IsSpellReady("Blessing of Protection")) {
 		//Blessing of Protection
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Blessing of Protection");
+		FunctionsLua::CastSpellByName("Blessing of Protection");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if (Combat && isParty && (distAlly < 30.0f) && (HpRatio < 60) && !BoSacrificeBuff && Functions::IsSpellReady("Blessing of Sacrifice")) {
+	else if (Combat && isParty && (distAlly < 30.0f) && (HpRatio < 60) && !BoSacrificeBuff && FunctionsLua::IsSpellReady("Blessing of Sacrifice")) {
 		//Blessing of Sacrifice
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Blessing of Sacrifice");
+		FunctionsLua::CastSpellByName("Blessing of Sacrifice");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if ((!Combat || nbrAggro == 0) && (distAlly < 40.0f) && (HpRatio < 50) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Flash of Light")) {
+	else if ((!Combat || nbrAggro == 0) && (distAlly < 40.0f) && (HpRatio < 50) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Flash of Light")) {
 		//Flash of Light
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Flash of Light");
+		FunctionsLua::CastSpellByName("Flash of Light");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
 	}
-	else if ((!Combat || nbrAggro == 0) && (distAlly < 40.0f) && (HpRatio < 33) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Holy Light")) {
+	else if ((!Combat || nbrAggro == 0) && (distAlly < 40.0f) && (HpRatio < 33) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Holy Light")) {
 		//Holy Light
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Holy Light");
+		FunctionsLua::CastSpellByName("Holy Light");
 		LastTarget = indexP;
 		if (Combat) Functions::LuaCall("TargetLastEnemy()");
 		return 0;
@@ -143,66 +164,79 @@ void ListAI::PaladinTank() {
 		ThreadSynchronizer::RunOnMainThread([=]() {
 			int BoSanctuaryIDs[4] = { 20911, 20912, 20913, 20914 };
 			bool BoSanctuaryBuff = localPlayer->hasBuff(BoSanctuaryIDs, 4);
+			int BoKingsIDs[1] = { 20217 };
+			bool BoKingsBuff = localPlayer->hasBuff(BoKingsIDs, 1);
+			WoWUnit* BoKingsTarget = Functions::GetMissingBuff(BoKingsIDs, 1);
 			int RetributionAuraIDs[5] = { 7294, 10298, 10299, 10300, 10301 };
 			bool RetributionAuraBuff = localPlayer->hasBuff(RetributionAuraIDs, 5);
 			int RighteousFuryIDs[1] = { 25780 };
 			bool RighteousFuryBuff = localPlayer->hasBuff(RighteousFuryIDs, 1);
 			int BoSalvationIDs[1] = { 1038 };
 			WoWUnit* BoSalvationTarget = Functions::GetMissingBuff(BoSalvationIDs, 1);
-			WoWUnit* PurifyTarget = Functions::GetGroupDispel("Disease", "Poison");
-			WoWUnit* CleanseTarget = Functions::GetGroupDispel("Disease", "Poison", "Magic");
+			WoWUnit* PurifyTarget = FunctionsLua::GetGroupDispel("Disease", "Poison");
+			WoWUnit* CleanseTarget = FunctionsLua::GetGroupDispel("Disease", "Poison", "Magic");
 			WoWUnit* deadPlayer = Functions::GetGroupDead(1);
-			if (!RetributionAuraBuff && Functions::IsPlayerSpell("Retribution Aura")) {
+			if (!RetributionAuraBuff && FunctionsLua::IsPlayerSpell("Retribution Aura")) {
 				//Retribution Aura
-				Functions::CastSpellByName("Retribution Aura");
+				FunctionsLua::CastSpellByName("Retribution Aura");
 			}
-			else if (!RighteousFuryBuff && Functions::IsSpellReady("Righteous Fury")) {
+			else if (!RighteousFuryBuff && FunctionsLua::IsSpellReady("Righteous Fury")) {
 				//Righteous Fury
-				Functions::CastSpellByName("Righteous Fury");
+				FunctionsLua::CastSpellByName("Righteous Fury");
 			}
-			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (deadPlayer != NULL) && Functions::IsSpellReady("Redemption")) {
+			else if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (deadPlayer != NULL) && FunctionsLua::IsSpellReady("Redemption")) {
 				//Redemption
 				localPlayer->SetTarget(deadPlayer->Guid);
-				Functions::CastSpellByName("Redemption");
+				FunctionsLua::CastSpellByName("Redemption");
 			}
-			else if (!BoSanctuaryBuff && Functions::IsSpellReady("Blessing of Sanctuary")) {
+			else if (!BoKingsBuff && FunctionsLua::IsSpellReady("Blessing of Kings")) {
+				//Blessing of Kings (self)
+				localPlayer->SetTarget(localPlayer->Guid);
+				FunctionsLua::CastSpellByName("Blessing of Kings");
+			}
+			else if ((BoKingsTarget != NULL) && FunctionsLua::IsSpellReady("Blessing of Kings")) {
+				//Blessing of Kings (Group)
+				localPlayer->SetTarget(BoKingsTarget->Guid);
+				FunctionsLua::CastSpellByName("Blessing of Kings");
+			}
+			else if (!BoSanctuaryBuff && FunctionsLua::IsSpellReady("Blessing of Sanctuary")) {
 				//Blessing of Sanctuary (self)
 				localPlayer->SetTarget(localPlayer->Guid);
-				Functions::CastSpellByName("Blessing of Sanctuary");
+				FunctionsLua::CastSpellByName("Blessing of Sanctuary");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if ((BoSalvationTarget != NULL) && Functions::IsSpellReady("Blessing of Salvation")) {
+			else if ((BoSalvationTarget != NULL) && FunctionsLua::IsSpellReady("Blessing of Salvation")) {
 				//Blessing of Salvation (Groupe)
 				localPlayer->SetTarget(BoSalvationTarget->Guid);
-				Functions::CastSpellByName("Blessing of Salvation");
+				FunctionsLua::CastSpellByName("Blessing of Salvation");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if (Combat && (localPlayer->prctMana < 10) && (Functions::GetMPotionCD() < 1.25)) {
+			else if (Combat && (localPlayer->prctMana < 10) && (FunctionsLua::GetMPotionCD() < 1.25)) {
 				//Mana Potion
-				Functions::UseItem("Mana Potion");
+				FunctionsLua::UseItem("Mana Potion");
 			}
-			else if ((localPlayer->prctMana > 25) && Functions::GetUnitDispel("player", "Disease", "Poison") && Functions::IsSpellReady("Purify")) {
+			else if ((localPlayer->prctMana > 25) && FunctionsLua::GetUnitDispel("player", "Disease", "Poison") && FunctionsLua::IsSpellReady("Purify")) {
 				//Purify (self)
 				localPlayer->SetTarget(localPlayer->Guid);
-				Functions::CastSpellByName("Purify");
+				FunctionsLua::CastSpellByName("Purify");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if ((PurifyTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Purify")) {
+			else if ((PurifyTarget != NULL) && (localPlayer->prctMana > 25) && FunctionsLua::IsSpellReady("Purify")) {
 				//Purify (Groupe)
 				localPlayer->SetTarget(PurifyTarget->Guid);
-				Functions::CastSpellByName("Purify");
+				FunctionsLua::CastSpellByName("Purify");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if ((localPlayer->prctMana > 25) && Functions::GetUnitDispel("player", "Disease", "Poison", "Magic") && Functions::IsSpellReady("Cleanse")) {
+			else if ((localPlayer->prctMana > 25) && FunctionsLua::GetUnitDispel("player", "Disease", "Poison", "Magic") && FunctionsLua::IsSpellReady("Cleanse")) {
 				//Cleanse (self)
 				localPlayer->SetTarget(localPlayer->Guid);
-				Functions::CastSpellByName("Cleanse");
+				FunctionsLua::CastSpellByName("Cleanse");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
-			else if ((CleanseTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cleanse")) {
+			else if ((CleanseTarget != NULL) && (localPlayer->prctMana > 25) && FunctionsLua::IsSpellReady("Cleanse")) {
 				//Cleanse (Groupe)
 				localPlayer->SetTarget(CleanseTarget->Guid);
-				Functions::CastSpellByName("Cleanse");
+				FunctionsLua::CastSpellByName("Cleanse");
 				if (Combat) Functions::LuaCall("TargetLastEnemy()");
 			}
 			else {

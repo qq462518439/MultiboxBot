@@ -6,6 +6,7 @@
 #include <iostream>
 
 std::vector<WoWUnit> ListUnits;
+std::vector<WoWGameObject> ListGameObjects;
 LocalPlayer* localPlayer = NULL;
 
 Position::Position() {
@@ -49,7 +50,7 @@ WoWObject::WoWObject(uintptr_t pointer, unsigned long long guid, ObjectType objT
 }
 
 uintptr_t WoWObject::GetDescriptorPtr() {
-    return *(uintptr_t*)(Pointer + DESCRIPTOR_OFFSET);
+    return *(uintptr_t*)(Pointer + 0x8);
 }
 
 /* === Unit === */
@@ -77,8 +78,9 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
 
     flags = *(UnitFlags*)(descriptor + UNIT_FLAG_OFFSET);
     movement_flags = *(MovementFlags*)(Pointer + MOVEMENT_FLAG_OFFSET);
+    dynamic_flags = *(DynamicFlags*)(descriptor + DYNAMIC_FLAG_OFFSET);
 
-    isdead = false; if ((objType == Player && health <= 1 && !(flags & UNIT_FLAG_UNK_29)) || (objType == Unit && health <= 0)) isdead = true;
+    isdead = false; if ((objType == Player && health <= 1 && !(flags & UNIT_FLAG_FEIGN_DEATH)) || (objType == Unit && health <= 0)) isdead = true;
 
     uintptr_t currentBuffOffset = BUFF_BASE_OFFSET;
     for (int i = 0; i < 30; i++) {
@@ -116,6 +118,7 @@ WoWUnit::WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType)
 
     unitReaction = Neutral;
     attackable = false;
+    role = -1;
 }
 
 int WoWUnit::getHealth() {
@@ -253,4 +256,16 @@ bool LocalPlayer::isCasting(int* IDs, int size) {
         if (IDs[i] == castInfo) return true;
     }
     return false;
+}
+
+/* === Gameobject === */
+
+WoWGameObject::WoWGameObject(uintptr_t pointer, unsigned long long guid, ObjectType objType) : WoWObject(pointer, guid, objType) {
+    uintptr_t descriptor = 0x2a0;
+    float x = *(float*)(Pointer + descriptor + 0x24);
+    float y = *(float*)(Pointer + descriptor + 0x28);
+    float z = *(float*)(Pointer + descriptor + 0x2C);
+    position = Position(x, y, z);
+    facing = *(float*)(Pointer + 0x30);
+    displayID = *(int*)((char*)Pointer  + descriptor + 0x8);
 }

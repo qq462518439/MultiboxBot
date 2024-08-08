@@ -89,7 +89,7 @@ enum UnitFlags : unsigned int {
     UNIT_FLAG_SKINNABLE = 1 << 26,
     UNIT_FLAG_MOUNT = 1 << 27, // is mounted?
     UNIT_FLAG_UNK_28 = 1 << 28, // ??
-    UNIT_FLAG_UNK_29 = 1 << 29, // used in Feing Death spell
+    UNIT_FLAG_FEIGN_DEATH = 1 << 29, // used in Feing Death spell
     UNIT_FLAG_SHEATHE = 1 << 30, // ??
 };
 
@@ -121,6 +121,14 @@ enum MovementFlags: unsigned int {
     MOVEFLAG_HOVER = 0x40000000
 };
 
+enum DynamicFlags : unsigned int {
+    DYNAMICFLAG_NONE = 0x0,
+    DYNAMICFLAG_CANBELOOTED = 0x1,
+    DYNAMICFLAG_ISMARKED = 0x2,
+    DYNAMICFLAG_TAPPED = 0x4, // Makes creature name tag appear grey
+    DYNAMICFLAG_TAPPEDBYME = 0x8
+};
+
 class Position {
 public:
     float X, Y, Z;
@@ -142,18 +150,16 @@ class WoWObject {
 
         WoWObject(uintptr_t pointer, unsigned long long guid, ObjectType objType);
         uintptr_t GetDescriptorPtr();
-
-    protected:
-        const uintptr_t DESCRIPTOR_OFFSET = 0x8;
 };
 
 class WoWUnit : public WoWObject {
     public:
         Position position; float prctHP; float prctMana; int rage; int energy;
-        UnitFlags flags; MovementFlags movement_flags; int buff[30]; int debuff[16]; bool isdead;
+        UnitFlags flags; MovementFlags movement_flags; DynamicFlags dynamic_flags;
+        int buff[30]; int debuff[16]; bool isdead;
         CreatureType creatureType; float speed; unsigned long long targetGuid;
         float facing; int level; char* name; int channelInfo; UnitReaction unitReaction;
-        bool attackable; int hpLost;
+        bool attackable; int hpLost; int role;
 
         WoWUnit(uintptr_t pointer, unsigned long long guid, ObjectType objType);
         bool hasBuff(int* IDs, int size);
@@ -164,34 +170,6 @@ class WoWUnit : public WoWObject {
         UnitReaction getUnitReaction(uintptr_t);
         bool canAttack(uintptr_t);
         int getHealth(); int getMaxHealth();
-
-    protected:
-        const uintptr_t TARGET_GUID_OFFSET = 0x40;
-        const uintptr_t HEALTH_OFFSET = 0x58;
-        const uintptr_t MANA_OFFSET = 0x5C;
-        const uintptr_t RAGE_OFFSET = 0x60;
-        const uintptr_t ENERGY_OFFSET = 0x68;
-        const uintptr_t MAX_HEALTH_OFFSET = 0x70;
-        const uintptr_t MAXMANA_OFFSET = 0x74;
-        const uintptr_t LEVEL_OFFSET = 0x88;
-        const uintptr_t UNIT_FLAG_OFFSET = 0xB8;
-        const uintptr_t MOVEMENT_FLAG_OFFSET = 0x9E8;
-        const uintptr_t BUFF_BASE_OFFSET = 0xBC;
-        const uintptr_t DEBUFF_BASE_OFFSET = 0x13C;
-        const uintptr_t CHANNEL_OFFSET = 0x240;
-        const uintptr_t POS_X_OFFSET = 0x9B8;
-        const uintptr_t POS_Y_OFFSET = 0x9BC;
-        const uintptr_t POS_Z_OFFSET = 0x9C0;
-        const uintptr_t FACING_OFFSET = 0x9C4;
-        const uintptr_t SPEED_OFFSET = 0xA2C;
-        const uintptr_t NAME_OFFSET = 0xB30;
-        const uintptr_t GET_CREATURE_TYPE_FUN_PTR = 0x00605570;
-        const uintptr_t GET_UNIT_REACTION_FUN_PTR = 0x006061E0;
-        const uintptr_t CAN_ATTACK_UNIT_FUN_PTR = 0x00606980;
-
-        const uintptr_t NAME_BASE_OFFSET = 0xC0E230;
-        const uintptr_t NEXT_NAME_OFFSET = 0xC;
-        const uintptr_t PLAYER_NAME_OFFSET = 0x14;
 };
 
 class WoWPlayer : public WoWUnit {
@@ -212,14 +190,50 @@ class LocalPlayer : public WoWPlayer {
         Position getOppositeDirection(Position enemy_pos, float radius);
         bool isCasting();
         bool isCasting(int* IDs, int size);
-    protected:
-        const uintptr_t SET_TARGET_FUN_PTR = 0x00493540;
-        const uintptr_t CLICK_TO_MOVE_FUN_PTR = 0x00611130;
-        const uintptr_t LOCKED_TARGET_STATIC_OFFSET = 0x00B4E2D8;
-        const uintptr_t CASTING_STATIC_OFFSET = 0x00CECA88;
 };
 
+class WoWGameObject : public WoWObject {
+    public:
+        int displayID; Position position; float facing;
+
+        WoWGameObject(uintptr_t pointer, unsigned long long guid, ObjectType objectType);
+};
+
+const uintptr_t TARGET_GUID_OFFSET = 0x40;
+const uintptr_t HEALTH_OFFSET = 0x58;
+const uintptr_t MANA_OFFSET = 0x5C;
+const uintptr_t RAGE_OFFSET = 0x60;
+const uintptr_t ENERGY_OFFSET = 0x68;
+const uintptr_t MAX_HEALTH_OFFSET = 0x70;
+const uintptr_t MAXMANA_OFFSET = 0x74;
+const uintptr_t LEVEL_OFFSET = 0x88;
+const uintptr_t UNIT_FLAG_OFFSET = 0xB8;
+const uintptr_t MOVEMENT_FLAG_OFFSET = 0x9E8;
+const uintptr_t DYNAMIC_FLAG_OFFSET = 0x23C;
+const uintptr_t BUFF_BASE_OFFSET = 0xBC;
+const uintptr_t DEBUFF_BASE_OFFSET = 0x13C;
+const uintptr_t CHANNEL_OFFSET = 0x240;
+const uintptr_t POS_X_OFFSET = 0x9B8;
+const uintptr_t POS_Y_OFFSET = 0x9BC;
+const uintptr_t POS_Z_OFFSET = 0x9C0;
+const uintptr_t FACING_OFFSET = 0x9C4;
+const uintptr_t SPEED_OFFSET = 0xA2C;
+const uintptr_t NAME_OFFSET = 0xB30;
+const uintptr_t GET_CREATURE_TYPE_FUN_PTR = 0x00605570;
+const uintptr_t GET_UNIT_REACTION_FUN_PTR = 0x006061E0;
+const uintptr_t CAN_ATTACK_UNIT_FUN_PTR = 0x00606980;
+    //=== Name ===//
+const uintptr_t NAME_BASE_OFFSET = 0xC0E230;
+const uintptr_t NEXT_NAME_OFFSET = 0xC;
+const uintptr_t PLAYER_NAME_OFFSET = 0x14;
+
+const uintptr_t SET_TARGET_FUN_PTR = 0x00493540;
+const uintptr_t CLICK_TO_MOVE_FUN_PTR = 0x00611130;
+const uintptr_t LOCKED_TARGET_STATIC_OFFSET = 0x00B4E2D8;
+const uintptr_t CASTING_STATIC_OFFSET = 0x00CECA88;
+
 extern std::vector<WoWUnit> ListUnits;
+extern std::vector<WoWGameObject> ListGameObjects;
 extern LocalPlayer* localPlayer;
 
 #endif

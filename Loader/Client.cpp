@@ -50,15 +50,15 @@ void Client::recvMessage() {
 		unsigned int id = (buffer[6] - '0')*10 + (buffer[7] - '0');
 		int str_length = (buffer[9] - '0') * 10 + (buffer[10] - '0');
 
-		std::string roleName = subchar(buffer, 12, 12+str_length);
+		std::string playerName = subchar(buffer, 12, 12+str_length);
 
 		if (leaderInfos.size() < id+1) {
 			while (leaderInfos.size() < id) {
-				leaderInfos.push_back(std::tuple<std::string, int, int>("tmp", -1, -1));
+				leaderInfos.push_back(std::tuple<std::string, int>("tmp", -1));
 			}
-			leaderInfos.push_back(std::tuple<std::string, int, int>(roleName, role, 0));
+			leaderInfos.push_back(std::tuple<std::string, int>(playerName, role));
 		}
-		else leaderInfos[id] = std::tuple<std::string, int, int>(roleName, role, 0);
+		else leaderInfos[id] = std::tuple<std::string, int>(playerName, role);
 	}
 	else if (buffer[0] == 'K' && buffer[1] == '1') {
 		keyHearthstone = true;

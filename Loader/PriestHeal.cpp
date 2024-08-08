@@ -1,3 +1,4 @@
+#include "Client.h"
 #include "ListAI.h"
 
 #include <iostream>
@@ -7,6 +8,7 @@ static int LesserHealRank = 0; static float LesserHealValue[3]; static int Lesse
 static int RenewRank = 0; static float RenewValue[10]; static int RenewLevel[10] = { 8, 14, 20, 26, 32, 38, 44, 50, 56, 60 };
 static int HealRank = 0; static float HealValue[4]; static int HealLevel[4] = { 16, 22, 28, 34 };
 static int GreaterHealRank = 0; static float GreaterHealValue[5]; static int GreaterHealLevel[5] = { 40, 46, 52, 58, 60 };
+static int FlashHealRank = 0; static float FlashHealValue[7]; static int FlashHealLevel[7] = { 20, 26, 32, 38, 44, 50, 56 };
 	//================//
 
 static void GetSpellBonusHealing() {
@@ -14,15 +16,17 @@ static void GetSpellBonusHealing() {
 	float tmp2[10] = { 45, 100, 175, 245, 315, 400, 510, 650, 810, 970 }; for (int i = 0; i < 10; i++) { RenewValue[i] = tmp2[i]; }
 	float tmp3[4] = { 330, 476, 624, 781 }; for (int i = 0; i < 4; i++) { HealValue[i] = tmp3[i]; }
 	float tmp4[5] = { 982, 1248, 1556, 1917, 2080 }; for (int i = 0; i < 5; i++) { GreaterHealValue[i] = tmp4[i]; }
-	int RenewTalentRank = Functions::GetTalentInfo(2, 2);
-	int SpiritualHealingRank = Functions::GetTalentInfo(2, 15);
-	int spirit = Functions::UnitStat("player", 5);
-	int SpiritualGuidance = Functions::GetTalentInfo(2, 14);
+	float tmp5[7] = { 224, 297, 372, 453, 583, 722, 885 }; for (int i = 0; i < 7; i++) { FlashHealValue[i] = tmp5[i]; }
+	int RenewTalentRank = FunctionsLua::GetTalentInfo(2, 2);
+	int SpiritualHealingRank = FunctionsLua::GetTalentInfo(2, 15);
+	int spirit = FunctionsLua::UnitStat("player", 5);
+	int SpiritualGuidance = FunctionsLua::GetTalentInfo(2, 14);
 	float bonusHealing = spirit * 0.05f * SpiritualGuidance;
-	std::tie(std::ignore, LesserHealRank) = Functions::GetSpellID("Lesser Heal");
-	std::tie(std::ignore, RenewRank) = Functions::GetSpellID("Renew");
-	std::tie(std::ignore, HealRank) = Functions::GetSpellID("Heal");
-	std::tie(std::ignore, GreaterHealRank) = Functions::GetSpellID("Greater Heal");
+	std::tie(std::ignore, LesserHealRank) = FunctionsLua::GetSpellID("Lesser Heal");
+	std::tie(std::ignore, RenewRank) = FunctionsLua::GetSpellID("Renew");
+	std::tie(std::ignore, HealRank) = FunctionsLua::GetSpellID("Heal");
+	std::tie(std::ignore, GreaterHealRank) = FunctionsLua::GetSpellID("Greater Heal");
+	std::tie(std::ignore, FlashHealRank) = FunctionsLua::GetSpellID("Flash Heal");
 	//====================================================//
 	float SubLevel20PENALTY = 1.0f;
 	if (RenewLevel[RenewRank] < 20.0f) SubLevel20PENALTY = 1.0f - (20.0f - RenewLevel[RenewRank]) * 0.0375f;
@@ -33,6 +37,7 @@ static void GetSpellBonusHealing() {
 	if (HealLevel[HealRank] < 20.0f) SubLevel20PENALTY = 1.0f - (20.0f - HealLevel[HealRank]) * 0.0375f;
 	HealValue[HealRank] = (HealValue[HealRank] + bonusHealing * (3.0f / 3.5f) * SubLevel20PENALTY) * (1.0f + (0.02f * SpiritualHealingRank));
 	GreaterHealValue[GreaterHealRank] = (GreaterHealValue[GreaterHealRank] + bonusHealing * (3.0f / 3.5f)) * (1.0f + (0.02f * SpiritualHealingRank));
+	FlashHealValue[FlashHealRank] = (FlashHealValue[FlashHealRank] + bonusHealing * (1.5f / 3.5f)) * (1.0f + (0.02f * SpiritualHealingRank));
 }
 
 static void PriestAttack() {
@@ -55,30 +60,30 @@ static void PriestAttack() {
 		bool ShadowWordPainDebuff = targetUnit->hasDebuff(ShadowWordPainIDs, 8);
 		int HolyFireIDs[8] = { 14914, 15262, 15263, 15264, 15265, 15266, 15267, 15261 };
 		bool HolyFireDebuff = targetUnit->hasDebuff(HolyFireIDs, 8);
-		if (!Functions::IsCurrentAction(Functions::GetSlot("Attack"))) Functions::CastSpellByName("Attack");
-		if ((nbrCloseEnemy >= 4) && Functions::IsSpellReady("Holy Nova")) {
+		if (!FunctionsLua::IsCurrentAction(FunctionsLua::GetSlot("Attack"))) FunctionsLua::CastSpellByName("Attack");
+		if ((nbrCloseEnemy >= 4) && FunctionsLua::IsSpellReady("Holy Nova")) {
 			//Holy Nova
-			Functions::CastSpellByName("Holy Nova");
+			FunctionsLua::CastSpellByName("Holy Nova");
 		}
-		else if (IsFacing && (localPlayer->prctMana > 66) && targetPlayer && !ShadowWordPainDebuff && Functions::IsSpellReady("Shadow Word: Pain")) {
+		else if (IsFacing && (localPlayer->prctMana > 75) && targetPlayer && !ShadowWordPainDebuff && FunctionsLua::IsSpellReady("Shadow Word: Pain")) {
 			//Shadow Word: Pain	(PvP)
-			Functions::CastSpellByName("Shadow Word: Pain");
+			FunctionsLua::CastSpellByName("Shadow Word: Pain");
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 66) && targetPlayer && !HolyFireDebuff && Functions::IsSpellReady("Holy Fire")) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 75) && targetPlayer && !HolyFireDebuff && FunctionsLua::IsSpellReady("Holy Fire")) {
 			//Holy Fire (PvP)
-			Functions::CastSpellByName("Holy Fire");
+			FunctionsLua::CastSpellByName("Holy Fire");
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 66) && Functions::IsSpellReady("Mind Blast")) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 75) && FunctionsLua::IsSpellReady("Mind Blast")) {
 			//Mind Blast
-			Functions::CastSpellByName("Mind Blast");
+			FunctionsLua::CastSpellByName("Mind Blast");
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 66) && Functions::IsSpellReady("Smite")) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && (localPlayer->prctMana > 75) && FunctionsLua::IsSpellReady("Smite")) {
 			//Smite
-			Functions::CastSpellByName("Smite");
+			FunctionsLua::CastSpellByName("Smite");
 		}
-		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::HasWandEquipped() && !Functions::IsAutoRepeatAction(Functions::GetSlot("Shoot"))) {
+		else if (IsFacing && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::HasWandEquipped() && !FunctionsLua::IsAutoRepeatAction(FunctionsLua::GetSlot("Shoot"))) {
 			//Wand
-			Functions::CastSpellByName("Shoot");
+			FunctionsLua::CastSpellByName("Shoot");
 		}
 	}
 }
@@ -102,73 +107,73 @@ static int HealGroup(unsigned int indexP) { //Heal Players and Npcs
 	bool PWShieldBuff = ListUnits[indexP].hasBuff(PWShieldIDs, 10);
 	int WeakenedSoulID[1] = { 6788 }; bool WeakenedSoulDebuff = ListUnits[indexP].hasDebuff(WeakenedSoulID, 1);
 	float distAlly = localPlayer->position.DistanceTo(ListUnits[indexP].position);
-	if (isPlayer && Combat && (localPlayer->prctHP < 40) && (Functions::GetHealthstoneCD() < 1.25)) {
+	if (isPlayer && Combat && (localPlayer->prctHP < 40) && (FunctionsLua::GetHealthstoneCD() < 1.25)) {
 		//Healthstone
-		Functions::UseItem("Healthstone");
+		FunctionsLua::UseItem("Healthstone");
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 35) && (Functions::GetHPotionCD() < 1.25)) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 35) && (FunctionsLua::GetHPotionCD() < 1.25)) {
 		//Healing Potion
-		Functions::UseItem("Healing Potion");
+		FunctionsLua::UseItem("Healing Potion");
 		return 0;
 	}
-	else if (isPlayer && Combat && (localPlayer->prctHP < 35) && Functions::IsSpellReady("Desperate Prayer")) {
+	else if (isPlayer && Combat && (localPlayer->prctHP < 35) && FunctionsLua::IsSpellReady("Desperate Prayer")) {
 		//Desperate Prayer
-		Functions::CastSpellByName("Desperate Prayer");
+		FunctionsLua::CastSpellByName("Desperate Prayer");
 		return 0;
 	}
-	else if ((AoEHeal >= 3) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Prayer of Healing")) {
+	else if ((AoEHeal >= 3) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Prayer of Healing")) {
 		//Prayer of Healing
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Prayer of Healing");
+		FunctionsLua::CastSpellByName("Prayer of Healing");
 		LastTarget = indexP;
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpRatio < 30) && !PWShieldBuff && !WeakenedSoulDebuff && (distAlly < 40.0f) && Functions::IsSpellReady("Power Word: Shield")) {
+	else if ((HpRatio < 30) && !PWShieldBuff && !WeakenedSoulDebuff && (distAlly < 40.0f) && FunctionsLua::IsSpellReady("Power Word: Shield")) {
 		//Power Word: Shield
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Power Word: Shield");
+		FunctionsLua::CastSpellByName("Power Word: Shield");
 		LastTarget = indexP;
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpRatio < 30) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Flash Heal")) {
+	else if ((HpRatio < 30) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Flash Heal")) {
 		//Flash Heal
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Flash Heal");
+		FunctionsLua::CastSpellByName("Flash Heal");
 		LastTarget = indexP;
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpLost > GreaterHealValue[GreaterHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Greater Heal")) {
+	else if ((HpLost > GreaterHealValue[GreaterHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Greater Heal")) {
 		//Greater Heal
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Greater Heal");
+		FunctionsLua::CastSpellByName("Greater Heal");
 		LastTarget = indexP;
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpLost > HealValue[HealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Heal")) {
+	else if ((HpLost > HealValue[HealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Heal")) {
 		//Heal
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Heal");
+		FunctionsLua::CastSpellByName("Heal");
 		LastTarget = indexP;
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((localPlayer->level < 40) && (HpLost > LesserHealValue[LesserHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Lesser Heal")) {
+	else if ((localPlayer->level < 40) && (HpLost > LesserHealValue[LesserHealRank]) && (distAlly < 40.0f) && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Lesser Heal")) {
 		//Lesser Heal
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Lesser Heal");
+		FunctionsLua::CastSpellByName("Lesser Heal");
 		LastTarget = indexP;
 		if (!los_heal) Moving = 5;
 		return 0;
 	}
-	else if ((HpLost > RenewValue[RenewRank]) && !RenewBuff && (distAlly < 40.0f) && Functions::IsSpellReady("Renew")) {
+	else if ((HpLost > RenewValue[RenewRank]) && !RenewBuff && (distAlly < 40.0f) && FunctionsLua::IsSpellReady("Renew")) {
 		//Renew
 		localPlayer->SetTarget(healGuid);
-		Functions::CastSpellByName("Renew");
+		FunctionsLua::CastSpellByName("Renew");
 		LastTarget = indexP;
 		if (!los_heal) Moving = 5;
 		return 0;
@@ -202,86 +207,99 @@ void ListAI::PriestHeal() {
 			WoWUnit* DivineSpiritTarget = Functions::GetMissingBuff(DivineSpiritIDs, 5);
 			int InnerFireIDs[6] = { 588, 7128, 602, 1006, 10951, 10952 };
 			bool InnerFireBuff = localPlayer->hasBuff(InnerFireIDs, 6);
-			WoWUnit* DispelMagicTarget = Functions::GetGroupDispel("Magic");
-			WoWUnit* CureDiseaseTarget = Functions::GetGroupDispel("Disease");
+			WoWUnit* DispelMagicTarget = FunctionsLua::GetGroupDispel("Magic");
+			WoWUnit* CureDiseaseTarget = FunctionsLua::GetGroupDispel("Disease");
 			WoWUnit* deadPlayer = Functions::GetGroupDead();
-			if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && Functions::IsSpellReady("Resurrection") && (deadPlayer != NULL)) {
+			if (!Combat && (localPlayer->speed == 0) && (Moving == 0 || Moving == 4) && FunctionsLua::IsSpellReady("Resurrection") && (deadPlayer != NULL)) {
 				//Resurrection
 				localPlayer->SetTarget(deadPlayer->Guid);
-				Functions::CastSpellByName("Resurrection");
+				FunctionsLua::CastSpellByName("Resurrection");
 			}
-			else if (!Combat && (PWFortitudeTarget != NULL) && Functions::IsSpellReady("Prayer of Fortitude")) {
+			else if (!Combat && (PWFortitudeTarget != NULL) && FunctionsLua::IsSpellReady("Prayer of Fortitude")) {
 				//Prayer of Fortitude (Group)
 				localPlayer->SetTarget(PWFortitudeTarget->Guid);
-				Functions::CastSpellByName("Prayer of Fortitude");
+				FunctionsLua::CastSpellByName("Prayer of Fortitude");
 			}
-			else if (!Combat && (DivineSpiritTarget != NULL) && Functions::IsSpellReady("Prayer of Spirit")) {
+			else if (!Combat && (DivineSpiritTarget != NULL) && FunctionsLua::IsSpellReady("Prayer of Spirit")) {
 				//Prayer of Spirit (Group)
 				localPlayer->SetTarget(DivineSpiritTarget->Guid);
-				Functions::CastSpellByName("Prayer of Spirit");
+				FunctionsLua::CastSpellByName("Prayer of Spirit");
 			}
-			else if (!InnerFireBuff && Functions::IsPlayerSpell("Inner Fire")) {
+			else if (!InnerFireBuff && FunctionsLua::IsPlayerSpell("Inner Fire")) {
 				//Inner Fire (self)
-				Functions::CastSpellByName("Inner Fire");
+				FunctionsLua::CastSpellByName("Inner Fire");
 			}
-			else if (!Combat && !PWFortitudeBuff && Functions::IsPlayerSpell("Power Word: Fortitude")) {
+			else if (!Combat && !PWFortitudeBuff && FunctionsLua::IsPlayerSpell("Power Word: Fortitude")) {
 				//Power Word: Fortitude (self)
 				localPlayer->SetTarget(localPlayer->Guid);
-				Functions::CastSpellByName("Power Word: Fortitude");
+				FunctionsLua::CastSpellByName("Power Word: Fortitude");
 			}
-			else if (!Combat && (PWFortitudeTarget != NULL) && Functions::IsSpellReady("Power Word: Fortitude")) {
+			else if (!Combat && (PWFortitudeTarget != NULL) && FunctionsLua::IsSpellReady("Power Word: Fortitude")) {
 				//Power Word: Fortitude (Group)
 				localPlayer->SetTarget(PWFortitudeTarget->Guid);
-				Functions::CastSpellByName("Power Word: Fortitude");
+				FunctionsLua::CastSpellByName("Power Word: Fortitude");
 			}
-			else if (!Combat && !DivineSpiritBuff && Functions::IsPlayerSpell("Divine Spirit")) {
+			else if (!Combat && !DivineSpiritBuff && FunctionsLua::IsPlayerSpell("Divine Spirit")) {
 				//Divine Spirit (self)
 				localPlayer->SetTarget(localPlayer->Guid);
-				Functions::CastSpellByName("Divine Spirit");
+				FunctionsLua::CastSpellByName("Divine Spirit");
 			}
-			else if (!Combat && (DivineSpiritTarget != NULL) && Functions::IsSpellReady("Divine Spirit")) {
+			else if (!Combat && (DivineSpiritTarget != NULL) && FunctionsLua::IsSpellReady("Divine Spirit")) {
 				//Divine Spirit (Group)
 				localPlayer->SetTarget(DivineSpiritTarget->Guid);
-				Functions::CastSpellByName("Divine Spirit");
+				FunctionsLua::CastSpellByName("Divine Spirit");
 			}
-			else if (Combat && (localPlayer->prctMana < 10) && (Functions::GetMPotionCD() < 1.25)) {
+			else if (Combat && (localPlayer->prctMana < 10) && (FunctionsLua::GetMPotionCD() < 1.25)) {
 				//Mana Potion
-				Functions::UseItem("Mana Potion");
+				FunctionsLua::UseItem("Mana Potion");
 			}
-			else if ((nbrAggro > 0) && Functions::IsSpellReady("Fade")) {
+			else if ((nbrAggro > 0) && FunctionsLua::IsSpellReady("Fade")) {
 				//Fade (Aggro)
-				Functions::CastSpellByName("Fade");
+				FunctionsLua::CastSpellByName("Fade");
 			}
-			else if ((nbrCloseEnemy >= 4) && Functions::IsSpellReady("Psychic Scream")) {
+			else if ((nbrCloseEnemy >= 4) && FunctionsLua::IsSpellReady("Psychic Scream")) {
 				//Psychic Scream
-				Functions::CastSpellByName("Psychic Scream");
+				FunctionsLua::CastSpellByName("Psychic Scream");
 			}
-			else if ((localPlayer->prctMana > 25) && Functions::GetUnitDispel("player", "Disease") && Functions::IsSpellReady("Cure Disease")) {
+			else if ((localPlayer->prctMana > 25) && FunctionsLua::GetUnitDispel("player", "Disease") && FunctionsLua::IsSpellReady("Cure Disease")) {
 				//Cure Disease (self)
 				localPlayer->SetTarget(localPlayer->Guid);
-				Functions::CastSpellByName("Cure Disease");
+				FunctionsLua::CastSpellByName("Cure Disease");
 			}
-			else if ((CureDiseaseTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Cure Disease")) {
+			else if ((CureDiseaseTarget != NULL) && (localPlayer->prctMana > 25) && FunctionsLua::IsSpellReady("Cure Disease")) {
 				//Cure Disease (Group)
 				localPlayer->SetTarget(CureDiseaseTarget->Guid);
-				Functions::CastSpellByName("Cure Disease");
+				FunctionsLua::CastSpellByName("Cure Disease");
 			}
-			else if ((localPlayer->prctMana > 25) && Functions::GetUnitDispel("player", "Magic") && Functions::IsSpellReady("Dispel Magic")) {
+			else if ((localPlayer->prctMana > 25) && FunctionsLua::GetUnitDispel("player", "Magic") && FunctionsLua::IsSpellReady("Dispel Magic")) {
 				//Dispel Magic (self)
 				localPlayer->SetTarget(localPlayer->Guid);
-				Functions::CastSpellByName("Dispel Magic");
+				FunctionsLua::CastSpellByName("Dispel Magic");
 			}
-			else if ((DispelMagicTarget != NULL) && (localPlayer->prctMana > 25) && Functions::IsSpellReady("Dispel Magic")) {
+			else if ((DispelMagicTarget != NULL) && (localPlayer->prctMana > 25) && FunctionsLua::IsSpellReady("Dispel Magic")) {
 				//Dispel Magic (Groupe)
 				localPlayer->SetTarget(DispelMagicTarget->Guid);
-				Functions::CastSpellByName("Dispel Magic");
+				FunctionsLua::CastSpellByName("Dispel Magic");
 			}
 			else {
-				int tmp = 1; unsigned int index = 0;
-				while (tmp == 1 and index < HealTargetArray.size()) {
-					tmp = HealGroup(HealTargetArray[index]);
-					index = index + 1;
+				//Priority in function of the number of heals in current group
+				int tmp = 1; unsigned int index_start = 0;
+				for(unsigned int i = 0; i < leaderInfos.size(); i++) {
+					if(get<1>(leaderInfos[i]) == 3) {
+						if(get<0>(leaderInfos[i]) == localPlayer->name) break;
+						for(int y = 0; y < NumGroupMembers; y++) {
+							if(GroupMember[y] != NULL && get<0>(leaderInfos[i]) == GroupMember[y]->name) {
+								index_start = index_start+1;
+								break;
+							}
+						}
+					}
 				}
+				unsigned int index = index_start; unsigned int n = HealTargetArray.size();
+				do {
+					tmp = HealGroup(HealTargetArray[index]);
+					index = (index + 1)%n;
+				} while (tmp == 1 && index != (index_start - 1)%n);
 				if (tmp == 1 && !passiveGroup) PriestAttack();
 			}
 		});

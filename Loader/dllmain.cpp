@@ -4,7 +4,6 @@
 // std::wstring
 #include <string>
 // CLR errors
-#include "CorError.h"
 #include <iostream>
 
 #include "Game.h"
